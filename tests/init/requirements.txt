@@ -1,3 +1,5 @@
 flask==0.10.1
 numpy==1.9.2
 requests==1.2.0
+matplotlib
+scipy
