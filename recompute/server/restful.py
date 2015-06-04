@@ -10,7 +10,6 @@ def recompute(url=None):
     print "Making a vagrant box..."
     x = subprocess.Popen(
         ["cd", "recompute/server/data/", "&&", "pwd", "&&",
-         "vagrant", "destroy", "--force", "&&",
          "vagrant", "up", "--provision", "&&", "vagrant", "package", "--output", "recompute.box"],
         shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, error = x.communicate()
