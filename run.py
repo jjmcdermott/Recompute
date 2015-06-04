@@ -1,7 +1,6 @@
 
 import recompute
 import argparse
-import numpy
 
 def main():
     parser = argparse.ArgumentParser(
@@ -14,7 +13,7 @@ def main():
     )
 
     parser.add_argument(
-        "--port", dest="port", type=int, default=8000,
+        "--port", dest="port", type=int, default=5000,
         help="Port of the server"
     )
 
@@ -23,6 +22,4 @@ def main():
     recompute.server.run(args.host, args.port)
 
 if __name__ == "__main__":
-    # recompute testing
-    numpy.arange(15)
     main()

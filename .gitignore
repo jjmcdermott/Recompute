@@ -1,5 +1,12 @@
+# virtual boxes
+*.box
+*.vagrant/
+
 # pycharm
 *.idea/
+
+#venv
+*venv/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
