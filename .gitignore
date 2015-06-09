@@ -8,6 +8,18 @@
 #venv
 *venv/
 
+#term.js
+node_modules/
+*.swp
+build/*
+.lock-wscript
+out/
+Makefile.gyp
+*.Makefile
+*.target.gyp.mk
+*.node
+example/*.log
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
