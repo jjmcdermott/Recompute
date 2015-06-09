@@ -7,8 +7,18 @@
 <h1>Recompute</h1>
 
 <form action="{{ url_for('recompute') }}" method="get">
-URL: <input type="text" name="url" value=""> <input type="submit" value="Submit">
+    NAME: <input type="text" name="hostname" value="">
+    GitHub URL: <input type="text" name="github_url" value="" size="50">
+    <input type="submit" value="Create">
 </form>
+
+{% for vm in virtual_machines.items %}
+    {{ vm.name }}
+{% endfor %}
+
+<script>
+
+</script>
 
 </body>
 </html>

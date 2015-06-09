@@ -1,18 +1,26 @@
-from config import recompute_server
-from flask import jsonify
-from flask import send_file as f_send_file
-import subprocess
 
+from flask import request, jsonify, send_file
+from .config import recompute_server
+from .recompute import create_vm
 
 @recompute_server.route("/recompute/", methods=["GET"])
-@recompute_server.route("/recompute/<string:url>", methods=["GET"])
-def recompute(url=None):
-    print "Making a vagrant box..."
-    x = subprocess.Popen(
-        ["cd", "recompute/server/data/", "&&", "pwd", "&&",
-         "vagrant", "up", "--provision", "&&", "vagrant", "package", "--output", "recompute.box"],
-        shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, error = x.communicate()
-    print out
-    print error
-    return f_send_file("data/recompute.box", mimetype="application/vnd.previewsystems.box", as_attachment=True)
+def recompute():
+    """
+    Recompute
+    """
+
+    try:
+        hostname = request.args.get("hostname")
+        github_url = request.args.get("github_url")
+        path = create_vm(hostname, github_url)
+        if path is not None:
+            return hostname
+            # return send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
+        else:
+            return jsonify(message="Internal error"), 400
+    except KeyError:
+        return jsonify(message="Invalid request"), 400
+
+@recompute_server.route("/machines", methods=["GET"])
+def get_all_vms():
+    pass
