@@ -26,20 +26,11 @@
 </form>
 
 <ul id="vms">
-
+    {% for vm in vms %}
+        <li><span class="hostname">{{ vm.hostname }}</span> <a href="{{ url_for('download', hostname=vm.hostname) }}" class="download">Download</a></li>
+    {% endfor %}
 </ul>
 
-<script>
-    $.ajax({
-        url: "{{ url_for('get_all_vms') }}",
-        success: function(resp) {
-            console.log(resp["vms"]);
-            resp["vms"].each(function() {
-                console.log($(this));
-            });
-        }
-    });
-</script>
 
 </body>
 </html>

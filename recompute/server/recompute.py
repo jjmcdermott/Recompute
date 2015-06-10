@@ -85,7 +85,7 @@ def create_vm(hostname, github_url, base_vm):
     base_vagrant_file = _get_base_vagrantfile(project_lang)
     if base_vagrant_file is None:
         return None
-    print "Project Vagrantfile: {}".format(base_vagrant_file)
+    print "Project base Vagrantfile: {}".format(base_vagrant_file)
 
     _generate_vagrantfile(hostname, github_url, base_vm, base_vagrant_file, vagrantfile_path)
     print "Vagrantfile @ {}".format(vagrantfile_path)

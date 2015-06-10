@@ -1,21 +1,18 @@
 
+import os
 from flask import render_template as render_template
-from flask_socketio import emit
-from .config import recompute_server, recompute_socket
+from .config import recompute_server
 
 @recompute_server.route("/", methods=["GET"])
 @recompute_server.route("/index", methods=["GET"])
 def get_index():
-    return render_template("index.html", vms=list())
+    vms = list()
+    for hostname in next(os.walk("recompute/server/vms/"))[1]:
+        vms.append({"hostname": hostname})
+    print vms
+    return render_template("index.html", vms=vms)
 
 
 @recompute_server.route("/tty", methods=["GET"])
 def get_tty():
     return render_template("tty.html")
-
-
-@recompute_socket.on("connect", namespace="/tty")
-def test_connect(message=None):
-    print "connected"
-    recompute_socket.emit("response", {"message": "Connected!!!!!"})
-    emit("response", {"message": "Connected"})
