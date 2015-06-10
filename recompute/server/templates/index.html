@@ -1,23 +1,44 @@
 <!DOCTYPE html>
 <head>
     <title>Recompute</title>
+
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 </head>
 <body>
 
 <h1>Recompute</h1>
 
 <form action="{{ url_for('recompute') }}" method="get">
-    NAME: <input type="text" name="hostname" value="">
-    GitHub URL: <input type="text" name="github_url" value="" size="50">
+    <span>NAME:</span><input type="text" name="hostname" value=""><br/>
+    <span>GitHub URL:</span><input type="text" name="github_url" value="" size="50"><br />
+    <span>BASE VM:</span>
+        <select name="base_vm">
+            <option value="ubuntu/trusty64">ubuntu/trusty64</option>
+        </select><br/>
     <input type="submit" value="Create">
 </form>
 
-{% for vm in vms.items %}
-    {{ vm.name }}
-{% endfor %}
+<h3>Virtual Machines</h3>
+<form action="" method="get">
+    NAME: <input type="text" name="hostname" value="">
+    <input type="submit" value="Search">
+</form>
+
+<ul id="vms">
+
+</ul>
 
 <script>
-
+    $.ajax({
+        url: "{{ url_for('get_all_vms') }}",
+        success: function(resp) {
+            console.log(resp["vms"]);
+            resp["vms"].each(function() {
+                console.log($(this));
+            });
+        }
+    });
 </script>
 
 </body>
