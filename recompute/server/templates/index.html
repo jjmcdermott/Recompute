@@ -14,7 +14,9 @@
     <span>GitHub URL:</span><input type="text" name="github_url" value="" size="50"><br />
     <span>BASE VM:</span>
         <select name="base_vm">
-            <option value="ubuntu/trusty64">ubuntu/trusty64</option>
+            {% for box in base_vagrantboxes %}
+                <option value="{{ box }}">{{ box }}</option>
+            {% endfor %}
         </select><br/>
     <input type="submit" value="Create">
 </form>
@@ -27,10 +29,18 @@
 
 <ul id="vms">
     {% for vm in vms %}
-        <li><span class="hostname">{{ vm.hostname }}</span> <a href="{{ url_for('download', hostname=vm.hostname) }}" class="download">Download</a></li>
+        <li>
+            <span class="hostname">{{ vm.hostname }}</span>
+            <span class="id">ID</span>
+            <span class="latest">TAG</span>
+            <span class="version">VERSION</span>
+            <span class="date">DATE</span>
+            <a href="" class="history">History</a>
+            <a href="" class="history">Play</a>
+            <a href="{{ url_for('download', hostname=vm.hostname) }}" class="download">Download</a>
+        </li>
     {% endfor %}
 </ul>
-
 
 </body>
 </html>

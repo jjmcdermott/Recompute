@@ -1,0 +1,13 @@
+<vm>
+    <id>ID</id>
+
+    <hostname>HOSTNAME</hostname>
+
+    <releases>
+        <release>
+            <tag>TAG</tag>
+            <version>VERSION</version>
+            <date>DATE</date>
+        </release>
+    </releases>
+</vm>

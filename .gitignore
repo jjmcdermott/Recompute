@@ -1,6 +1,7 @@
 # virtual boxes
 *.box
 *.vagrant/
+Vagrantfile
 
 # pycharm
 *.idea/
