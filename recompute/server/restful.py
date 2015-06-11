@@ -43,7 +43,8 @@ def download(hostname):
 
     if os.path.exists(project_dir) and os.path.isfile(vagrantbox_path):
         return send_file(relative_vagrantbox_path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
-
+    else:
+        return jsonify(message="VM not found"), 400
 
 @recompute_server.route("/vagrantfile/<hostname>", methods=["GET"])
 def get_vagrantfile(hostname):

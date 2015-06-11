@@ -1,14 +1,18 @@
 import subprocess
 import os
+import sys
 import requests
 from bs4 import BeautifulSoup
 from .config import vagrant_config_dict, language_version_dict
+
 
 def _execute(command, cwd):
     p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
     lines_iter = iter(p.stdout.readline, b"")
     for line in lines_iter:
-        print(line)
+        sys.stdout.write(line)
+        sys.stdout.flush()
+
 
 def _generate_vagrantbox(project_dir, hostname):
     """
@@ -84,7 +88,7 @@ def create_vm(hostname, github_url, base_vm):
     vagrantbox_path = project_dir + hostname + ".box"
     relative_vagrantbox_path = "vms/" + hostname + "/" + hostname + ".box"
 
-    print "Project: {}".format(hostname)
+    print "Creating Project: {}...".format(hostname)
 
     os.makedirs(project_dir)
     print "Directory @ {}".format(project_dir)

@@ -5,6 +5,7 @@
 
     <releases>
         <release>
+            <id>ID</id>
             <tag>TAG</tag>
             <version>VERSION</version>
             <date>DATE</date>
