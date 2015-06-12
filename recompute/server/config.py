@@ -1,14 +1,30 @@
-
 from flask import Flask
-from flask_socketio import SocketIO
+from tornado.wsgi import WSGIContainer
+from tornado.web import FallbackHandler, Application
+from tornado.websocket import WebSocketHandler
+from tornado.log import enable_pretty_logging
 
-recompute_server = Flask(__name__)
-recompute_server.config.from_object(__name__)
-recompute_server.config["SECRET_KEY"] = "SECRET!"
-recompute_server.debug = True
-recompute_socket = SocketIO(recompute_server)
+recompute_app = Flask(__name__)
+recompute_app.config.from_object(__name__)
+recompute_app.config["SECRET_KEY"] = "SECRET!"
+recompute_app.debug = True
 
-DEFAULT_VM = "ubuntu/trusty64"
+recompute_container = WSGIContainer(recompute_app)
+
+class WebSocket(WebSocketHandler):
+    def open(self):
+        print "Socket opened."
+
+    def on_message(self, message):
+        self.write_message("Received: " + message)
+        print "Received message: " + message
+
+
+recompute_server = Application([
+    (r"/websocket/", WebSocket),
+    (r".*", FallbackHandler, dict(fallback=recompute_container))
+], debug=True)
+enable_pretty_logging()
 
 vagrant_config_dict = dict()
 vagrant_config_dict["Python"] = "python.vagrant.config"

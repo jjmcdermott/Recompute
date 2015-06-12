@@ -1,10 +1,10 @@
 import os
 from flask import request, jsonify, send_file
-from .config import recompute_server
+from .config import recompute_app
 from .recompute import create_vm
 
 
-@recompute_server.route("/recompute/", methods=["GET"])
+@recompute_app.route("/recompute/", methods=["GET"])
 def recompute():
     """
     Recompute
@@ -31,7 +31,7 @@ def recompute():
         return jsonify(message="Invalid request"), 400
 
 
-@recompute_server.route("/download/<hostname>", methods=["GET"])
+@recompute_app.route("/download/<hostname>", methods=["GET"])
 def download(hostname):
     """
     Download the virtual machine
@@ -46,7 +46,7 @@ def download(hostname):
     else:
         return jsonify(message="VM not found"), 400
 
-@recompute_server.route("/vagrantfile/<hostname>", methods=["GET"])
+@recompute_app.route("/vagrantfile/<hostname>", methods=["GET"])
 def get_vagrantfile(hostname):
     """
     """

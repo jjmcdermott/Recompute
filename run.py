@@ -1,15 +1,10 @@
-
 import recompute
 import argparse
+
 
 def main():
     parser = argparse.ArgumentParser(
         description="Runs the Recompute server"
-    )
-
-    parser.add_argument(
-        "--host", dest="host", type=str, default="localhost",
-        help="Host of the server"
     )
 
     parser.add_argument(
@@ -19,7 +14,8 @@ def main():
 
     args = parser.parse_args()
 
-    recompute.server.run(args.host, args.port)
+    recompute.server.run(args.port)
+
 
 if __name__ == "__main__":
     main()
