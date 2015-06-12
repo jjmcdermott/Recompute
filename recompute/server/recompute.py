@@ -2,6 +2,7 @@ import subprocess
 import os
 import sys
 import requests
+import yaml
 from bs4 import BeautifulSoup
 from .config import vagrant_config_dict, language_version_dict
 
@@ -16,26 +17,14 @@ def _execute(command, cwd):
 
 def _generate_vagrantbox(project_dir, hostname):
     """
-    Package a Vagrant box
+    Package a Vagrantbox
     """
-
-    # vagrant_up = subprocess.Popen(
-    #     ["vagrant", "up", "--provision"],
-    #     cwd=project_dir, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # while True:
-    #     nextline = vagrant_up.stdout.readline()
-    #     if nextline == '' and vagrant_up.poll() != None:
-    #         break
 
     vagrant_up = ["vagrant", "up", "--provision"]
     _execute(vagrant_up, project_dir)
 
-    vagrant_package = subprocess.Popen(
-        ["vagrant", "package", "--output", hostname + ".box"],
-        cwd=project_dir, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, error = vagrant_package.communicate()
-    print out
-    print error
+    vagrant_package =  ["vagrant", "package", "--output", hostname + ".box"]
+    _execute(vagrant_package, project_dir)
 
 
 def _generate_vagrantfile(hostname, github_url, language_version, base_vm, base_vagrantfile, new_vagrantfile_path):
@@ -48,7 +37,7 @@ def _generate_vagrantfile(hostname, github_url, language_version, base_vm, base_
 
     vagrant_config = vagrant_config.replace("<HOSTNAME>", hostname)
     vagrant_config = vagrant_config.replace("<BOX>", base_vm)
-    vagrant_config = vagrant_config.replace("<VERSION>", language_version)
+    vagrant_config = vagrant_config.replace("<VERSION>", language_version or "")
     vagrant_config = vagrant_config.replace("<GITHUB_URL>", github_url)
     vagrant_config = vagrant_config.replace("<GITHUB_REPO_NAME>", github_url.split("/")[-1])
 
@@ -68,11 +57,22 @@ def _get_base_vagrantfile(language):
 
 
 def _get_language_version(language, github_url):
-    return language_version_dict[language]
+    github_user = github_url.split("/")[-2]
+    github_repo_name = github_url.split("/")[-1]
+    raw_travis_url = "https://raw.githubusercontent.com/"+github_user+"/"+github_repo_name+"/master/.travis.yml"
+    travis_script = requests.get(raw_travis_url)
+    if travis_script.status_code < 400:
+        travis_yaml = yaml.load(travis_script.text)
+        travis_language = travis_yaml["language"]
+        print [travis_language]
+        return language_version_dict[language]
+    elif language in language_version_dict:
+        return language_version_dict[language]
+    else:
+        return None
 
 
 def _get_project_language(github_url):
-    requests.packages.urllib3.disable_warnings()
     response = requests.get(github_url)
     soup = BeautifulSoup(response.text)
     return soup.find("ol", attrs={"class": "repository-lang-stats-numbers"}).find("span", {"class": "lang"}).text
@@ -99,6 +99,8 @@ def create_vm(hostname, github_url, base_vm):
 
     base_vagrant_file = _get_base_vagrantfile(project_lang)
     if base_vagrant_file is None:
+        # clean up
+        os.rmdir(project_dir)
         return None
     print "Base VM: {}".format(base_vm)
     print "Base Vagrantfile: {}".format(base_vagrant_file)

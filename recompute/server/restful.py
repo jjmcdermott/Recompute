@@ -12,10 +12,10 @@ def recompute():
 
     try:
         hostname = request.args.get("hostname")
+        hostname = hostname.replace("_", "-").replace(" ", "-")
 
         project_dir = "recompute/server/vms/" + hostname + "/"
-        vagrantbox_path = project_dir + hostname + ".box"
-        if os.path.exists(project_dir) and os.path.isfile(vagrantbox_path):
+        if os.path.exists(project_dir):
             return jsonify(message="VM already exists"), 400
 
         github_url = request.args.get("github_url")

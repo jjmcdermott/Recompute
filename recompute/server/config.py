@@ -26,12 +26,14 @@ recompute_server = Application([
 ], debug=True)
 enable_pretty_logging()
 
-vagrant_config_dict = dict()
-vagrant_config_dict["Python"] = "python.vagrant.config"
-vagrant_config_dict["NodeJS"] = "nodejs.vagrant.config"
-vagrant_config_dict["JavaScript"] = "nodejs.vagrant.config"
+vagrant_config_dict = {
+    "Python": "python.vagrant.config",
+    "NodeJS": "nodejs.vagrant.config",
+    "JavaScript": "nodejs.vagrant.config"
+}
 
-language_version_dict = dict()
-language_version_dict["Python"] = "2.7"
-language_version_dict["NodeJS"] = "0.10"
-language_version_dict["JavaScript"] = "0.10"
+language_version_dict = {
+    "Python": "2.7",
+    "NodeJS": "0.10",
+    "JavaScript": "0.10"
+}
