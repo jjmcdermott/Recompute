@@ -1,0 +1,47 @@
+
+$rootScript = <<SCRIPT
+  cd /home/vagrant
+  apt-get update
+  apt-get install -y curl git build-essential libssl-dev firefox
+SCRIPT
+
+$userScript = <<SCRIPT
+  cd /home/vagrant
+  curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
+  echo "source /home/vagrant/.nvm/nvm.sh" >> /home/vagrant/.profile
+  source /home/vagrant/.profile
+  nvm install 0.10
+  nvm alias default 0.10
+  echo "nvm: $(nvm --version)"
+  echo "node: $(node --version)"
+  echo "npm: $(npm --version)"
+  npm install -g npm@next
+  npm install -g gulp
+
+  git clone https://github.com/GoodBoyDigital/pixi.js
+  cd pixi.js/
+  npm cache clean
+  npm install
+  gulp build
+SCRIPT
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.hostname = "pixi.box"
+
+  # Removes "stdin: is not a tty" annoyance as per
+  # https://github.com/SocialGeeks/vagrant-openstack/commit/d3ea0695e64ea2e905a67c1b7e12d794a1a29b97
+  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
+
+  config.vm.provider "virtualbox" do |vb|
+    # Allow the creation of symlinks for nvm
+    # http://blog.liip.ch/archive/2012/07/25/vagrant-and-node-js-quick-tip.html
+    vb.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/vagrant","1"]
+  end
+
+  # Shell provisioning.
+  config.vm.provision "shell", inline: $rootScript
+  config.vm.provision "shell", inline: $userScript, privileged: false
+
+end
