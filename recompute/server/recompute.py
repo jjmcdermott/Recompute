@@ -23,7 +23,7 @@ def _generate_vagrantbox(project_dir, hostname):
     vagrant_up = ["vagrant", "up", "--provision"]
     _execute(vagrant_up, project_dir)
 
-    vagrant_package =  ["vagrant", "package", "--output", hostname + ".box"]
+    vagrant_package = ["vagrant", "package", "--output", hostname + ".box"]
     _execute(vagrant_package, project_dir)
 
 
@@ -64,8 +64,7 @@ def _get_language_version(language, github_url):
     if travis_script.status_code < 400:
         travis_yaml = yaml.load(travis_script.text)
         travis_language = travis_yaml["language"]
-        print [travis_language]
-        return language_version_dict[language]
+        return travis_yaml[travis_language][-1]
     elif language in language_version_dict:
         return language_version_dict[language]
     else:

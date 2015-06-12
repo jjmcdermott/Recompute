@@ -1,5 +1,6 @@
 from flask import Flask
 from tornado.wsgi import WSGIContainer
+from tornado.httpserver import HTTPServer
 from tornado.web import FallbackHandler, Application
 from tornado.websocket import WebSocketHandler
 from tornado.log import enable_pretty_logging
@@ -20,10 +21,10 @@ class WebSocket(WebSocketHandler):
         print "Received message: " + message
 
 
-recompute_server = Application([
+recompute_server = HTTPServer(Application([
     (r"/websocket/", WebSocket),
     (r".*", FallbackHandler, dict(fallback=recompute_container))
-], debug=True)
+], debug=True))
 enable_pretty_logging()
 
 vagrant_config_dict = {
