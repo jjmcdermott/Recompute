@@ -5,18 +5,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Recompute</title>
+    <title class="text-center">Recompute</title>
 
     <!--<link rel="icon" href="../../favicon.ico">-->
 
     <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 </head>
 
 <body>
 
-<nav class="navbar navbar-inverse navbar-fixed-top">
+<div class="navbar navbar-default navbar-static-top" role="navigation">
     <div class="container">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
@@ -30,18 +31,21 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="#">Home</a></li>
-                <li><a href="#">Software</a></li>
-                <li><a href="#">Develop</a></li>
+                <li {% if request.path == "/" %} class="active"{% endif %}><a href="{{ url_for('get_index_page') }}">Home</a></li>
+                <li {% if request.path == "/software" %} class="active"{% endif %}><a href="{{ url_for('get_software_page') }}">Software</a></li>
+                <li {% if request.path == "/languages" %} class="active"{% endif %}><a href="{{ url_for('get_languages_page') }}">Languages</a></li>
             </ul>
         </div>
         <!--/.nav-collapse -->
     </div>
-</nav>
+</div>
+
+{% block jumbo %}
+{% endblock %}
 
 <div class="container">
 
-    {% block container %}
+    {% block content %}
     {% endblock %}
 
 </div><!-- /.container -->
@@ -56,6 +60,36 @@ function apiStatus(data) {
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+<script src="{{url_for('static', filename='term.js')}}"></script>
+
+<script>
+    function recomputation_history(name) {
+        view = $("#history_"+name);
+        if (view.css("display") == "none") {
+            view.css("display", "inline");
+        } else {
+            view.css("display", "none");
+        }
+    }
+
+    function recomputation_play(name) {
+        var term = new Terminal({
+            cols: 80,
+            rows: 24,
+            useStyle: true,
+            screenKeys: true,
+            cursorBlink: false
+        });
+
+        term.open(document.getElementById("display"));
+        term.write('Hello world!\n');
+    }
+
+    function recomputation_download(name) {
+        window.location.href = "{{ url_for('get_vagrantbox', name='') }}" + name
+    }
+</script>
 
 </body>
 </html>

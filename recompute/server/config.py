@@ -27,13 +27,13 @@ recompute_server = HTTPServer(Application([
 ], debug=True))
 enable_pretty_logging()
 
-vagrant_config_dict = {
-    "Python": "python.vagrant.config",
-    "NodeJS": "nodejs.vagrant.config",
-    "JavaScript": "nodejs.vagrant.config"
+default_vagrantfile_dict = {
+    "Python": "server/languages/python/python.vconfig",
+    "NodeJS": "server/languages/nodejs/nodejs.vconfig",
+    "JavaScript": "server/languages/nodejs/nodejs.vconfig"
 }
 
-language_version_dict = {
+default_language_version_dict = {
     "Python": "2.7",
     "NodeJS": "0.10",
     "JavaScript": "0.10"

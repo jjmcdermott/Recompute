@@ -1,12 +1,13 @@
-__all__ = ["config", "pageserver", "restful", "recompute"]
+__all__ = ["config", "pageserver", "restful", "recompute", "file"]
 
 from tornado.ioloop import IOLoop
-from .config import recompute_server
+from . import config
 from . import pageserver
 from . import restful
 from . import recompute
+from . import file
 
 
 def run(port):
-    recompute_server.listen(port)
+    config.recompute_server.listen(port)
     IOLoop.instance().start()

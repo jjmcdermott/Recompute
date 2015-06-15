@@ -4,7 +4,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Runs the Recompute server"
+        description="Run the Recompute server"
     )
 
     parser.add_argument(

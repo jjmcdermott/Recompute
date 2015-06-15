@@ -1,3 +1,3 @@
 __all__ = ["server"]
 
-import server
+from . import server

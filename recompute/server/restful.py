@@ -1,54 +1,45 @@
 import os
 from flask import request, jsonify, send_file
 from .config import recompute_app
-from .recompute import create_vm
+from .recompute import Recomputation
+from .file import find_vagrantfile_relative_path, find_vagrantbox_relative_path
 
 
 @recompute_app.route("/recompute/", methods=["GET"])
 def recompute():
-    """
-    Recompute
-    """
-
     try:
-        hostname = request.args.get("hostname")
-        hostname = hostname.replace("_", "-").replace(" ", "-")
-
-        project_dir = "recompute/server/vms/" + hostname + "/"
-        if os.path.exists(project_dir):
-            return jsonify(message="VM already exists"), 400
-
+        name = request.args.get("name")
+        name = name.replace("_", "-").replace(" ", "-")
         github_url = request.args.get("github_url")
         base_vm = request.args.get("base_vm")
-        relative_vagrantbox_path = create_vm(hostname, github_url, base_vm)
-        if relative_vagrantbox_path is None:
-            return jsonify(message="VM not created"), 500
+
+        if find_vagrantbox_relative_path(name) is not None:
+            return jsonify(message="VM already exists"), 400
+
+        success = Recomputation.create_vm(name, github_url, base_vm)
+        if success:
+            path = find_vagrantbox_relative_path(name)
+            return send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
         else:
-            return send_file(relative_vagrantbox_path,
-                             mimetype="application/vnd.previewsystems.box", as_attachment=True)
+            return jsonify(message="VM not created"), 500
 
     except KeyError:
         return jsonify(message="Invalid request"), 400
 
 
-@recompute_app.route("/download/<hostname>", methods=["GET"])
-def download(hostname):
-    """
-    Download the virtual machine
-    """
-
-    project_dir = "recompute/server/vms/" + hostname + "/"
-    vagrantbox_path = project_dir + hostname + ".box"
-    relative_vagrantbox_path = "vms/" + hostname + "/" + hostname + ".box"
-
-    if os.path.exists(project_dir) and os.path.isfile(vagrantbox_path):
-        return send_file(relative_vagrantbox_path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
+@recompute_app.route("/vagrantfile/<name>", methods=["GET"])
+def get_vagrantfile(name):
+    path = find_vagrantfile_relative_path(name)
+    if path is not None:
+        return send_file(path, mimetype="text/plain", as_attachment=True)
     else:
-        return jsonify(message="VM not found"), 400
+        return jsonify(message="Vagrantfile found"), 400
 
-@recompute_app.route("/vagrantfile/<hostname>", methods=["GET"])
-def get_vagrantfile(hostname):
-    """
-    """
 
-    pass
+@recompute_app.route("/vagrantbox/<name>", methods=["GET"])
+def get_vagrantbox(name):
+    path = find_vagrantbox_relative_path(name)
+    if path is not None:
+        return send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
+    else:
+        return jsonify(message="Vagrantbox not found"), 400

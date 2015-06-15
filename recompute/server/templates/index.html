@@ -1,81 +1,65 @@
 
 {% extends "layout.html" %}
 
-{% block container %}
+{% block jumbo %}
 
-<h1>Recompute</h1>
+    <div class="jumbotron">
+        <div class="container">
 
-<form action="{{ url_for('recompute') }}" method="get">
-    <span>NAME:</span><input type="text" name="hostname" value=""><br/>
-    <span>GitHub URL:</span><input type="text" name="github_url" value="" size="50"><br />
-    <span>BASE VM:</span>
-        <select name="base_vm">
-            {% for box in base_vagrantboxes %}
-                <option value="{{ box }}">{{ box }}</option>
-            {% endfor %}
-        </select><br/>
-    <input type="submit" value="Create">
-</form>
+            <h1>Recompute</h1>
 
-<h3>Virtual Machines</h3>
-<form action="" method="get">
-    NAME: <input type="text" name="hostname" value="">
-    <input type="submit" value="Search">
-</form>
+            <p>A demo</p>
 
-<ul id="vms">
-    {% for vm in vms %}
-        <li>
-            <span class="hostname">{{ vm.hostname }}</span>
-            <span class="id">ID</span>
-            <span class="latest">TAG</span>
-            <span class="version">VERSION</span>
-            <span class="date">DATE</span>
-            <button type="button" id="btn_history_{{ vm.hostname }}" class="history" onclick="history('{{ vm.hostname }}');">History</button>
-            <button type="button" class="play" onclick="play('{{ vm.hostname }}');">Play</button>
-            <button type="button" class="download" onclick="download('{{ vm.hostname }}');">Download</button>
+      </div>
+    </div><!-- /.jumbotron -->
 
-            <div id="history_view_{{ vm.hostname }}" class="history_view" style="display: none;">
-                <ul>
-                    <li>
-                        <span class="id">ID</span>
-                        <span class="latest">TAG</span>
-                        <span class="version">VERSION</span>
-                        <span class="date">DATE</span>
-                    </li>
-                </ul>
-            </div>
+{% endblock %}
 
-            <div id="terminal_{{ vm.hostname }}" class="terminal" style="display: none;">
-                <p>TERMINAL</p>
-            </div>
+{% block content %}
 
-        </li>
-    {% endfor %}
-</ul>
+    <div class="row">
+        <div class="col-md-12" style="margin-bottom: 100px; margin-top: 100px">
+            <form class="text-center" action="{{ url_for('recompute') }}" method="get">
+                <span>Name: </span><input type="text" name="name" value="" placeholder="Enter name">
+                <span>GitHub URL: </span><input type="text" name="github_url" value="" size="50" placeholder="Enter URL">
+                <span>Base VM: </span>
+                <select name="base_vm">
+                {% for box in base_vagrantboxes %}
+                    <option value="{{ box }}">{{ box }}</option>
+                {% endfor %}
+                </select>
+                <input type="submit" value="Create">
+            </form>
+        </div>
 
-<script>
-    function history(vm_hostname) {
-        view = $("#history_view_"+vm_hostname);
-        if (view.css("display") == "none") {
-            view.css("display", "inline");
-        } else {
-            view.css("display", "none");
-        }
-    }
-
-    function play(vm_hostname) {
-        view = $("#terminal_"+vm_hostname);
-        if (view.css("display") == "none") {
-            view.css("display", "inline");
-        } else {
-            view.css("display", "none");
-        }
-    }
-
-    function download(vm_hostname) {
-        window.location.href = "{{ url_for('download', hostname='') }}" + vm_hostname
-    }
-</script>
+        <div class="col-md-12">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>ID</th>
+                        <th>TAG</th>
+                        <th>VERSION</th>
+                        <th>DATE</th>
+                        <th>PLAY</th>
+                        <th>DOWNLOAD</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for software in latest_recomputation %}
+                    <tr>
+                          <td>{{ software.name }}</td>
+                          <td>ID xxx</td>
+                          <td>TAG xxx</td>
+                          <td>VERSION xxx</td>
+                          <td>DATE xxx</td>
+                        <td><a onclick="recomputation_play('{{ software.name }}');" class="btn info"><i class="fa fa-play-circle"></i> Play</a></td>
+                        <td><a onclick="recomputation_download('{{ software.name }}');" class="btn btn-success"><i class="fa fa-download"></i> Download</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 {% endblock %}

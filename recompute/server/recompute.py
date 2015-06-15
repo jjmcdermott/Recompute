@@ -4,110 +4,98 @@ import sys
 import requests
 import yaml
 from bs4 import BeautifulSoup
-from .config import vagrant_config_dict, language_version_dict
+from .config import default_vagrantfile_dict, default_language_version_dict
+from .file import get_software_absolute_path
 
 
-def _execute(command, cwd):
-    p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
-    lines_iter = iter(p.stdout.readline, b"")
-    for line in lines_iter:
-        sys.stdout.write(line)
-        sys.stdout.flush()
+class Recomputation:
+    def __init__(self):
+        pass
 
+    @staticmethod
+    def _execute(command, cwd):
+        p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
+        lines_iter = iter(p.stdout.readline, b"")
+        for line in lines_iter:
+            sys.stdout.write(line)
+            sys.stdout.flush()
 
-def _generate_vagrantbox(project_dir, hostname):
-    """
-    Package a Vagrantbox
-    """
+    @staticmethod
+    def _generate_vagrantbox(software_dir, name):
+        Recomputation._execute(["vagrant", "up", "--provision"], software_dir)
+        Recomputation._execute(["vagrant", "package", "--output", name + ".box"], software_dir)
 
-    vagrant_up = ["vagrant", "up", "--provision"]
-    _execute(vagrant_up, project_dir)
+    @staticmethod
+    def _generate_vagrantfile(name, github_url, software_lang_ver, base_vm, base_vagrantfile_path,
+                              software_vagrantfile_path):
+        with open(base_vagrantfile_path, "r") as vagrant_file:
+            vagrant_config = vagrant_file.read()
 
-    vagrant_package = ["vagrant", "package", "--output", hostname + ".box"]
-    _execute(vagrant_package, project_dir)
+        vagrant_config = vagrant_config.replace("<NAME>", name)
+        vagrant_config = vagrant_config.replace("<BOX>", base_vm)
+        vagrant_config = vagrant_config.replace("<VERSION>", software_lang_ver or "")
+        vagrant_config = vagrant_config.replace("<GITHUB_URL>", github_url)
+        vagrant_config = vagrant_config.replace("<GITHUB_REPO_NAME>", github_url.split("/")[-1])
 
+        with open(software_vagrantfile_path, "w") as vagrant_file:
+            vagrant_file.write("{0}".format(vagrant_config))
 
-def _generate_vagrantfile(hostname, github_url, language_version, base_vm, base_vagrantfile, new_vagrantfile_path):
-    """
-    Generate a Vagrantfile
-    """
+    @staticmethod
+    def _get_base_vagrantfile(language):
+        if language in default_vagrantfile_dict:
+            return default_vagrantfile_dict[language]
+        else:
+            return None
 
-    with open("recompute/server/configs/" + base_vagrantfile, "r") as vagrant_file:
-        vagrant_config = vagrant_file.read()
+    @staticmethod
+    def _get_software_language_version(software_lang, github_url):
+        github_user = github_url.split("/")[-2]
+        github_repo_name = github_url.split("/")[-1]
+        raw_travis_url = "https://raw.githubusercontent.com/" + github_user + "/" + github_repo_name + "/master/.travis.yml"
+        travis_script = requests.get(raw_travis_url)
+        if travis_script.status_code < 400:
+            travis_yaml = yaml.load(travis_script.text)
+            travis_language = travis_yaml["language"]
+            return travis_yaml[travis_language][-1]
+        elif software_lang in default_language_version_dict:
+            return default_language_version_dict[software_lang]
+        else:
+            return None
 
-    vagrant_config = vagrant_config.replace("<HOSTNAME>", hostname)
-    vagrant_config = vagrant_config.replace("<BOX>", base_vm)
-    vagrant_config = vagrant_config.replace("<VERSION>", language_version or "")
-    vagrant_config = vagrant_config.replace("<GITHUB_URL>", github_url)
-    vagrant_config = vagrant_config.replace("<GITHUB_REPO_NAME>", github_url.split("/")[-1])
+    @staticmethod
+    def _get_software_language(github_url):
+        response = requests.get(github_url)
+        soup = BeautifulSoup(response.text)
+        return soup.find("ol", attrs={"class": "repository-lang-stats-numbers"}).find("span", {"class": "lang"}).text
 
-    with open(new_vagrantfile_path, "w") as vagrant_file:
-        vagrant_file.write("{0}".format(vagrant_config))
+    @staticmethod
+    def create_vm(name, github_url, base_vm):
+        software_dir = get_software_absolute_path(name)
+        software_vagrantfile_path = software_dir + "Vagrantfile"
+        software_vagrantbox_path = software_dir + name + ".box"
 
+        print "Creating Project: {}...".format(name)
+        print "Directory @ {}".format(software_dir)
 
-def _get_base_vagrantfile(language):
-    """
-    Get the base Vagrantfile
-    """
+        os.makedirs(software_dir)
+        software_lang = Recomputation._get_software_language(github_url)
+        software_lang_ver = Recomputation._get_software_language_version(software_lang, github_url)
 
-    if language in vagrant_config_dict:
-        return vagrant_config_dict[language]
-    else:
-        return None
+        print "Language: {}, Version: {}".format(software_lang, software_lang_ver)
 
+        base_vagrantfile_path = Recomputation._get_base_vagrantfile(software_lang)
+        if base_vagrantfile_path is None:
+            print "Base Vagrantfile not found"
+            os.rmdir(software_dir)
+            return False
 
-def _get_language_version(language, github_url):
-    github_user = github_url.split("/")[-2]
-    github_repo_name = github_url.split("/")[-1]
-    raw_travis_url = "https://raw.githubusercontent.com/"+github_user+"/"+github_repo_name+"/master/.travis.yml"
-    travis_script = requests.get(raw_travis_url)
-    if travis_script.status_code < 400:
-        travis_yaml = yaml.load(travis_script.text)
-        travis_language = travis_yaml["language"]
-        return travis_yaml[travis_language][-1]
-    elif language in language_version_dict:
-        return language_version_dict[language]
-    else:
-        return None
+        Recomputation._generate_vagrantfile(
+            name, github_url, software_lang_ver, base_vm, base_vagrantfile_path, software_vagrantfile_path)
+        Recomputation._generate_vagrantbox(software_dir, name)
 
+        print "Base VM: {}".format(base_vm)
+        print "Base Vagrantfile: {}".format(base_vagrantfile_path)
+        print "Vagrantfile @ {}".format(software_vagrantfile_path)
+        print "Vagrantbox @ {}".format(software_vagrantbox_path)
 
-def _get_project_language(github_url):
-    response = requests.get(github_url)
-    soup = BeautifulSoup(response.text)
-    return soup.find("ol", attrs={"class": "repository-lang-stats-numbers"}).find("span", {"class": "lang"}).text
-
-
-def create_vm(hostname, github_url, base_vm):
-    """
-    Create a new vagrant box
-    """
-
-    project_dir = "recompute/server/vms/" + hostname + "/"
-    vagrantfile_path = project_dir + "Vagrantfile"
-    vagrantbox_path = project_dir + hostname + ".box"
-    relative_vagrantbox_path = "vms/" + hostname + "/" + hostname + ".box"
-
-    print "Creating Project: {}...".format(hostname)
-
-    os.makedirs(project_dir)
-    print "Directory @ {}".format(project_dir)
-
-    project_lang = _get_project_language(github_url)
-    language_version = _get_language_version(project_lang, github_url)
-    print "Language: {}, Version: {}".format(project_lang, language_version)
-
-    base_vagrant_file = _get_base_vagrantfile(project_lang)
-    if base_vagrant_file is None:
-        # clean up
-        os.rmdir(project_dir)
-        return None
-    print "Base VM: {}".format(base_vm)
-    print "Base Vagrantfile: {}".format(base_vagrant_file)
-
-    _generate_vagrantfile(hostname, github_url, language_version, base_vm, base_vagrant_file, vagrantfile_path)
-    print "Vagrantfile @ {}".format(vagrantfile_path)
-
-    _generate_vagrantbox(project_dir, hostname)
-    print "Vagrantbox @ {}".format(vagrantbox_path)
-
-    return relative_vagrantbox_path
+        return True
