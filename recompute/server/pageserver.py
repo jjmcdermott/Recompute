@@ -29,13 +29,18 @@ def get_index_page():
 
 @recompute_app.route("/software", methods=["GET"])
 def get_software_page():
-    return render_template("software.html", recomputation=_get_all_recomputation())
+    return render_template("software.html", all_recomputation=_get_all_recomputation())
 
 
 @recompute_app.route("/languages", methods=["GET"])
 def get_languages_page():
     return render_template("languages.html")
 
+
+@recompute_app.route("/recomputation/<string:name>", methods=["GET"])
+def get_single_recomputation_page(name):
+    recomputation = {"name": name}
+    return render_template("single_recomputation.html", recomputation=recomputation)
 
 @recompute_app.route("/tty", methods=["GET"])
 def get_tty():

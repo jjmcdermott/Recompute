@@ -27,14 +27,21 @@ recompute_server = HTTPServer(Application([
 ], debug=True))
 enable_pretty_logging()
 
+
 default_vagrantfile_dict = {
-    "Python": "server/languages/python/python.vconfig",
-    "NodeJS": "server/languages/nodejs/nodejs.vconfig",
-    "JavaScript": "server/languages/nodejs/nodejs.vconfig"
+    "python": "server/languages/python/python.vconfig",
+    "node_js": "server/languages/nodejs/nodejs.vconfig",
+    "cpp": "server/languages/cpp/cpp.vconfig",
+    "c": "server/languages/cpp/cpp.vconfig"
+}
+
+default_language_install_dict = {
+    "python": "pip install -r requirements.txt",
+    "node_js": "npm install"
 }
 
 default_language_version_dict = {
-    "Python": "2.7",
-    "NodeJS": "0.10",
-    "JavaScript": "0.10"
+    "python": "2.7",
+    "node_js": "0.10",
+    "cpp": ""
 }

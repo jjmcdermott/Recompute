@@ -1,8 +1,10 @@
 
 $rootScript = <<SCRIPT
   cd /home/vagrant
-  apt-get update
+  <ADD_APT_REPOSITORY>
+  apt-get update -y
   apt-get install -y git build-essential python<VERSION> python<VERSION>-dev python-pip python-virtualenv
+  <APT_GET_INSTALL>
 SCRIPT
 
 $userScript = <<SCRIPT
@@ -11,7 +13,8 @@ $userScript = <<SCRIPT
   cd <GITHUB_REPO_NAME>/
   virtualenv venv
   source venv/bin/activate
-  pip install -r requirements.txt
+  <INSTALL_SCRIPT>
+  <TEST_SCRIPT>
 SCRIPT
 
 Vagrant.configure("2") do |config|

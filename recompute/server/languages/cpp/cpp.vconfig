@@ -1,29 +1,30 @@
 
 $rootScript = <<SCRIPT
   cd /home/vagrant
-  apt-get update
-  apt-get install -y git build-essential python2.7 python2.7-dev python-pip python-virtualenv
+  <ADD_APT_REPOSITORY>
+  apt-get update -y
+  apt-get install -y git build-essential gcc clang make autotools cmake scons
+  <APT_GET_INSTALL>
 SCRIPT
 
 $userScript = <<SCRIPT
   cd /home/vagrant
-  git clone https://github.com/cjw-charleswu/Recompute
-  cd Recompute/
-  virtualenv venv
-  source venv/bin/activate
-  pip install -r requirements.txt
+  git clone <GITHUB_URL>
+  cd <GITHUB_REPO_NAME>/
+  <INSTALL_SCRIPT>
+  <TEST_SCRIPT>
 SCRIPT
 
 Vagrant.configure("2") do |config|
 
-  config.vm.box = "ubuntu/trusty64"
-  config.vm.hostname = "recompute.box"
+  config.vm.box = "<BOX>"
+  config.vm.hostname = "<HOSTNAME>.box"
 
   # Removes "stdin: is not a tty" annoyance as per
   # https://github.com/SocialGeeks/vagrant-openstack/commit/d3ea0695e64ea2e905a67c1b7e12d794a1a29b97
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
 
-  # Shell provisioning.
+  # Shell provisioning
   config.vm.provision "shell", inline: $rootScript
   config.vm.provision "shell", inline: $userScript, privileged: false
 

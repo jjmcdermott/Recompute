@@ -1,4 +1,3 @@
-import os
 from flask import request, jsonify, send_file
 from .config import recompute_app
 from .recompute import Recomputation

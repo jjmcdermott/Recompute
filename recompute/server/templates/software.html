@@ -13,7 +13,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Name</th>
+                        <th>NAME</th>
                         <th>ID</th>
                         <th>TAG</th>
                         <th>VERSION</th>
@@ -23,15 +23,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for software in recomputation %}
+                {% for recomputation in all_recomputation %}
                     <tr>
-                        <td>{{ software.name }}</td>
+                        <td><a href="{{ url_for('get_single_recomputation_page', name=recomputation.name) }}">{{ recomputation.name }}</a></td>
                         <td>ID xxx</td>
                         <td>TAG xxx</td>
                         <td>VERSION xxx</td>
                         <td>DATE xxx</td>
-                        <td><a onclick="recomputation_play('{{ software.name }}');" class="btn info"><i class="fa fa-play-circle"></i> Play</a></td>
-                        <td><a onclick="recomputation_download('{{ software.name }}');" class="btn btn-success"><i class="fa fa-download"></i> Download</a></td>
+                        <td><a onclick="recomputation_play('{{ recomputation.name }}');" class="btn info"><i class="fa fa-play-circle"></i> Play</a></td>
+                        <td><a onclick="recomputation_download('{{ recomputation.name }}');" class="btn btn-success"><i class="fa fa-download"></i> Download</a></td>
                     </tr>
                 {% endfor %}
                 </tbody>
