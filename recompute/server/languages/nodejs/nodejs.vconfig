@@ -12,8 +12,8 @@ $userScript = <<SCRIPT
   curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
   echo "source /home/vagrant/.nvm/nvm.sh" >> /home/vagrant/.profile
   source /home/vagrant/.profile
-  nvm install <VERSION>
-  nvm alias default <VERSION>
+  nvm install <LANG_VERSION>
+  nvm alias default <LANG_VERSION>
   echo "nvm: $(nvm --version)"
   echo "node: $(node --version)"
   echo "npm: $(npm --version)"

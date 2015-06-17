@@ -29,10 +29,10 @@ enable_pretty_logging()
 
 
 default_vagrantfile_dict = {
-    "python": "server/languages/python/python.vconfig",
-    "node_js": "server/languages/nodejs/nodejs.vconfig",
-    "cpp": "server/languages/cpp/cpp.vconfig",
-    "c": "server/languages/cpp/cpp.vconfig"
+    "python": "recompute/server/languages/python/python.vconfig",
+    "node_js": "recompute/server/languages/nodejs/nodejs.vconfig",
+    "cpp": "recompute/server/languages/cpp/cpp.vconfig",
+    "c": "recompute/server/languages/cpp/cpp.vconfig"
 }
 
 default_language_install_dict = {

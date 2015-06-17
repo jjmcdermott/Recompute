@@ -26,16 +26,16 @@ class Recomputation:
         Recomputation._execute(["vagrant", "package", "--output", name + ".box"], software_dir)
 
     @staticmethod
-    def _generate_vagrantfile(name, github_url, software_lang_ver, base_vm, build_details, base_vagrantfile_path,
-                              software_vagrantfile_path):
+    def _generate_vagrantfile(build_details, base_vagrantfile_path, software_vagrantfile_path):
+
         with open(base_vagrantfile_path, "r") as vagrant_file:
             vagrant_config = vagrant_file.read()
 
-        vagrant_config = vagrant_config.replace("<HOSTNAME>", name)
-        vagrant_config = vagrant_config.replace("<BOX>", base_vm)
-        vagrant_config = vagrant_config.replace("<VERSION>", software_lang_ver)
-        vagrant_config = vagrant_config.replace("<GITHUB_URL>", github_url)
-        vagrant_config = vagrant_config.replace("<GITHUB_REPO_NAME>", github_url.split("/")[-1])
+        vagrant_config = vagrant_config.replace("<HOSTNAME>", build_details["HOSTNAME"])
+        vagrant_config = vagrant_config.replace("<BOX>", build_details["BOX"])
+        vagrant_config = vagrant_config.replace("<LANG_VERSION>", build_details["LANG_VERSION"])
+        vagrant_config = vagrant_config.replace("<GITHUB_URL>", build_details["GITHUB_URL"])
+        vagrant_config = vagrant_config.replace("<GITHUB_REPO_NAME>", build_details["GITHUB_REPO_NAME"])
         vagrant_config = vagrant_config.replace("<ADD_APT_REPOSITORY>", build_details["ADD_APT_REPOSITORY"])
         vagrant_config = vagrant_config.replace("<APT_GET_INSTALL>", build_details["APT_GET_INSTALL"])
         vagrant_config = vagrant_config.replace("<INSTALL_SCRIPT>", build_details["INSTALL_SCRIPT"])
@@ -59,42 +59,37 @@ class Recomputation:
         scripts = []
 
         if travis_script is not None:
-            travis_before_install = travis_script["before_install"]
-            if travis_before_install is not None:
+            if "before_install" in travis_script:
+                travis_before_install = travis_script["before_install"]
                 # ADD_APT_REPOSITORIES
-                add_apt_packages_cmds = [cmd for cmd in travis_before_install if "add-apt-repository" in cmd]
-                print add_apt_packages_cmds
-                for cmd in add_apt_packages_cmds:
-                    repositories = [phrase for phrase in cmd.split(" ") if phrase.startswith("ppa:")]
-                    add_apt_repositories.append(repositories)
+                for add_apt_repo in [line for line in travis_before_install if "add-apt-repository" in line]:
+                    repositories = [phrase for phrase in add_apt_repo.split(" ") if phrase.startswith("ppa:")]
+                    add_apt_repositories.extend(repositories)
+
                 # APT-GET INSTALL
-                apt_get_install_cms = [cmd for cmd in travis_before_install if "apt-get install" in cmd]
-                print apt_get_install_cms
-                for cmd in apt_get_install_cms:
-                    packages = [phrase for phrase in cmd.split(" ") if phrase not in ["sudo", "apt-get", "install", "-y"]]
-                    apt_packages.append(packages)
+                for apt_get_install in [line for line in travis_before_install if "apt-get install" in line]:
+                    packages = [phrase for phrase in apt_get_install.split(" ") if
+                                phrase not in ["sudo", "apt-get", "install", "-y"]]
+                    apt_packages.extend(packages)
 
             # APT-GET INSTALL
-            travis_apt_packages = travis_script["addons"]["apt_packages"]
-            if travis_apt_packages is not None:
-                apt_packages.append(travis_apt_packages)
+            if "addons" in travis_script and "apt_packages" in travis_script["addons"]:
+                apt_packages.extend(travis_script["addons"]["apt_packages"])
 
             # INSTALL
-            travis_install = travis_script["install"]
-            if travis_install is not None:
-                installs.append(travis_install)
+            if "install" in travis_script:
+                installs.extend(travis_script["install"])
 
             # SCRIPT
-            travis_script = travis_script["script"]
-            if travis_script is not None:
-                scripts.append(travis_script)
+            if "script" in travis_script:
+                scripts.extend(travis_script["script"])
 
         else:
-            installs = default_language_install_dict[software_lang]
+            installs.append(default_language_install_dict[software_lang])
 
         return {
             "ADD_APT_REPOSITORY": "\n".join(["add-apt-repository -y " + repo for repo in add_apt_repositories]),
-            "APT_GET_INSTALL": "apt-get install -y " + " ".join(apt_packages),
+            "APT_GET_INSTALL": "apt-get install -y " + " ".join(apt_packages) + "\n",
             "INSTALL_SCRIPT": "\n".join(installs),
             "TEST_SCRIPT": "\n".join(scripts)
         }
@@ -120,9 +115,9 @@ class Recomputation:
 
     @staticmethod
     def _get_travis_script(github_url):
-        github_user = github_url.split("/")[-2]
-        github_repo_name = github_url.split("/")[-1]
-        raw_travis_url = "https://raw.githubusercontent.com/" + github_user + "/" + github_repo_name + "/master/.travis.yml"
+        user = github_url.split("/")[-2]
+        repo = github_url.split("/")[-1]
+        raw_travis_url = "https://raw.githubusercontent.com/" + user + "/" + repo + "/master/.travis.yml"
         travis_script = requests.get(raw_travis_url)
         if travis_script.status_code < 400:
             return yaml.load(travis_script.text)
@@ -135,14 +130,13 @@ class Recomputation:
         software_vagrantfile_path = software_dir + "Vagrantfile"
         software_vagrantbox_path = software_dir + name + ".box"
 
-        print "Creating Project: {}...".format(name)
-        print "Directory @ {}".format(software_dir)
-
         os.makedirs(software_dir)
         travis_script = Recomputation._get_travis_script(github_url)
         software_lang = Recomputation._get_software_language(github_url, travis_script)
-        software_lang_ver = Recomputation._get_software_language_version(software_lang, github_url)
+        software_lang_ver = Recomputation._get_software_language_version(software_lang, travis_script)
 
+        print "Creating Project: {}...".format(name)
+        print "Directory @ {}".format(software_dir)
         print "Language: {}, Version: {}".format(software_lang, software_lang_ver)
 
         base_vagrantfile_path = Recomputation._get_base_vagrantfile(software_lang)
@@ -152,8 +146,13 @@ class Recomputation:
             return False
 
         build_details = Recomputation._get_build_details(software_lang, travis_script)
-        Recomputation._generate_vagrantfile(
-            name, github_url, software_lang_ver, base_vm, base_vagrantfile_path, software_vagrantfile_path)
+        build_details["HOSTNAME"] = name
+        build_details["BOX"] = base_vm
+        build_details["LANG_VERSION"] = software_lang_ver
+        build_details["GITHUB_URL"] = github_url
+        build_details["GITHUB_REPO_NAME"] = github_url.split("/")[-1]
+
+        Recomputation._generate_vagrantfile(build_details, base_vagrantfile_path, software_vagrantfile_path)
         Recomputation._generate_vagrantbox(software_dir, name)
 
         print "Base VM: {}".format(base_vm)
