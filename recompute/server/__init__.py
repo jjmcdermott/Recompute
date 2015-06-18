@@ -8,6 +8,12 @@ from . import recompute
 from . import file
 
 
+def _update_base_vagrantboxes():
+    pass
+
+def _update_vagrantboxes():
+    pass
+
 def run(port):
     config.recompute_server.listen(port)
     IOLoop.instance().start()

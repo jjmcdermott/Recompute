@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+import shutil
 import requests
 import yaml
 from bs4 import BeautifulSoup
@@ -19,11 +20,23 @@ class Recomputation:
         for line in lines_iter:
             sys.stdout.write(line)
             sys.stdout.flush()
+        p.communicate()
+        rcode = p.returncode
+        if rcode == 0:
+            return True
+        else:
+            return False
 
     @staticmethod
     def _generate_vagrantbox(software_dir, name):
-        Recomputation._execute(["vagrant", "up", "--provision"], software_dir)
-        Recomputation._execute(["vagrant", "package", "--output", name + ".box"], software_dir)
+        success = Recomputation._execute(["vagrant", "up", "--provision"], software_dir)
+        if not success:
+            return False
+        success = Recomputation._execute(["vagrant", "package", "--output", name + ".box"], software_dir)
+        if success:
+            return True
+        else:
+            return False
 
     @staticmethod
     def _generate_vagrantfile(build_details, base_vagrantfile_path, software_vagrantfile_path):
@@ -39,7 +52,7 @@ class Recomputation:
         vagrant_config = vagrant_config.replace("<ADD_APT_REPOSITORY>", build_details["ADD_APT_REPOSITORY"])
         vagrant_config = vagrant_config.replace("<APT_GET_INSTALL>", build_details["APT_GET_INSTALL"])
         vagrant_config = vagrant_config.replace("<INSTALL_SCRIPT>", build_details["INSTALL_SCRIPT"])
-        vagrant_config = vagrant_config.replace("<TEST_SCRIPT>", "")
+        vagrant_config = vagrant_config.replace("<TEST_SCRIPT>", build_details["TEST_SCRIPT"])
 
         with open(software_vagrantfile_path, "w") as vagrant_file:
             vagrant_file.write("{0}".format(vagrant_config))
@@ -53,51 +66,64 @@ class Recomputation:
 
     @staticmethod
     def _get_build_details(software_lang, travis_script):
-        add_apt_repositories = []
-        apt_packages = []
-        installs = []
-        scripts = []
+        add_apt_repositories = list()
+        apt_install_packages = list()
+        install_scripts = list()
+        envs = list()
+        test_scripts = list()
 
         if travis_script is not None:
             if "before_install" in travis_script:
                 travis_before_install = travis_script["before_install"]
                 # ADD_APT_REPOSITORIES
                 for add_apt_repo in [line for line in travis_before_install if "add-apt-repository" in line]:
-                    repositories = [phrase for phrase in add_apt_repo.split(" ") if phrase.startswith("ppa:")]
+                    repositories = [repo for repo in add_apt_repo.split(" ") if repo.startswith("ppa:")]
                     add_apt_repositories.extend(repositories)
 
                 # APT-GET INSTALL
                 for apt_get_install in [line for line in travis_before_install if "apt-get install" in line]:
-                    packages = [phrase for phrase in apt_get_install.split(" ") if
-                                phrase not in ["sudo", "apt-get", "install", "-y"]]
-                    apt_packages.extend(packages)
+                    packages = [p for p in apt_get_install.split(" ") if p not in ["sudo", "apt-get", "install", "-y"]]
+                    apt_install_packages.extend(packages)
 
             # APT-GET INSTALL
             if "addons" in travis_script and "apt_packages" in travis_script["addons"]:
-                apt_packages.extend(travis_script["addons"]["apt_packages"])
+                apt_install_packages.extend(travis_script["addons"]["apt_packages"])
 
             # INSTALL
             if "install" in travis_script:
-                installs.extend(travis_script["install"])
+                install_scripts.extend(travis_script["install"])
+
+            # ENV
+            if "env" in travis_script:
+                envs.extend(travis_script["env"])
 
             # SCRIPT
             if "script" in travis_script:
-                scripts.extend(travis_script["script"])
+                test_scripts.extend(travis_script["script"])
 
         else:
-            installs.append(default_language_install_dict[software_lang])
+            install_scripts.extend(default_language_install_dict[software_lang])
+
+        # clean up
+        final_test_scripts = list()
+        # add non-tests statements
+        final_test_scripts.extend([s for s in test_scripts if not any(env.split("=", 1)[0] in s for env in envs)])
+        # add real-tests statements, interpolated with different env variables
+        for env in envs:
+            final_test_scripts.append(env)
+            final_test_scripts.extend([s for s in test_scripts if env.split("=", 1)[0] in s])
 
         return {
             "ADD_APT_REPOSITORY": "\n".join(["add-apt-repository -y " + repo for repo in add_apt_repositories]),
-            "APT_GET_INSTALL": "apt-get install -y " + " ".join(apt_packages) + "\n",
-            "INSTALL_SCRIPT": "\n".join(installs),
-            "TEST_SCRIPT": "\n".join(scripts)
+            "APT_GET_INSTALL": "apt-get install -y " + " ".join(apt_install_packages) + "\n",
+            "INSTALL_SCRIPT": "\n  ".join(install_scripts),
+            "TEST_SCRIPT": "\n  ".join(final_test_scripts)
         }
 
     @staticmethod
     def _get_software_language_version(software_lang, travis_script):
         if travis_script is not None:
-            if travis_script[software_lang] is not None:
+            if software_lang in travis_script:
                 return travis_script[software_lang][-1]
         if software_lang in default_language_version_dict:
             return default_language_version_dict[software_lang]
@@ -153,11 +179,16 @@ class Recomputation:
         build_details["GITHUB_REPO_NAME"] = github_url.split("/")[-1]
 
         Recomputation._generate_vagrantfile(build_details, base_vagrantfile_path, software_vagrantfile_path)
-        Recomputation._generate_vagrantbox(software_dir, name)
+        success = Recomputation._generate_vagrantbox(software_dir, name)
 
         print "Base VM: {}".format(base_vm)
         print "Base Vagrantfile: {}".format(base_vagrantfile_path)
         print "Vagrantfile @ {}".format(software_vagrantfile_path)
         print "Vagrantbox @ {}".format(software_vagrantbox_path)
 
-        return True
+        if success:
+            return True
+        else:
+            "Vagrantbox not created"
+            shutil.rmtree(software_dir, ignore_errors=True)
+            return False

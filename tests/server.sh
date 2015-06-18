@@ -1,3 +1,3 @@
 #!/bin/bash
 
-printf "Testing...\n"
+printf "Testing...Done! :)\n"

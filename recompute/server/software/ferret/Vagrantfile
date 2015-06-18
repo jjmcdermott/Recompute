@@ -3,24 +3,31 @@ $rootScript = <<SCRIPT
   cd /home/vagrant
   apt-get update -y
   apt-get install -y software-properties-common python-software-properties
-  <ADD_APT_REPOSITORY>
+  add-apt-repository -y ppa:azumanga/gap
   apt-get update -y
   apt-get install -y git build-essential gcc clang make autotools-dev autoconf cmake scons
-  <APT_GET_INSTALL>
+  apt-get install -y gap-snapshot libgmp3-dev parallel valgrind
+
 SCRIPT
 
 $userScript = <<SCRIPT
   cd /home/vagrant
-  git clone <GITHUB_URL> -b master
-  cd <GITHUB_REPO_NAME>/
-  <INSTALL_SCRIPT>
-  <TEST_SCRIPT>
+  git clone https://github.com/gap-system/ferret -b master
+  cd ferret/
+  ./configure /opt/gap && make
+  mkdir gap-root && mkdir gap-root/pkg && ln -s $(pwd) gap-root/pkg/ferret
+  echo 'export GAPEXEC="$GAPEXEC -l '$(pwd)'/gap-root;"' >> ferret.vars
+  cat ferret.vars
+  MAKEFLAG="CHECK=1"
+  scripts/quick_test.sh ${MAKEFLAG}
+  MAKEFLAG="CHECK=0"
+  scripts/quick_test.sh ${MAKEFLAG}
 SCRIPT
 
 Vagrant.configure("2") do |config|
 
-  config.vm.box = "<BOX>"
-  config.vm.hostname = "<HOSTNAME>.box"
+  config.vm.box = "hashicorp/precise64"
+  config.vm.hostname = "ferret.box"
 
   # Removes "stdin: is not a tty" annoyance as per
   # https://github.com/SocialGeeks/vagrant-openstack/commit/d3ea0695e64ea2e905a67c1b7e12d794a1a29b97

@@ -1,6 +1,8 @@
 
 $rootScript = <<SCRIPT
   cd /home/vagrant
+  apt-get update -y
+  apt-get install -y software-properties-common python-software-properties
   <ADD_APT_REPOSITORY>
   apt-get update -y
   apt-get install -y git build-essential python<LANG_VERSION> python<LANG_VERSION>-dev python-pip python-virtualenv
@@ -9,7 +11,7 @@ SCRIPT
 
 $userScript = <<SCRIPT
   cd /home/vagrant
-  git clone <GITHUB_URL>
+  git clone <GITHUB_URL> -b master
   cd <GITHUB_REPO_NAME>/
   virtualenv venv
   source venv/bin/activate

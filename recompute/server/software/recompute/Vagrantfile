@@ -1,6 +1,8 @@
 
 $rootScript = <<SCRIPT
   cd /home/vagrant
+  apt-get update -y
+  apt-get install -y software-properties-common python-software-properties
   
   apt-get update -y
   apt-get install -y git build-essential python2.7 python2.7-dev python-pip python-virtualenv
@@ -10,12 +12,14 @@ SCRIPT
 
 $userScript = <<SCRIPT
   cd /home/vagrant
-  git clone https://github.com/cjw-charleswu/Recompute
+  git clone https://github.com/cjw-charleswu/Recompute -b master --single-branch
   cd Recompute/
   virtualenv venv
   source venv/bin/activate
   pip install -r requirements.txt
-  
+  cd tests/
+  chmod a+x server.sh
+  ./server.sh
 SCRIPT
 
 Vagrant.configure("2") do |config|

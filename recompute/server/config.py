@@ -43,5 +43,6 @@ default_language_install_dict = {
 default_language_version_dict = {
     "python": "2.7",
     "node_js": "0.10",
-    "cpp": ""
+    "cpp": "",
+    "c": ""
 }
