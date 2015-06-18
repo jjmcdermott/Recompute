@@ -12,6 +12,7 @@ recompute_app.debug = True
 
 recompute_container = WSGIContainer(recompute_app)
 
+
 class WebSocket(WebSocketHandler):
     def open(self):
         print "Socket opened."
@@ -27,22 +28,30 @@ recompute_server = HTTPServer(Application([
 ], debug=True))
 enable_pretty_logging()
 
+recomputation_count = 0
+
+default_recomputefile = "recompute/server/software/recomputation.xml"
 
 default_vagrantfile_dict = {
     "python": "recompute/server/languages/python/python.vconfig",
     "node_js": "recompute/server/languages/nodejs/nodejs.vconfig",
     "cpp": "recompute/server/languages/cpp/cpp.vconfig",
+    "c++": "recompute/server/languages/cpp/cpp.vconfig",
     "c": "recompute/server/languages/cpp/cpp.vconfig"
 }
 
 default_language_install_dict = {
     "python": "pip install -r requirements.txt",
-    "node_js": "npm install"
+    "node_js": "npm install",
+    "cpp": ["chmod +x configure", "./configure", "make", "sudo make install"],
+    "c++": ["chmod +x configure", "./configure", "make", "sudo make install"],
+    "c": ["chmod +x configure", "./configure", "make", "sudo make install"]
 }
 
 default_language_version_dict = {
     "python": "2.7",
     "node_js": "0.10",
     "cpp": "",
+    "c++": "",
     "c": ""
 }

@@ -1,14 +1,13 @@
-<vm>
+<recomputation>
     <id>ID</id>
-
-    <hostname>HOSTNAME</hostname>
-
+    <name>NAME</name>
     <releases>
         <release>
-            <id>ID</id>
             <tag>TAG</tag>
             <version>VERSION</version>
             <date>DATE</date>
+            <box>BOX</box>
+            <box_version>BOX_VERSION</box_version>
         </release>
     </releases>
-</vm>
+</recomputation>

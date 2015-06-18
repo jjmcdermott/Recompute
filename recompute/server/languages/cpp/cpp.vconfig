@@ -3,9 +3,9 @@ $rootScript = <<SCRIPT
   cd /home/vagrant
   apt-get update -y
   apt-get install -y software-properties-common python-software-properties
+  apt-get install -y git build-essential gcc clang make autotools-dev autoconf cmake scons
   <ADD_APT_REPOSITORY>
   apt-get update -y
-  apt-get install -y git build-essential gcc clang make autotools-dev autoconf cmake scons
   <APT_GET_INSTALL>
 SCRIPT
 
@@ -22,12 +22,18 @@ Vagrant.configure("2") do |config|
   config.vm.box = "<BOX>"
   config.vm.hostname = "<HOSTNAME>.box"
 
+  # more cpu and memory
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 2
+  end
+
   # Removes "stdin: is not a tty" annoyance as per
   # https://github.com/SocialGeeks/vagrant-openstack/commit/d3ea0695e64ea2e905a67c1b7e12d794a1a29b97
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
 
   # Shell provisioning
   config.vm.provision "shell", inline: $rootScript
-  config.vm.provision "shell", inline: $userScript, privileged: false
+  config.vm.provision "shell", inline: $userScript
 
 end

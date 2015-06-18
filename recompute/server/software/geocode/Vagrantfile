@@ -3,29 +3,31 @@ $rootScript = <<SCRIPT
   cd /home/vagrant
   apt-get update -y
   apt-get install -y software-properties-common python-software-properties
-  apt-get install -y git build-essential python<LANG_VERSION> python<LANG_VERSION>-dev python-pip python-virtualenv
-  <ADD_APT_REPOSITORY>
+  apt-get install -y git build-essential gcc clang make autotools-dev autoconf cmake scons
+  
   apt-get update -y
-  <APT_GET_INSTALL>
+  apt-get install -y 
+
 SCRIPT
 
 $userScript = <<SCRIPT
   cd /home/vagrant
-  git clone <GITHUB_URL> -b master
-  cd <GITHUB_REPO_NAME>/
-  virtualenv venv
-  source venv/bin/activate
-  <INSTALL_SCRIPT>
-  <TEST_SCRIPT>
+  git clone https://github.com/ampl/gecode -b master
+  cd gecode/
+  chmod +x configure
+  ./configure
+  make
+  sudo make install
+  
 SCRIPT
 
 Vagrant.configure("2") do |config|
 
-  config.vm.box = "<BOX>"
-  config.vm.hostname = "<HOSTNAME>.box"
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.hostname = "geocode.box"
 
+  # more cpu and memory
   config.vm.provider "virtualbox" do |v|
-    # more cpu and memory
     v.memory = 2048
     v.cpus = 2
   end
@@ -34,8 +36,8 @@ Vagrant.configure("2") do |config|
   # https://github.com/SocialGeeks/vagrant-openstack/commit/d3ea0695e64ea2e905a67c1b7e12d794a1a29b97
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
 
-  # Shell provisioning.
+  # Shell provisioning
   config.vm.provision "shell", inline: $rootScript
-  config.vm.provision "shell", inline: $userScript, privileged: false
+  config.vm.provision "shell", inline: $userScript
 
 end

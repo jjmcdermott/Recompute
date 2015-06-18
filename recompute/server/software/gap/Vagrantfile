@@ -1,0 +1,70 @@
+
+$rootScript = <<SCRIPT
+  cd /home/vagrant
+  apt-get update -y
+  apt-get install -y software-properties-common python-software-properties
+  
+  apt-get update -y
+  apt-get install -y git build-essential gcc clang make autotools-dev autoconf cmake scons
+  apt-get install -y libgmp3-dev texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-extra-utils texlive-fonts-recommended texlive-fonts-extra
+
+SCRIPT
+
+$userScript = <<SCRIPT
+  cd /home/vagrant
+  git clone https://github.com/gap-system/gap -b master
+  cd gap/
+  
+  ./configure --with-gmp=system
+  make
+  mkdir pkg
+  cd pkg
+  wget ftp://ftp.gap-system.org/pub/gap/gap47/tar.gz/packages/GAPDoc-1.5.1.tar.gz
+  wget ftp://ftp.gap-system.org/pub/gap/gap47/tar.gz/packages/autpgrp-1.5.tar.gz
+  wget ftp://ftp.gap-system.org/pub/gap/gap47/tar.gz/packages/atlasrep1r5p0.tar.gz
+  wget ftp://ftp.gap-system.org/pub/gap/gap47/tar.gz/packages/ctbllib-1r2p2.tar.gz
+  wget ftp://ftp.gap-system.org/pub/gap/gap47/tar.gz/packages/grpconst-2.3.tar.gz
+  wget ftp://ftp.gap-system.org/pub/gap/gap47/tar.gz/packages/irredsol-1r2n4.tar.gz
+  wget ftp://ftp.gap-system.org/pub/gap/gap47/tar.gz/packages/tomlib1r2p4.tar.gz
+  tar xvzf GAPDoc-1.5.1.tar.gz
+  tar xvzf autpgrp-1.5.tar.gz
+  tar xvzf atlasrep1r5p0.tar.gz
+  tar xvzf ctbllib-1r2p2.tar.gz
+  tar xvzf grpconst-2.3.tar.gz
+  tar xvzf irredsol-1r2n4.tar.gz
+  tar xvzf tomlib1r2p4.tar.gz
+  cd ..
+  TEST_SUITE="testinstall"
+  if [ $TEST_SUITE = 'makemanuals' ]; then make manuals ; cat doc/*/make_manuals.out ; fi
+  if [ $TEST_SUITE != 'makemanuals' ]; then echo "Read(\"tst/${TEST_SUITE}.g\"); quit;" | sh bin/gap.sh | tee testlog.txt | grep --colour=always -E "########> Diff|$"; cat testlog.txt | tail -n 2 | grep "total"; ( ! grep "########> Diff" testlog.txt ); fi
+  TEST_SUITE="testtravis"
+  if [ $TEST_SUITE = 'makemanuals' ]; then make manuals ; cat doc/*/make_manuals.out ; fi
+  if [ $TEST_SUITE != 'makemanuals' ]; then echo "Read(\"tst/${TEST_SUITE}.g\"); quit;" | sh bin/gap.sh | tee testlog.txt | grep --colour=always -E "########> Diff|$"; cat testlog.txt | tail -n 2 | grep "total"; ( ! grep "########> Diff" testlog.txt ); fi
+  TEST_SUITE="testbugfix"
+  if [ $TEST_SUITE = 'makemanuals' ]; then make manuals ; cat doc/*/make_manuals.out ; fi
+  if [ $TEST_SUITE != 'makemanuals' ]; then echo "Read(\"tst/${TEST_SUITE}.g\"); quit;" | sh bin/gap.sh | tee testlog.txt | grep --colour=always -E "########> Diff|$"; cat testlog.txt | tail -n 2 | grep "total"; ( ! grep "########> Diff" testlog.txt ); fi
+  TEST_SUITE="makemanuals"
+  if [ $TEST_SUITE = 'makemanuals' ]; then make manuals ; cat doc/*/make_manuals.out ; fi
+  if [ $TEST_SUITE != 'makemanuals' ]; then echo "Read(\"tst/${TEST_SUITE}.g\"); quit;" | sh bin/gap.sh | tee testlog.txt | grep --colour=always -E "########> Diff|$"; cat testlog.txt | tail -n 2 | grep "total"; ( ! grep "########> Diff" testlog.txt ); fi
+SCRIPT
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "hashicorp/precise64"
+  config.vm.hostname = "gap.box"
+
+  # more cpu and memory
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 2
+  end
+
+  # Removes "stdin: is not a tty" annoyance as per
+  # https://github.com/SocialGeeks/vagrant-openstack/commit/d3ea0695e64ea2e905a67c1b7e12d794a1a29b97
+  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
+
+  # Shell provisioning
+  config.vm.provision "shell", inline: $rootScript
+  config.vm.provision "shell", inline: $userScript, privileged: false
+
+end

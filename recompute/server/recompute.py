@@ -5,8 +5,9 @@ import shutil
 import requests
 import yaml
 from bs4 import BeautifulSoup
-from .config import default_vagrantfile_dict, default_language_version_dict, default_language_install_dict
-from .file import get_software_absolute_path
+from xml.etree import ElementTree
+from . import config
+from . import file
 
 
 class Recomputation:
@@ -28,11 +29,17 @@ class Recomputation:
             return False
 
     @staticmethod
+    def _generate_recomputefile(build_details, base_recomputefile_path, software_recomputefile_path):
+        recomputefile = ElementTree.parse(base_recomputefile_path)
+        root = recomputefile.getroot()
+        root["id"].text = config.recomputation_count
+
+    @staticmethod
     def _generate_vagrantbox(software_dir, name):
         success = Recomputation._execute(["vagrant", "up", "--provision"], software_dir)
-        if not success:
-            return False
-        success = Recomputation._execute(["vagrant", "package", "--output", name + ".box"], software_dir)
+        if success:
+            success = Recomputation._execute(["vagrant", "package", "--output", name + ".box"], software_dir)
+        Recomputation._execute(["vagrant", "halt"], software_dir)
         if success:
             return True
         else:
@@ -54,13 +61,15 @@ class Recomputation:
         vagrant_config = vagrant_config.replace("<INSTALL_SCRIPT>", build_details["INSTALL_SCRIPT"])
         vagrant_config = vagrant_config.replace("<TEST_SCRIPT>", build_details["TEST_SCRIPT"])
 
+        print vagrant_config
+
         with open(software_vagrantfile_path, "w") as vagrant_file:
             vagrant_file.write("{0}".format(vagrant_config))
 
     @staticmethod
     def _get_base_vagrantfile(language):
-        if language in default_vagrantfile_dict:
-            return default_vagrantfile_dict[language]
+        if language in config.default_vagrantfile_dict:
+            return config.default_vagrantfile_dict[language]
         else:
             return None
 
@@ -102,13 +111,13 @@ class Recomputation:
                 test_scripts.extend(travis_script["script"])
 
         else:
-            install_scripts.extend(default_language_install_dict[software_lang])
+            install_scripts.extend(config.default_language_install_dict[software_lang])
 
-        # clean up
+        # CLEAN UP
         final_test_scripts = list()
-        # add non-tests statements
+        # NON-TEST statements
         final_test_scripts.extend([s for s in test_scripts if not any(env.split("=", 1)[0] in s for env in envs)])
-        # add real-tests statements, interpolated with different env variables
+        # TEST statements, interpolated with different env variables
         for env in envs:
             final_test_scripts.append(env)
             final_test_scripts.extend([s for s in test_scripts if env.split("=", 1)[0] in s])
@@ -125,8 +134,8 @@ class Recomputation:
         if travis_script is not None:
             if software_lang in travis_script:
                 return travis_script[software_lang][-1]
-        if software_lang in default_language_version_dict:
-            return default_language_version_dict[software_lang]
+        if software_lang in config.default_language_version_dict:
+            return config.default_language_version_dict[software_lang]
         else:
             return None
 
@@ -152,9 +161,10 @@ class Recomputation:
 
     @staticmethod
     def create_vm(name, github_url, base_vm):
-        software_dir = get_software_absolute_path(name)
+        software_dir = file.get_software_absolute_path(name)
         software_vagrantfile_path = software_dir + "Vagrantfile"
         software_vagrantbox_path = software_dir + name + ".box"
+        software_recomputefile_path = software_dir + "recomputation.xml"
 
         os.makedirs(software_dir)
         travis_script = Recomputation._get_travis_script(github_url)
@@ -180,15 +190,18 @@ class Recomputation:
 
         Recomputation._generate_vagrantfile(build_details, base_vagrantfile_path, software_vagrantfile_path)
         success = Recomputation._generate_vagrantbox(software_dir, name)
+        if not success:
+            "Vagrantbox not created"
+            shutil.rmtree(software_dir, ignore_errors=True)
+            return False
+
+        config.recomputation_count += 1
+        # Recomputation._generate_recomputefile(build_details, config.default_recomputefile, software_recomputefile_path)
 
         print "Base VM: {}".format(base_vm)
         print "Base Vagrantfile: {}".format(base_vagrantfile_path)
         print "Vagrantfile @ {}".format(software_vagrantfile_path)
         print "Vagrantbox @ {}".format(software_vagrantbox_path)
+        print "Recomputefile @ {}".format(software_recomputefile_path)
 
-        if success:
-            return True
-        else:
-            "Vagrantbox not created"
-            shutil.rmtree(software_dir, ignore_errors=True)
-            return False
+        return True
