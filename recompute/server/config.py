@@ -28,8 +28,6 @@ recompute_server = HTTPServer(Application([
 ], debug=True))
 enable_pretty_logging()
 
-recomputation_count = 0
-
 default_recomputefile = "recompute/server/software/recomputation.xml"
 
 default_vagrantfile_dict = {

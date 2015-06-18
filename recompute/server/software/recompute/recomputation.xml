@@ -1,6 +1,6 @@
 <recomputation>
-    <id>ID</id>
-    <name>NAME</name>
+    <id>0</id>
+    <name>recompute</name>
     <releases>
         <release>
             <tag>TAG</tag>

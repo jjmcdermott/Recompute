@@ -10,7 +10,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <table class="table table-hover">
+            <table class="table table-striped table-hover">
                 <thead>
                     <tr>
                         <th>NAME</th>
@@ -26,52 +26,16 @@
                 {% for recomputation in all_recomputation %}
                     <tr>
                         <td><a href="{{ url_for('get_single_recomputation_page', name=recomputation.name) }}">{{ recomputation.name }}</a></td>
-                        <td>ID xxx</td>
-                        <td>TAG xxx</td>
-                        <td>VERSION xxx</td>
-                        <td>DATE xxx</td>
-                        <td><a onclick="recomputation_play('{{ recomputation.name }}');" class="btn info"><i class="fa fa-play-circle"></i> Play</a></td>
-                        <td><a onclick="recomputation_download('{{ recomputation.name }}');" class="btn btn-success"><i class="fa fa-download"></i> Download</a></td>
+                        <td>{{ recomputation.id }}</td>
+                        <td>{{ recomputation.tag }}</td>
+                        <td>{{ recomputation.version }}</td>
+                        <td>{{ recomputation.date }}</td>
+                        <td><a onclick="recomputation_play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
+                        <td><a onclick="recomputation_download('{{ recomputation.name }}');"><i class="fa fa-download"></i> Download</a></td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-
-
-
-
-    <!--<ul id="software">-->
-        <!--{% set z_index = -1000 %}-->
-        <!--{% for software in recomputation %}-->
-            <!--<li id="software_{{ software.name }}" style="z-index: {{ z_index }}">-->
-                <!--<span class="name">{{ software.name }}</span>-->
-                <!--<span class="id">ID</span>-->
-                <!--<span class="latest">TAG</span>-->
-                <!--<span class="version">VERSION</span>-->
-                <!--<span class="date">DATE</span>-->
-                <!--<button type="button" id="btn_history_{{ software.name }}" class="history" onclick="recomputation_history('{{ software.name }}');">History</button>-->
-                <!--<button type="button" class="play" onclick="recomputation_play('{{ software.name }}');">Play</button>-->
-                <!--<button type="button" class="download" onclick="recomputation_download('{{software.name }}');">Download</button>-->
-
-                <!--<div id="history_{{ software.name }}" class="history" style="display: none;">-->
-                    <!--<ul>-->
-                        <!--<li>-->
-                            <!--<span class="id">ID</span>-->
-                            <!--<span class="latest">TAG</span>-->
-                            <!--<span class="version">VERSION</span>-->
-                            <!--<span class="date">DATE</span>-->
-                        <!--</li>-->
-                    <!--</ul>-->
-                <!--</div>-->
-
-                <!--<div id="terminal_{{ software.name }}" class="window" style="display: none;">-->
-
-                <!--</div>-->
-            <!--</li>-->
-            <!--{% set z_index = z_index+1 %}-->
-        <!--{% endfor %}-->
-    <!--</ul>-->
-
 {% endblock %}

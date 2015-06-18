@@ -195,7 +195,6 @@ class Recomputation:
             shutil.rmtree(software_dir, ignore_errors=True)
             return False
 
-        config.recomputation_count += 1
         # Recomputation._generate_recomputefile(build_details, config.default_recomputefile, software_recomputefile_path)
 
         print "Base VM: {}".format(base_vm)
