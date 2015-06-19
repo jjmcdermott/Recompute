@@ -24,7 +24,7 @@ in a few weeks, and try again.
 
 ## Support
 
-It currently supports projects written in C, C++, Python, or Node.js
+It currently supports projects written in C, C++, Python, and Node.js
 
 ## Future work
 

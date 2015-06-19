@@ -32,7 +32,9 @@ class Recomputation:
     def _generate_recomputefile(build_details, base_recomputefile_path, software_recomputefile_path):
         recomputefile = ElementTree.parse(base_recomputefile_path)
         root = recomputefile.getroot()
-        root["id"].text = config.recomputation_count
+        root.find("id").text = str(file.get_recomputation_count())
+        root.find("name").text = str(build_details["NAME"])
+        recomputefile.write(software_recomputefile_path)
 
     @staticmethod
     def _generate_vagrantbox(software_dir, name):
@@ -51,7 +53,7 @@ class Recomputation:
         with open(base_vagrantfile_path, "r") as vagrant_file:
             vagrant_config = vagrant_file.read()
 
-        vagrant_config = vagrant_config.replace("<HOSTNAME>", build_details["HOSTNAME"])
+        vagrant_config = vagrant_config.replace("<HOSTNAME>", build_details["NAME"])
         vagrant_config = vagrant_config.replace("<BOX>", build_details["BOX"])
         vagrant_config = vagrant_config.replace("<LANG_VERSION>", build_details["LANG_VERSION"])
         vagrant_config = vagrant_config.replace("<GITHUB_URL>", build_details["GITHUB_URL"])
@@ -182,7 +184,7 @@ class Recomputation:
             return False
 
         build_details = Recomputation._get_build_details(software_lang, travis_script)
-        build_details["HOSTNAME"] = name
+        build_details["NAME"] = name
         build_details["BOX"] = base_vm
         build_details["LANG_VERSION"] = software_lang_ver
         build_details["GITHUB_URL"] = github_url
@@ -197,7 +199,7 @@ class Recomputation:
             shutil.rmtree(software_dir, ignore_errors=True)
             return False
 
-        # Recomputation._generate_recomputefile(build_details, config.default_recomputefile, software_recomputefile_path)
+        Recomputation._generate_recomputefile(build_details, config.default_recomputefile, software_recomputefile_path)
 
         print "Base VM: {}".format(base_vm)
         print "Base Vagrantfile: {}".format(base_vagrantfile_path)

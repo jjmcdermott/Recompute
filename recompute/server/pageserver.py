@@ -17,7 +17,7 @@ def _get_base_vagrantboxes():
 
 def _get_latest_recomputation():
     recomputation_list = _get_all_recomputation()
-    return recomputation_list[:5]
+    return recomputation_list[-5:]
 
 
 def _get_all_recomputation():
