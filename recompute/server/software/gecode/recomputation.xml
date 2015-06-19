@@ -1,0 +1,13 @@
+<recomputation>
+    <id>1</id>
+    <name>gecode</name>
+    <releases>
+        <release>
+            <tag>TAG</tag>
+            <version>VERSION</version>
+            <date>DATE</date>
+            <box>BOX</box>
+            <box_version>BOX_VERSION</box_version>
+        </release>
+    </releases>
+</recomputation>

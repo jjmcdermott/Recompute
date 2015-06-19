@@ -1,0 +1,13 @@
+<recomputation>
+    <id>3</id>
+    <name>ferret-2</name>
+    <releases>
+        <release>
+            <tag>TAG</tag>
+            <version>VERSION</version>
+            <date>DATE</date>
+            <box>BOX</box>
+            <box_version>BOX_VERSION</box_version>
+        </release>
+    </releases>
+</recomputation>
