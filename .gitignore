@@ -1,7 +1,7 @@
 # virtual boxes
 *.vagrant/
 *.box
-*software/*
+recompute/server/software/*
 !recompute/server/software/recomputation.xml
 
 # pycharm
