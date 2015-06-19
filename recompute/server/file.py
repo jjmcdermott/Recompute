@@ -36,7 +36,5 @@ def find_vagrantbox_relative_path(name):
 
 def get_recomputation_count():
     software_dir = get_software_absolute_dir()
-    count = 0
-    for root, dirs, files in os.walk(software_dir):
-        count += len(dirs)
+    count = len(next(os.walk(software_dir))[1])
     return count

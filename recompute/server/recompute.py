@@ -61,8 +61,6 @@ class Recomputation:
         vagrant_config = vagrant_config.replace("<INSTALL_SCRIPT>", build_details["INSTALL_SCRIPT"])
         vagrant_config = vagrant_config.replace("<TEST_SCRIPT>", build_details["TEST_SCRIPT"])
 
-        print vagrant_config
-
         with open(software_vagrantfile_path, "w") as vagrant_file:
             vagrant_file.write("{0}".format(vagrant_config))
 
@@ -104,7 +102,13 @@ class Recomputation:
 
             # ENV
             if "env" in travis_script:
-                envs.extend(travis_script["env"])
+                for env in travis_script["env"]:
+                    var = env.split("=", 1)[0]
+                    val = env.split("=", 1)[-1]
+                    if not val.startswith("\"") and not val.startswith("\""):
+                        envs.append(var + "=\"" + val + "\"")
+                    else:
+                        envs.append(env)
 
             # SCRIPT
             if "script" in travis_script:
