@@ -38,6 +38,7 @@ def get_vagrantfile(name):
 @recompute_app.route("/vagrantbox/<name>", methods=["GET"])
 def get_vagrantbox(name):
     path = file.find_vagrantbox_relative_path(name)
+    print path
     if path is not None:
         return send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
     else:

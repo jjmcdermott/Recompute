@@ -1,6 +1,7 @@
 # virtual boxes
 *.vagrant/
 *.box
+*software/*
 
 # pycharm
 *.idea/

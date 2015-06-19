@@ -187,8 +187,8 @@ class Recomputation:
         build_details["LANG_VERSION"] = software_lang_ver
         build_details["GITHUB_URL"] = github_url
         build_details["GITHUB_REPO_NAME"] = github_url.split("/")[-1]
-        build_details["MEMORY"] = config.default_memory
-        build_details["CPUS"] = config.default_cpus
+        build_details["MEMORY"] = str(config.default_memory)
+        build_details["CPUS"] = str(config.default_cpus)
 
         Recomputation._generate_vagrantfile(build_details, base_vagrantfile_path, software_vagrantfile_path)
         success = Recomputation._generate_vagrantbox(software_dir, name)
