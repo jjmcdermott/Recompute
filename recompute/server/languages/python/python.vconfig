@@ -26,8 +26,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider "virtualbox" do |v|
     # more cpu and memory
-    v.memory = 2048
-    v.cpus = 2
+    v.memory = <MEMORY>
+    v.cpus = <CPUS>
   end
 
   # Removes "stdin: is not a tty" annoyance as per

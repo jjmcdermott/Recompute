@@ -28,6 +28,9 @@ recompute_server = HTTPServer(Application([
 ], debug=True))
 enable_pretty_logging()
 
+default_memory = 4098
+default_cpus = 2
+
 default_recomputefile = "recompute/server/software/recomputation.xml"
 
 default_vagrantfile_dict = {

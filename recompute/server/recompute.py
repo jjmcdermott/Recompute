@@ -60,6 +60,8 @@ class Recomputation:
         vagrant_config = vagrant_config.replace("<APT_GET_INSTALL>", build_details["APT_GET_INSTALL"])
         vagrant_config = vagrant_config.replace("<INSTALL_SCRIPT>", build_details["INSTALL_SCRIPT"])
         vagrant_config = vagrant_config.replace("<TEST_SCRIPT>", build_details["TEST_SCRIPT"])
+        vagrant_config = vagrant_config.replace("<MEMORY>", build_details["MEMORY"])
+        vagrant_config = vagrant_config.replace("<CPUS>", build_details["CPUS"])
 
         with open(software_vagrantfile_path, "w") as vagrant_file:
             vagrant_file.write("{0}".format(vagrant_config))
@@ -102,13 +104,7 @@ class Recomputation:
 
             # ENV
             if "env" in travis_script:
-                for env in travis_script["env"]:
-                    var = env.split("=", 1)[0]
-                    val = env.split("=", 1)[-1]
-                    if not val.startswith("\"") and not val.startswith("\""):
-                        envs.append(var + "=\"" + val + "\"")
-                    else:
-                        envs.append(env)
+                envs.extend(travis_script["env"])
 
             # SCRIPT
             if "script" in travis_script:
@@ -123,7 +119,7 @@ class Recomputation:
         final_test_scripts.extend([s for s in test_scripts if not any(env.split("=", 1)[0] in s for env in envs)])
         # TEST statements, interpolated with different env variables
         for env in envs:
-            final_test_scripts.append(env)
+            final_test_scripts.append(str("export " + env))
             final_test_scripts.extend([s for s in test_scripts if env.split("=", 1)[0] in s])
 
         return {
@@ -191,6 +187,8 @@ class Recomputation:
         build_details["LANG_VERSION"] = software_lang_ver
         build_details["GITHUB_URL"] = github_url
         build_details["GITHUB_REPO_NAME"] = github_url.split("/")[-1]
+        build_details["MEMORY"] = config.default_memory
+        build_details["CPUS"] = config.default_cpus
 
         Recomputation._generate_vagrantfile(build_details, base_vagrantfile_path, software_vagrantfile_path)
         success = Recomputation._generate_vagrantbox(software_dir, name)

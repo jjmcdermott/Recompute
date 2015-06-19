@@ -34,16 +34,16 @@ $userScript = <<SCRIPT
   tar xvzf irredsol-1r2n4.tar.gz
   tar xvzf tomlib1r2p4.tar.gz
   cd ..
-  TEST_SUITE="testinstall"
+  export TEST_SUITE=testinstall
   if [ $TEST_SUITE = 'makemanuals' ]; then make manuals ; cat doc/*/make_manuals.out ; fi
   if [ $TEST_SUITE != 'makemanuals' ]; then echo "Read(\"tst/${TEST_SUITE}.g\"); quit;" | sh bin/gap.sh | tee testlog.txt | grep --colour=always -E "########> Diff|$"; cat testlog.txt | tail -n 2 | grep "total"; ( ! grep "########> Diff" testlog.txt ); fi
-  TEST_SUITE="testtravis"
+  export TEST_SUITE=testtravis
   if [ $TEST_SUITE = 'makemanuals' ]; then make manuals ; cat doc/*/make_manuals.out ; fi
   if [ $TEST_SUITE != 'makemanuals' ]; then echo "Read(\"tst/${TEST_SUITE}.g\"); quit;" | sh bin/gap.sh | tee testlog.txt | grep --colour=always -E "########> Diff|$"; cat testlog.txt | tail -n 2 | grep "total"; ( ! grep "########> Diff" testlog.txt ); fi
-  TEST_SUITE="testbugfix"
+  export TEST_SUITE=testbugfix
   if [ $TEST_SUITE = 'makemanuals' ]; then make manuals ; cat doc/*/make_manuals.out ; fi
   if [ $TEST_SUITE != 'makemanuals' ]; then echo "Read(\"tst/${TEST_SUITE}.g\"); quit;" | sh bin/gap.sh | tee testlog.txt | grep --colour=always -E "########> Diff|$"; cat testlog.txt | tail -n 2 | grep "total"; ( ! grep "########> Diff" testlog.txt ); fi
-  TEST_SUITE="makemanuals"
+  export TEST_SUITE=makemanuals
   if [ $TEST_SUITE = 'makemanuals' ]; then make manuals ; cat doc/*/make_manuals.out ; fi
   if [ $TEST_SUITE != 'makemanuals' ]; then echo "Read(\"tst/${TEST_SUITE}.g\"); quit;" | sh bin/gap.sh | tee testlog.txt | grep --colour=always -E "########> Diff|$"; cat testlog.txt | tail -n 2 | grep "total"; ( ! grep "########> Diff" testlog.txt ); fi
 SCRIPT
