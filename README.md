@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/cjw-charleswu/Recompute.svg?branch=master)](https://travis-ci.org/cjw-charleswu/Recompute)
 
-A web application for recomputating your projects and experiments. See [recomputation.org](http://www.recomputation.org/) for more details.
+A web application for recomputating your projects and experiments. See [recomputation.org](http://www.recomputation.org/) for more information.
 
 ## Running the server
 
@@ -12,7 +12,21 @@ A web application for recomputating your projects and experiments. See [recomput
 
 ## Dependencies
 
-The server is written in Python, using Tornado and Flask. See requirements.txt.
+The server is written in Python, using Tornado and Flask. You will need Python2.7x. We recommend running the server
+inside a virtual environment. Read [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/) for more information.
+
+You can install Python's virtual environment virtualenv with pip:
+
+- `$ pip install virtualenv`
+
+To create and use a virtual environment:
+
+- `$ virtualenv venv`
+- `$ source venv/bin/activate`
+
+To install all the dependencies:
+
+- `$ pip install -r requirements.txt`
 
 ## How it works
 
