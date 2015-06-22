@@ -1,3 +1,5 @@
+# software-properties-common and python-software-properties (put both in case, should do more tests)
+# for getting add-apt-repository command to work in ubuntu 12.04 and/or 14.04 (cannot accurately recall now)
 
 $rootScript = <<SCRIPT
   cd /home/vagrant

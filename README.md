@@ -14,6 +14,8 @@ A web application for recomputating your projects and experiments. See [recomput
 
 The server is written in Python, using Tornado and Flask. You will need Python2.7x. We recommend running the server
 inside a virtual environment. Read [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/) for more information.
+To run recomputation, you will need [VirtualBox](https://www.virtualbox.org/) and [Vagrant](https://www.vagrantup.com/).
+Vagrant is a nice tool, you will like it.
 
 You can install Python's virtual environment virtualenv with pip:
 
@@ -24,9 +26,17 @@ To create and use a virtual environment:
 - `$ virtualenv venv`
 - `$ source venv/bin/activate`
 
-To install all the dependencies:
+Inside the virtual environment, install all the dependencies:
 
-- `$ pip install -r requirements.txt`
+- `$(venv) pip install -r requirements.txt`
+
+To exit the virtual environment:
+
+- `$(venv) deactivate`
+
+Starting the virtual environment on Windows is slightly different:
+
+- `$ .\venv\Scripts\activate`
 
 ## How it works
 
@@ -36,9 +46,13 @@ reproduce the steps to its best ability. If there is no Travis script, guess the
 For example, try `./congigure && make && sudo make install' to build a C++ project. If everything fails, come back again
 in a few weeks, and try again.
 
-## Support
+## Tests
 
-It currently supports projects written in C, C++, Python, and Node.js
+Currently there are no tests to show that it actually works, but it does (to some extent).
+
+## Limitations
+
+The applications only supports projects written in C, C++, Python, and Node.js.
 
 ## Future work
 
