@@ -7,7 +7,8 @@ A web application for recomputating your projects and experiments. See [recomput
 ## What is recomputation?
 
 Recomputation is the idea that "If we can compute your experiment now, anyone can recompute it 20 years from now".
-Recompute means to build and run a piece of software.
+Recompute means to build and run a piece of software. We want to keep your software in a state that it
+can be discovered, ran, maintained, and tested by other people effortlessly.
 
 ## Running the server
 
