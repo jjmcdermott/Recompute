@@ -16,6 +16,21 @@ can be discovered, ran, maintained, and tested by other people effortlessly.
 
 ![recompute](https://raw.github.com/cjw-charleswu/Recompute/master/images/recompute.png)
 
+### Recomputation example: gecode
+
+Gecode is a constraint programming solver. To recompute the latest version of gecode from [Github](https://github.com/ampl/gecode),
+start the server. Open a web browser and type: `localhost:[port]`. You will see a front page similar to the image above,
+likely without any recomputation project listed. Enter a name, say `gecode`, and the url `https://github.com/ampl/gecode`.
+If you have all the dependencies installed, you should see that the server is creating your vm from the terminal where the server
+was started. The process should finish within 10 minutes. Then you will browser will download the Vagrant box containing gecode.
+This was tested on a host machine running Fedora21, using ubuntu/trusty64 as the base image for the virtual machine.
+
+To start the virtual machine, use Vagrant from the directory containing the Vagrant box:
+
+- `$ vagrant init`
+- `$ vagrant up`
+- `$ vagrant ssh`
+
 ## Dependencies
 
 The server is written in Python, using Tornado and Flask. You will need Python2.7x. We recommend running the server
@@ -32,17 +47,17 @@ To create and use a virtual environment:
 - `$ virtualenv venv`
 - `$ source venv/bin/activate`
 
-Inside the virtual environment, install all the dependencies:
-
-- `$(venv) pip install -r requirements.txt`
-
-To exit the virtual environment:
-
-- `$(venv) deactivate`
-
 Starting the virtual environment on Windows is slightly different:
 
 - `$ .\venv\Scripts\activate`
+
+Inside the virtual environment, install all the dependencies:
+
+- `(venv) $ pip install -r requirements.txt`
+
+To exit the virtual environment:
+
+- `(venv) $ deactivate`
 
 ## How it works
 
