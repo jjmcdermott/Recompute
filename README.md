@@ -4,6 +4,11 @@
 
 A web application for recomputating your projects and experiments. See [recomputation.org](http://www.recomputation.org/) for more information.
 
+## What is recomputation?
+
+Recomputation is the idea that "If we can compute your experiment now, anyone can recompute it 20 years from now".
+Recompute means to build and run a piece of software.
+
 ## Running the server
 
 - `$ python run.py --port=[port]`
