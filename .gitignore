@@ -10,17 +10,17 @@ recompute/server/software/*
 #venv
 *venv/
 
-#term.js
+#butterfly
+butterfly/
+*.crt
+*.key
+*.p12
+*.pyc
 node_modules/
-*.swp
-build/*
-.lock-wscript
-out/
-Makefile.gyp
-*.Makefile
-*.target.gyp.mk
-*.node
-example/*.log
+*.src.coffee
+*.map
+sass/scss
+*.egg-info/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

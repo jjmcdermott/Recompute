@@ -74,16 +74,7 @@ function apiStatus(data) {
     }
 
     function recomputation_play(name) {
-        var term = new Terminal({
-            cols: 80,
-            rows: 24,
-            useStyle: true,
-            screenKeys: true,
-            cursorBlink: false
-        });
-
-        term.open(document.getElementById("display"));
-        term.write('Hello world!\n');
+        window.open("https://localhost:57575/")
     }
 
     function recomputation_download(name) {
