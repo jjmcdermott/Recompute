@@ -1,6 +1,5 @@
 import os
 import requests
-import random
 from bs4 import BeautifulSoup
 from xml.etree import ElementTree
 from flask import render_template as render_template
@@ -51,12 +50,16 @@ def get_index_page():
 
 @recompute_app.route("/software", methods=["GET"])
 def get_software_page():
-    return render_template("software.html", all_recomputation=_get_all_recomputation())
+
+    from forms import FilterSoftwareForm
+    form = FilterSoftwareForm()
+
+    return render_template("software.html", filter_software_form=form, all_recomputation=_get_all_recomputation())
 
 
-@recompute_app.route("/languages", methods=["GET"])
+@recompute_app.route("/base_vms", methods=["GET"])
 def get_languages_page():
-    return render_template("languages.html")
+    return render_template("base_vms.html")
 
 
 @recompute_app.route("/recomputation/<string:name>", methods=["GET"])

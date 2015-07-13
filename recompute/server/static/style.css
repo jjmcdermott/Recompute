@@ -38,6 +38,10 @@ a {
     cursor: hand;
 }
 
+.top-buffer {
+    margin-top: 50px;
+}
+
 #footer {
     position: absolute;
     bottom: 0;

@@ -33,7 +33,7 @@
             <ul class="nav navbar-nav">
                 <li {% if request.path == "/" %} class="active"{% endif %}><a href="{{ url_for('get_index_page') }}">Home</a></li>
                 <li {% if request.path == "/software" %} class="active"{% endif %}><a href="{{ url_for('get_software_page') }}">Software</a></li>
-                <li {% if request.path == "/languages" %} class="active"{% endif %}><a href="{{ url_for('get_languages_page') }}">Languages</a></li>
+                <li {% if request.path == "/languages" %} class="active"{% endif %}><a href="{{ url_for('get_languages_page') }}">Base VMs</a></li>
             </ul>
         </div>
         <!--/.nav-collapse -->
