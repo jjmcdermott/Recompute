@@ -1,32 +1,22 @@
-from flask import Flask
-from tornado.wsgi import WSGIContainer
-from tornado.httpserver import HTTPServer
-from tornado.web import FallbackHandler, Application
-from tornado.websocket import WebSocketHandler
-from tornado.log import enable_pretty_logging
+import flask
+import tornado.wsgi
+import tornado.httpserver
+import tornado.web
+import tornado.log
+from . import play
 
-recompute_app = Flask(__name__)
+recompute_app = flask.Flask(__name__)
 recompute_app.config.from_object(__name__)
 recompute_app.config["SECRET_KEY"] = "SECRET!"
 recompute_app.debug = True
 
-recompute_container = WSGIContainer(recompute_app)
+recompute_container = tornado.wsgi.WSGIContainer(recompute_app)
 
-
-class WebSocket(WebSocketHandler):
-    def open(self):
-        print "Socket opened."
-
-    def on_message(self, message):
-        self.write_message("Received: " + message)
-        print "Received message: " + message
-
-
-recompute_server = HTTPServer(Application([
-    (r"/websocket/", WebSocket),
-    (r".*", FallbackHandler, dict(fallback=recompute_container))
+recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
+    (r"/ws/play/", play.PlayWebSocket),
+    (r".*", tornado.web.FallbackHandler, dict(fallback=recompute_container))
 ], debug=True))
-enable_pretty_logging()
+tornado.log.enable_pretty_logging()
 
 default_memory = 4098
 default_cpus = 2

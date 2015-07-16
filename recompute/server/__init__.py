@@ -1,9 +1,10 @@
-__all__ = ["config", "pageserver", "restful", "forms", "recompute", "file"]
+__all__ = ["config", "pageserver", "restful", "ws_play.py", "forms", "recompute", "file"]
 
 from tornado.ioloop import IOLoop
 from . import config
 from . import pageserver
 from . import restful
+from . import play
 from . import forms
 from . import recompute
 from . import file

@@ -1,5 +1,6 @@
 import os
 import requests
+import flask
 from bs4 import BeautifulSoup
 from xml.etree import ElementTree
 from flask import render_template as render_template
@@ -40,6 +41,12 @@ def _get_all_recomputation():
     return recomputation_list
 
 
+@recompute_app.route("/favicon.ico")
+def favicon():
+    return flask.send_from_directory(os.path.join(recompute_app.root_path, "static"), "favicon.ico",
+                                     mimetype="image/vnd.microsoft.icon")
+
+
 @recompute_app.route("/", methods=["GET"])
 def get_index_page():
     return render_template("index.html",
@@ -50,7 +57,6 @@ def get_index_page():
 
 @recompute_app.route("/software", methods=["GET"])
 def get_software_page():
-
     from forms import FilterSoftwareForm
     form = FilterSoftwareForm()
 

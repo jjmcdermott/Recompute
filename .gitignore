@@ -10,6 +10,9 @@ recompute/server/software/*
 #venv
 *venv/
 
+#tty.js
+tty.js/
+
 #butterfly
 butterfly/
 *.crt

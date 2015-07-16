@@ -7,11 +7,11 @@
 
     <title class="text-center">Recompute</title>
 
-    <!--<link rel="icon" href="../../favicon.ico">-->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
+    <link rel="stylesheet" href="{{url_for('static', filename='jquery-ui.min.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='bootstrap.min.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
-
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 </head>
 
@@ -59,26 +59,28 @@ function apiStatus(data) {
 
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script src="{{url_for('static', filename='jquery-ui.min.js')}}"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
 <script src="{{url_for('static', filename='term.js')}}"></script>
+<script src="{{url_for('static', filename='play.js')}}"></script>
 
 <script>
-    function recomputation_history(name) {
-        view = $("#history_"+name);
-        if (view.css("display") == "none") {
-            view.css("display", "inline");
-        } else {
-            view.css("display", "none");
+    function recomputation_play(vm) {
+        var protocol = "ws";
+        var ws_url = protocol + "://" + window.location.host + "/ws/play/";
+        var terminal_opts = {
+            cols: 80,
+            rows: 24,
+            useStyle: true,
+            screenKeys: true,
+            cursorBlink: true
         }
+        var terminal = make_terminal(document.body,terminal_opts, ws_url);
     }
 
-    function recomputation_play(name) {
-        window.open("https://localhost:57575/")
-    }
-
-    function recomputation_download(name) {
-        window.location.href = "{{ url_for('get_vagrantbox', name='') }}" + name
+    function recomputation_download(vm) {
+        window.location.href = "{{ url_for('get_vagrantbox', name='') }}" + vm
     }
 </script>
 

@@ -1,0 +1,3 @@
+pwd
+cd recompute
+ls
