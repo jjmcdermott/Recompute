@@ -4,49 +4,64 @@ import ptyprocess
 import tornado.web
 import tornado.websocket
 import tornado.ioloop
+from .config import recompute_app
 
 
 class PlayWebSocket(tornado.websocket.WebSocketHandler):
-    def initialize(self):
-        self.session = PlayWebSocketSession(self)
-        self.pty_fd = None
+    def __init__(self, application, request, **kwargs):
+        super(PlayWebSocket, self).__init__(application, request, **kwargs)
+        self.terminal = PlayTerminal(self)
+        self.recomputation_name = None
         self.log = logging.getLogger(__name__)
 
-    def open(self):
-        self.log.info("PlayWebSocket opened")
-        self.pty_fd = self.session.handle_open()
+    def open(self, recomputation_name):
+        self.recomputation_name = recomputation_name
+        self.terminal.handle_open(self.recomputation_name)
+        self.write_message("\x1b[31mRecomputation: {}!\x1b[m\r\n\n".format(self.recomputation_name))
+        self.log.info("Recomputation: {} opened @ {} ".format(self.recomputation_name, self.request.remote_ip))
 
     def on_message(self, message):
-        self.session.handle_message(message, self.pty_fd)
+        self.terminal.handle_message(message)
 
     def on_close(self):
-        pass
+        self.terminal.handle_close()
+        self.log.info("Recomputation: {} closed @ {} ".format(self.recomputation_name, self.request.remote_ip))
 
     def on_pty_read(self, data):
         self.write_message(data)
 
+    def on_pty_exit(self):
+        self.close()
 
-class PlayWebSocketSession(object):
+
+class PlayTerminal(object):
     def __init__(self, socket):
         self.socket = socket
-        self.ptys_by_fd = {}
+        self.pty = None
         self.ioloop = tornado.ioloop.IOLoop.instance()
 
-    def handle_open(self, opts=None, cols=80, rows=24):
-        argv = ["bash"]
+    def handle_open(self, recomputation_name):
+        argv = ["vagrant", "ssh"]
+        cwd = os.path.join(recompute_app.root_path, "software", recomputation_name, "test")
         env = os.environ.copy()
         env["TERM"] = "xterm"
-        env["COLUMNS"] = str(cols)
-        env["LINES"] = str(rows)
-        pty = ptyprocess.PtyProcessUnicode.spawn(argv, env=env)
-        self.ptys_by_fd[pty.fd] = pty
-        self.ioloop.add_handler(pty.fd, self.pty_read, self.ioloop.READ)
-        return pty.fd
+        self.pty = ptyprocess.PtyProcessUnicode.spawn(argv=argv, cwd=cwd, env=env, dimensions=(24, 80))
+        self.ioloop.add_handler(self.pty.fd, self.pty_read, self.ioloop.READ)
 
-    def handle_message(self, message, fd):
-        self.ptys_by_fd[fd].write(message)
+    def handle_close(self):
+        self.ioloop.remove_handler(self.pty.fd)
+        os.close(self.pty.fd)
+        self.pty.isalive()
 
-    def pty_read(self, fd, events=None):
-        pty = self.ptys_by_fd[fd]
-        data = pty.read(65536)
-        self.socket.on_pty_read(data)
+    def handle_message(self, message):
+        self.pty.write(message)
+
+    def handle_resize(self):
+        pass
+
+    def pty_read(self, fd, events):
+        try:
+            data = self.pty.read(65536)
+            self.socket.on_pty_read(data)
+        except EOFError:
+            self.socket.on_pty_exit()

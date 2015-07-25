@@ -67,11 +67,3 @@ a {
 table {
     word-wrap: break-word;
 }
-
-.terminal {
-    border: #000 solid 5px;
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 11px;
-    color: #f0f0f0;
-    background: #000;
-}

@@ -10,10 +10,6 @@ from . import recompute
 from . import file
 
 
-def _update_base_vagrantboxes():
-    pass
-
-
 def run(port):
     config.recomputation_count = file.get_recomputation_count()
     config.recompute_server.listen(port)

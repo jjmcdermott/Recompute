@@ -3,7 +3,6 @@ import tornado.wsgi
 import tornado.httpserver
 import tornado.web
 import tornado.log
-from . import play
 
 recompute_app = flask.Flask(__name__)
 recompute_app.config.from_object(__name__)
@@ -12,10 +11,17 @@ recompute_app.debug = True
 
 recompute_container = tornado.wsgi.WSGIContainer(recompute_app)
 
+settings = {
+    "auto_reload": True,
+    "debug": True
+}
+
+from . import play
 recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
-    (r"/ws/play/", play.PlayWebSocket),
+    (r"/ws/play/(.*)", play.PlayWebSocket),
     (r".*", tornado.web.FallbackHandler, dict(fallback=recompute_container))
-], debug=True))
+], **settings))
+
 tornado.log.enable_pretty_logging()
 
 default_memory = 4098

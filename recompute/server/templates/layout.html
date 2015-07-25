@@ -11,8 +11,10 @@
 
     <link rel="stylesheet" href="{{url_for('static', filename='jquery-ui.min.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='bootstrap.min.css')}}">
-    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='play.css')}}">
 </head>
 
 <body>
@@ -59,24 +61,23 @@ function apiStatus(data) {
 
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-<script src="{{url_for('static', filename='jquery-ui.min.js')}}"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
 <script src="{{url_for('static', filename='term.js')}}"></script>
 <script src="{{url_for('static', filename='play.js')}}"></script>
 
 <script>
     function recomputation_play(vm) {
-        var protocol = "ws";
-        var ws_url = protocol + "://" + window.location.host + "/ws/play/";
-        var terminal_opts = {
+        var ws_url = "ws://" + window.location.host + "/ws/play/" + vm;
+        var terminal_args = {
             cols: 80,
             rows: 24,
             useStyle: true,
             screenKeys: true,
             cursorBlink: true
         }
-        var terminal = make_terminal(document.body,terminal_opts, ws_url);
+        var terminal = make_play_window(document.body, terminal_args, ws_url, vm);
     }
 
     function recomputation_download(vm) {
