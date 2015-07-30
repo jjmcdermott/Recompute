@@ -6,6 +6,7 @@ import requests
 import yaml
 import datetime
 import bs4
+from . import config
 from . import file
 from . import recomputation
 from . import recompute_learn
@@ -41,10 +42,10 @@ def __make_vagrantbox(recomputation_data):
     success = __execute(["vagrant", "up", "--provision"], recomputation_dir)
     if success:
         __execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
-        __execute(["vagrant", "halt"], recomputation_dir)
+        __execute(["vagrant", "destroy"], recomputation_dir)
         __execute(["mkdir", "vm"], recomputation_dir)
         __execute(["cp", vagrantbox, "vm/"], recomputation_dir)
-        __execute(["vagrant", "init", recomputation_name], recomputation_vm_dir)
+        __execute(["vagrant", "init", vagrantbox], recomputation_vm_dir)
         __execute(["vagrant", "up"], recomputation_vm_dir)
 
     return success
@@ -199,7 +200,7 @@ def create_vm(name, github_url, box):
 
     os.makedirs(recomputation_dir)
 
-    recomputation_data = __get_recomputation_data(42, name, github_url, box)
+    recomputation_data = __get_recomputation_data(config.recomputations_count, name, github_url, box)
 
     language = recomputation_data.release.build.language
     vagrantfile_template = __get_vagrantfile_template(language)
@@ -216,5 +217,6 @@ def create_vm(name, github_url, box):
         return False, "Recomputation was unsuccessful."
 
     print "Recomputed: {} @ {}".format(name, recomputation_dir)
+    config.recomputations_count += 1
 
-    return True
+    return True, "Successful."

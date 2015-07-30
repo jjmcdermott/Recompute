@@ -69,6 +69,5 @@ def get_all_recomputations_data():
     return recomputations_data
 
 
-def get_recomputation_count():
-    count = len(next(os.walk(software_dir_absolute))[1])
-    return count
+def get_recomputations_count():
+    return len(next(os.walk(software_dir_absolute))[1])

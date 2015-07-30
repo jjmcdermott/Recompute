@@ -1,28 +1,28 @@
 import os
 import flask
-from .config import recompute_app
+from . import config
 from . import file
 
 
-@recompute_app.route("/favicon.ico")
+@config.recompute_app.route("/favicon.ico")
 def favicon():
     return flask.send_from_directory(os.path.join(recompute_app.root_path, "static"), "favicon.ico",
                                      mimetype="image/vnd.microsoft.icon")
 
 
-@recompute_app.route("/", methods=["GET"])
+@config.recompute_app.route("/", methods=["GET"])
 def index_page():
     from .forms import RecomputeForm
     recompute_form = RecomputeForm()
 
-    recomputation_count = file.get_recomputation_count()
+    recomputations_count = config.recomputations_count
     latest_recomputations = file.get_latest_recomputations_data()
 
-    return flask.render_template("index.html", recompute_form=recompute_form, recomputation_count=recomputation_count,
+    return flask.render_template("index.html", recompute_form=recompute_form, recomputations_count=recomputations_count,
                                  latest_recomputations=latest_recomputations)
 
 
-@recompute_app.route("/recomputations", methods=["GET", "POST"])
+@config.recompute_app.route("/recomputations", methods=["GET", "POST"])
 def recomputations_page():
     from .forms import FilterRecomputationsForm
     filter_recomputation_form = FilterRecomputationsForm()
@@ -40,7 +40,7 @@ def recomputations_page():
                                  all_recomputations=all_recomputations)
 
 
-@recompute_app.route("/recomputation/<string:name>", methods=["GET"])
+@config.recompute_app.route("/recomputation/<string:name>", methods=["GET"])
 def recomputation_page(name):
     if not file.exists_recomputation(name):
         return flask.render_template("recomputation404.html", name=name)
@@ -49,6 +49,6 @@ def recomputation_page(name):
         return flask.render_template("recomputation.html", recomputation=recomputation)
 
 
-@recompute_app.route("/boxes", methods=["GET"])
+@config.recompute_app.route("/boxes", methods=["GET"])
 def boxes_page():
     return flask.render_template("boxes.html")

@@ -9,12 +9,13 @@ recompute_app.config.from_object(__name__)
 recompute_app.config["SECRET_KEY"] = "SECRET!"
 recompute_app.debug = True
 
+from . import play
+
 recompute_container = tornado.wsgi.WSGIContainer(recompute_app)
 settings = {
     "auto_reload": True,
     "debug": True
 }
-from . import play
 recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
     (r"/ws/play/(.*)", play.PlayWebSocket),
     (r".*", tornado.web.FallbackHandler, dict(fallback=recompute_container))
