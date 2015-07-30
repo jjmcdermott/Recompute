@@ -2,11 +2,11 @@ default_memory = 4098
 default_cpus = 2
 
 vagrantfile_templates_dict = {
-    "python": "python/python.vagrantfile",
-    "node_js": "nodejs/nodejs.vagrantfile",
-    "cpp": "cpp/cpp.vagrantfile",
-    "c++": "cpp/cpp.vagrantfile",
-    "c": "cpp/cpp.vagrantfile"
+    "python": "python/python.vagrantfile.template",
+    "node_js": "nodejs/nodejs.vagrantfile.template",
+    "cpp": "cpp/cpp.vagrantfile.template",
+    "c++": "cpp/cpp.vagrantfile.template",
+    "c": "cpp/cpp.vagrantfile.template"
 }
 
 default_languages_version_dict = {

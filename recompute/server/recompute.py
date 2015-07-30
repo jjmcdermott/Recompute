@@ -13,6 +13,7 @@ from . import recompute_learn
 
 
 def __execute(command, cwd):
+    print command
     p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
     lines_iter = iter(p.stdout.readline, b"")
     for line in lines_iter:
@@ -44,7 +45,7 @@ def __make_vagrantbox(recomputation_data):
         __execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
         __execute(["vagrant", "destroy"], recomputation_dir)
         __execute(["mkdir", "vm"], recomputation_dir)
-        __execute(["cp", vagrantbox, "vm/"], recomputation_dir)
+        __execute(["cp", vagrantbox, "vms/"], recomputation_dir)
         __execute(["vagrant", "init", vagrantbox], recomputation_vm_dir)
         __execute(["vagrant", "up"], recomputation_vm_dir)
 

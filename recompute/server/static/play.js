@@ -28,12 +28,14 @@ function make_play_window(root, terminal_args, ws_url, vm) {
 
         ws.onclose = function(event) {
             term.destroy();
+            win.destroy();
         }
     }
 }
 
 function PlayWindow(ws, root, vm) {
     this.socket = ws;
+    this.root = root;
 
     this.element = document.createElement("div");
     this.element.className = "window";
@@ -69,7 +71,7 @@ function PlayWindow(ws, root, vm) {
     this.bar.appendChild(this.new_button);
     this.bar.appendChild(this.tab_button);
     this.bar.appendChild(this.title);
-    root.appendChild(this.element);
+    this.root.appendChild(this.element);
 
     this.draggable();
 }
@@ -81,7 +83,6 @@ PlayWindow.prototype.draggable = function() {
     $(this.element).draggable({
         cursor: "move",
         start: function() {
-            console.log(self.element.offsetWidth);
             self.element.style.opacity = "0.6";
         },
         stop: function() {
@@ -106,4 +107,8 @@ PlayWindow.prototype.draggable = function() {
 PlayWindow.prototype.resize = function(cols, rows) {
     this.cols = cols;
     this.rows = rows;
+}
+
+PlayWindow.prototype.destroy = function() {
+    this.root.removeChild(this.element)
 }

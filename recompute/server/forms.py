@@ -13,3 +13,8 @@ class RecomputeForm(flask_wtf.Form):
 class FilterRecomputationsForm(flask_wtf.Form):
     name = wtfStringField("name", validators=[wtfDataRequired()])
     clear = wtfBooleanField('clear')
+
+
+class FilterBoxesForm(flask_wtf.Form):
+    language = wtfStringField("language", validators=[wtfDataRequired()])
+    clear = wtfBooleanField('clear')

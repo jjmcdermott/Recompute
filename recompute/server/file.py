@@ -4,7 +4,7 @@ import json
 
 software_dir_absolute = "recompute/server/recomputations/"
 software_dir_relative = "recomputations/"
-template_vagrantfiles_dir_absolute = "recompute/server/vagrantfiles/"
+template_vagrantfiles_dir_absolute = "recompute/server/boxes/"
 
 
 def get_recomputation_absolute_dir(name):
@@ -71,3 +71,8 @@ def get_all_recomputations_data():
 
 def get_recomputations_count():
     return len(next(os.walk(software_dir_absolute))[1])
+
+
+def get_all_boxes_data():
+    return [{"language": "python", "version": "2.7"}, {"language": "c/c++"}, {"language": "node.js", "version": "0.10"},
+            {"language": "gap", "version": "4.7.8"}, {"language": "gecode", "version": "4.4.0"}]

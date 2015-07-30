@@ -12,10 +12,10 @@
             <div class="row">
                 <div class="col-md-6">
                     <form class="form-inline" action="{{ url_for('recomputations_page') }}" method="POST">
-                        {{ filter_recomputation_form.hidden_tag() }}
+                        {{ filter_recomputations_form.hidden_tag() }}
                         <div class="form-group">
                             <label for="name" >Name</label>
-                            {{ filter_recomputation_form.name(class="form-control", placeholder="Name") }}
+                            {{ filter_recomputations_form.name(class="form-control", placeholder="Name") }}
                         </div>
 
                         <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Search</button>
@@ -30,7 +30,7 @@
                         <th>ID</th>
                         <th>TAG</th>
                         <th>VERSION</th>
-                        <th>DATE</th>
+                        <th>LAST UPDATED</th>
                         <th>PLAY</th>
                         <th>DOWNLOAD</th>
                     </tr>
@@ -43,8 +43,8 @@
                         <td>{{ recomputation.releases[0].tag }}</td>
                         <td>{{ recomputation.releases[0].version }}</td>
                         <td>{{ recomputation.releases[0].date }}</td>
-                        <td><a onclick="recomputation_play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
-                        <td><a onclick="recomputation_download('{{ recomputation.name }}');"><i class="fa fa-download"></i> Download</a></td>
+                        <td><a onclick="play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
+                        <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name) }}"><i class="fa fa-download"></i> Vagrantbox</a></td>
                     </tr>
                 {% endfor %}
                 </tbody>

@@ -1,16 +1,16 @@
 {
-  "id": "3",
+  "id": 3,
   "name": "ferret-2",
-  "github_url": "github",
+  "github_url": "https://github.com/gap-system/ferret",
   "releases": [
     {
-      "tag": "tag",
-      "version": "version",
-      "date": "date",
-      "box": "box",
-      "box_version": "box_version",
-      "github_url": "github_url",
-      "github_commit": "github_commit"
+      "tag": "Latest",
+      "version": "0",
+      "date": "2015-7-31 5:20:00",
+      "box": "ubuntu/precise64",
+      "box_version": "UNKNOWN",
+      "github_url": "https://github.com/gap-system/ferret",
+      "github_commit": "9ba2d30f313ae5ee04ab7c0f4f591d0ee30adf98"
     }
   ]
 }

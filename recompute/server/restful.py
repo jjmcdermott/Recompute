@@ -31,14 +31,14 @@ def create_recomputation():
         return flask.redirect(flask.url_for("index_page"))
 
 
-@config.recompute_app.route("/recomputation/edit/<name>", methods=["GET", ])
+@config.recompute_app.route("/recomputation/edit/<name>", methods=["GET"])
 def edit_recomputation(name):
-    pass
+    return flask.redirect(flask.url_for("recomputation_page", name=name))
 
 
 @config.recompute_app.route("/recomputation/rebuild/<name>", methods=["GET"])
-def rebuild_recomputation(name):
-    pass
+def update_recomputation(name):
+    return flask.redirect(flask.url_for("recomputation_page", name=name))
 
 
 @config.recompute_app.route("/recomputation/delete/<name>", methods=["GET"])
@@ -55,13 +55,13 @@ def delete_recomputation(name):
         flask.render_template("recomputation404.html", name=name)
 
 
-@config.recompute_app.route("/vagrantfile/<name>", methods=["GET"])
-def get_vagrantfile(name):
-    path = file.get_vagrantfile_relative_path(name)
-    if path is not None:
-        return flask.send_file(path, mimetype="text/plain", as_attachment=True)
-    else:
-        return flask.jsonify(message="Vagrantfile found"), 400
+# @config.recompute_app.route("/vagrantfile/<name>", methods=["GET"])
+# def get_vagrantfile(name):
+#     path = file.get_vagrantfile_relative_path(name)
+#     if path is not None:
+#         return flask.send_file(path, mimetype="text/plain", as_attachment=True)
+#     else:
+#         return flask.jsonify(message="Vagrantfile found"), 400
 
 
 @config.recompute_app.route("/vagrantbox/download/<name>", methods=["GET"])
@@ -71,9 +71,9 @@ def download_vagrantbox(name):
         return flask.send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
     else:
         flask.flash("Recomputation: " + name + " not found.", "danger")
-        flask.redirect(flask.url_for("index_page"))
+        return flask.redirect(flask.url_for("index_page"))
 
 
-@config.recompute_app.route("/vagrantbox/delete/<name>/<version>", methods=["POST"])
-def delete_vagrantbox(name, version):
-    pass
+@config.recompute_app.route("/vagrantbox/delete/<name>", methods=["GET"])
+def delete_vagrantbox(name):
+    return flask.redirect(flask.url_for("recomputation_page", name=name))

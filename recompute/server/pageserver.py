@@ -6,7 +6,7 @@ from . import file
 
 @config.recompute_app.route("/favicon.ico")
 def favicon():
-    return flask.send_from_directory(os.path.join(recompute_app.root_path, "static"), "favicon.ico",
+    return flask.send_from_directory(os.path.join(config.recompute_app.root_path, "static"), "favicon.ico",
                                      mimetype="image/vnd.microsoft.icon")
 
 
@@ -25,18 +25,18 @@ def index_page():
 @config.recompute_app.route("/recomputations", methods=["GET", "POST"])
 def recomputations_page():
     from .forms import FilterRecomputationsForm
-    filter_recomputation_form = FilterRecomputationsForm()
+    filter_recomputations_form = FilterRecomputationsForm()
 
     all_recomputations = file.get_all_recomputations_data()
 
-    if filter_recomputation_form.validate_on_submit():
-        name = filter_recomputation_form.name.data
+    if filter_recomputations_form.validate_on_submit():
+        name = filter_recomputations_form.name.data
         if name != "":
             all_recomputations = [r for r in all_recomputations if r["name"] == name]
         if len(all_recomputations) == 0:
             flask.flash("Recomputation: " + name + " not found.", "danger")
 
-    return flask.render_template("recomputations.html", filter_recomputation_form=filter_recomputation_form,
+    return flask.render_template("recomputations.html", filter_recomputations_form=filter_recomputations_form,
                                  all_recomputations=all_recomputations)
 
 
@@ -51,4 +51,16 @@ def recomputation_page(name):
 
 @config.recompute_app.route("/boxes", methods=["GET"])
 def boxes_page():
-    return flask.render_template("boxes.html")
+    from .forms import FilterBoxesForm
+    filter_boxes_form = FilterBoxesForm()
+
+    all_boxes = file.get_all_boxes_data()
+
+    if filter_boxes_form.validate_on_submit():
+        language = filter_boxes_form.language.data
+        if language != "":
+            all_boxes = [box for box in all_boxes if box["language"] == language]
+        if len(all_boxes) == 0:
+            flask.flash("Language: " + all_boxes + " not found.", "danger")
+
+    return flask.render_template("boxes.html", filter_boxes_form=filter_boxes_form, all_boxes=all_boxes)

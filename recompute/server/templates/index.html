@@ -53,7 +53,7 @@
                         <th>ID</th>
                         <th>TAG</th>
                         <th>VERSION</th>
-                        <th>DATE</th>
+                        <th>LAST UPDATED</th>
                         <th>PLAY</th>
                         <th>DOWNLOAD</th>
                     </tr>
@@ -67,7 +67,7 @@
                         <td>{{ recomputation.releases[0].version }}</td>
                         <td>{{ recomputation.releases[0].date }}</td>
                         <td><a onclick="play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
-                        <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name) }}"><i class="fa fa-download"></i> Download</a></td>
+                        <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name) }}"><i class="fa fa-download"></i> Vagrantbox</a></td>
                     </tr>
                 {% endfor %}
                 </tbody>

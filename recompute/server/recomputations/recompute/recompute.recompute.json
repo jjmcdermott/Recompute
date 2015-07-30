@@ -1,16 +1,16 @@
 {
-  "id": "0",
+  "id": 0,
   "name": "recompute",
   "github_url": "https://github.com/cjw-charleswu/Recompute",
   "releases": [
     {
       "tag": "Latest",
       "version": "0",
-      "date": "date",
+      "date": "2015-7-31 5:20:00",
       "box": "ubuntu/trusty64",
       "box_version": "UNKNOWN",
       "github_url": "https://github.com/cjw-charleswu/Recompute",
-      "github_commit": "9d9ee9218edaa6dea36d8296083d3981ed17dec9"
+      "github_commit": "a3b70860bc70b194e23a6f432f5bc8e79019e361"
     }
   ]
 }
