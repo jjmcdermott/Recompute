@@ -33,9 +33,12 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li {% if request.path == "/" %} class="active"{% endif %}><a href="{{ url_for('get_index_page') }}">Home</a></li>
-                <li {% if request.path == "/software" %} class="active"{% endif %}><a href="{{ url_for('get_software_page') }}">Software</a></li>
-                <li {% if request.path == "/languages" %} class="active"{% endif %}><a href="{{ url_for('get_languages_page') }}">Base VMs</a></li>
+                <li {% if request.path== url_for(
+                'index_page') %} class="active" {% endif %}><a href="{{ url_for('index_page') }}">Home</a></li>
+                <li {% if request.path== url_for(
+                'recomputations_page') %} class="active" {% endif %}><a href="{{ url_for('recomputations_page') }}">Recomputations</a></li>
+                <li {% if request.path== url_for(
+                'boxes_page') %} class="active" {% endif %}><a href="{{ url_for('boxes_page') }}">Boxes</a></li>
             </ul>
         </div>
         <!--/.nav-collapse -->
@@ -47,10 +50,21 @@
 
 <div class="container">
 
-    {% block content %}
-    {% endblock %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{category}}" style="margin-top: 20px;">
+        <button type="button" class="close" data-dismiss="alert">×</button>
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
 
-</div><!-- /.container -->
+    {% block content %}{% endblock %}
+
+</div>
+<!-- /.container -->
 
 <script>
 function apiStatus(data) {
@@ -68,7 +82,7 @@ function apiStatus(data) {
 <script src="{{url_for('static', filename='play.js')}}"></script>
 
 <script>
-    function recomputation_play(vm) {
+    function play(vm) {
         var ws_url = "ws://" + window.location.host + "/ws/play/" + vm;
         var terminal_args = {
             cols: 80,
@@ -78,10 +92,6 @@ function apiStatus(data) {
             cursorBlink: true
         }
         var terminal = make_play_window(document.body, terminal_args, ws_url, vm);
-    }
-
-    function recomputation_download(vm) {
-        window.location.href = "{{ url_for('get_vagrantbox', name='') }}" + vm
     }
 </script>
 

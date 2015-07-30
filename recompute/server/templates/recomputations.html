@@ -4,19 +4,21 @@
 {% block content %}
 
     <div class="page-header">
-        <h1>Software</h1>
+        <h1>Recomputations</h1>
     </div>
 
     <div class="top-buffer row">
         <div class="col-md-12">
             <div class="row">
                 <div class="col-md-6">
-                    <form class="form-inline" id="filter_users_form" action="#" method="POST" name="filter_software">
+                    <form class="form-inline" action="{{ url_for('recomputations_page') }}" method="POST">
+                        {{ filter_recomputation_form.hidden_tag() }}
                         <div class="form-group">
                             <label for="name" >Name</label>
-                            {{ filter_software_form.name(type="text", class="form-control", id="name", placeholder="Name") }}
+                            {{ filter_recomputation_form.name(class="form-control", placeholder="Name") }}
                         </div>
-                        <a href="#" onclick="" class="btn btn-primary"><i class="fa fa-search"></i>Search</a>
+
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Search</button>
                     </form>
                 </div>
             </div>
@@ -34,13 +36,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for recomputation in all_recomputation %}
+                {% for recomputation in all_recomputations %}
                     <tr>
-                        <td><a href="{{ url_for('get_single_recomputation_page', name=recomputation.name) }}">{{ recomputation.name }}</a></td>
+                        <td><a href="{{ url_for('recomputation_page', name=recomputation.name) }}">{{ recomputation.name }}</a></td>
                         <td>{{ recomputation.id }}</td>
-                        <td>{{ recomputation.tag }}</td>
-                        <td>{{ recomputation.version }}</td>
-                        <td>{{ recomputation.date }}</td>
+                        <td>{{ recomputation.releases[0].tag }}</td>
+                        <td>{{ recomputation.releases[0].version }}</td>
+                        <td>{{ recomputation.releases[0].date }}</td>
                         <td><a onclick="recomputation_play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
                         <td><a onclick="recomputation_download('{{ recomputation.name }}');"><i class="fa fa-download"></i> Download</a></td>
                     </tr>

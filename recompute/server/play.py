@@ -42,7 +42,7 @@ class PlayTerminal(object):
 
     def handle_open(self, recomputation_name):
         argv = ["vagrant", "ssh"]
-        cwd = os.path.join(recompute_app.root_path, "software", recomputation_name, "test")
+        cwd = os.path.join(recompute_app.root_path, "recomputations", recomputation_name, "vm")
         env = os.environ.copy()
         env["TERM"] = "xterm"
         self.pty = ptyprocess.PtyProcessUnicode.spawn(argv=argv, cwd=cwd, env=env, dimensions=(24, 80))

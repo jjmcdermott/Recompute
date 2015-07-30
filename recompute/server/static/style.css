@@ -67,3 +67,26 @@ a {
 table {
     word-wrap: break-word;
 }
+
+.delete {
+    color: #E82C0C;
+}
+
+a.delete:hover {
+    color: #AE2C0C;
+}
+
+header {
+    position: relative;
+}
+
+.more {
+    position: absolute;
+    bottom: 1px;
+    right: 0px;
+    font-size: 12px;
+}
+
+.more a {
+    color: #243773;
+}

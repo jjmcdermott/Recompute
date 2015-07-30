@@ -1,44 +1,7 @@
 import os
-import requests
 import flask
-from bs4 import BeautifulSoup
-from xml.etree import ElementTree
-from flask import render_template as render_template
 from .config import recompute_app
 from . import file
-
-
-def _get_base_vagrantboxes():
-    requests.packages.urllib3.disable_warnings()
-    response = requests.get("https://atlas.hashicorp.com/boxes/search")
-    soup = BeautifulSoup(response.text)
-    return [str(span.a.text) for span in soup.findAll("span", attrs={"class": "title title-small"})]
-
-
-def _get_latest_recomputation():
-    recomputation_list = _get_all_recomputation()
-    return recomputation_list[-5:]
-
-
-def _get_all_recomputation():
-    recomputation_list = list()
-    software_dir = file.get_software_absolute_dir()
-    inside_software_dir = next(os.walk(software_dir))
-    recomputation_dirs = [os.path.join(inside_software_dir[0], d) for d in inside_software_dir[1]]
-    for d in recomputation_dirs:
-        recomputation_details = ElementTree.parse(d + "/recomputation.xml").getroot()
-        latest_release = recomputation_details.find("releases")[0]
-        recomputation_list.append({
-            "name": recomputation_details.find("name").text,
-            "id": recomputation_details.find("id").text,
-            "tag": latest_release.find("tag").text,
-            "version": latest_release.find("version").text,
-            "date": latest_release.find("date").text,
-            "box": latest_release.find("box").text,
-            "box_version": latest_release.find("box_version").text
-        })
-    recomputation_list.sort(key=lambda recomputation: recomputation["id"])
-    return recomputation_list
 
 
 @recompute_app.route("/favicon.ico")
@@ -48,43 +11,44 @@ def favicon():
 
 
 @recompute_app.route("/", methods=["GET"])
-def get_index_page():
-    return render_template("index.html",
-                           recomputation_count=file.get_recomputation_count(),
-                           base_vagrantboxes=_get_base_vagrantboxes(),
-                           latest_recomputation=_get_latest_recomputation())
+def index_page():
+    from .forms import RecomputeForm
+    recompute_form = RecomputeForm()
+
+    recomputation_count = file.get_recomputation_count()
+    latest_recomputations = file.get_latest_recomputations_data()
+
+    return flask.render_template("index.html", recompute_form=recompute_form, recomputation_count=recomputation_count,
+                                 latest_recomputations=latest_recomputations)
 
 
-@recompute_app.route("/software", methods=["GET"])
-def get_software_page():
-    from forms import FilterSoftwareForm
-    form = FilterSoftwareForm()
+@recompute_app.route("/recomputations", methods=["GET", "POST"])
+def recomputations_page():
+    from .forms import FilterRecomputationsForm
+    filter_recomputation_form = FilterRecomputationsForm()
 
-    return render_template("software.html", filter_software_form=form, all_recomputation=_get_all_recomputation())
+    all_recomputations = file.get_all_recomputations_data()
 
+    if filter_recomputation_form.validate_on_submit():
+        name = filter_recomputation_form.name.data
+        if name != "":
+            all_recomputations = [r for r in all_recomputations if r["name"] == name]
+        if len(all_recomputations) == 0:
+            flask.flash("Recomputation: " + name + " not found.", "danger")
 
-@recompute_app.route("/base_vms", methods=["GET"])
-def get_languages_page():
-    return render_template("base_vms.html")
+    return flask.render_template("recomputations.html", filter_recomputation_form=filter_recomputation_form,
+                                 all_recomputations=all_recomputations)
 
 
 @recompute_app.route("/recomputation/<string:name>", methods=["GET"])
-def get_single_recomputation_page(name):
-    software_dir = file.get_software_absolute_path(name)
-    recomputation_details = ElementTree.parse(software_dir + "/recomputation.xml").getroot()
-    latest_release = recomputation_details.find("releases")[0]
-    recomputation = {
-        "name": recomputation_details.find("name").text,
-        "id": recomputation_details.find("id").text,
-        "tag": latest_release.find("tag").text,
-        "version": latest_release.find("version").text,
-        "date": latest_release.find("date").text,
-        "box": latest_release.find("box").text,
-        "box_version": latest_release.find("box_version").text
-    }
-    return render_template("recomputation.html", recomputation=recomputation)
+def recomputation_page(name):
+    if not file.exists_recomputation(name):
+        return flask.render_template("recomputation404.html", name=name)
+    else:
+        recomputation = file.get_recomputation_data(name)
+        return flask.render_template("recomputation.html", recomputation=recomputation)
 
 
-@recompute_app.route("/tty", methods=["GET"])
-def get_tty():
-    return render_template("tty.html")
+@recompute_app.route("/boxes", methods=["GET"])
+def boxes_page():
+    return flask.render_template("boxes.html")

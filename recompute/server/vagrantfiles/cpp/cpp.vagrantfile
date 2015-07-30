@@ -6,9 +6,9 @@ $rootScript = <<SCRIPT
   apt-get update -y
   apt-get install -y software-properties-common python-software-properties
   apt-get install -y git build-essential gcc clang make autotools-dev autoconf cmake scons
-  <ADD_APT_REPOSITORY>
+  <ADD_APT_REPOSITORIES>
   apt-get update -y
-  <APT_GET_INSTALL>
+  apt-get install -y <APT_GET_INSTALL>
 SCRIPT
 
 $userScript = <<SCRIPT
@@ -22,7 +22,7 @@ SCRIPT
 Vagrant.configure("2") do |config|
 
   config.vm.box = "<BOX>"
-  config.vm.hostname = "<HOSTNAME>.box"
+  config.vm.hostname = "<NAME>.box"
 
   # more cpu and memory
   config.vm.provider "virtualbox" do |v|

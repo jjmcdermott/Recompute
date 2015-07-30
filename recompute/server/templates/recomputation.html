@@ -6,8 +6,9 @@
     <div class="page-header">
         <h1>Recomputation: {{ recomputation.name }}</h1>
         <h4>
-            <a href="#"><i class="fa fa-pencil"></i> Edit</a>&nbsp;&nbsp;
-            <a href="#"><i class="fa fa-refresh"></i> Rebuild</a>
+            <a href="{{ url_for('edit_recomputation', name=recomputation.name) }}"><i class="fa fa-pencil"></i> Edit</a>&nbsp;&nbsp;
+            <a href="{{ url_for('rebuild_recomputation', name=recomputation.name) }}"><i class="fa fa-refresh"></i> Rebuild</a>&nbsp;&nbsp;
+            <a href="{{ url_for('delete_recomputation', name=recomputation.name) }}" class="delete"><i class="fa fa-trash-o"></i> Delete</a>
         </h4>
     </div>
 
@@ -15,11 +16,10 @@
     <div class="row">
         <div class="col-md-4">
             <ul class="list-group">
-                <li class="list-group-item"><span>NAME: {{ recomputation.name }}</span></li>
+                <li class="list-group-item"><span>Name: {{ recomputation.name }}</span></li>
                 <li class="list-group-item"><span>ID: {{ recomputation.id }}</span></li>
-                <li class="list-group-item"><span>TAG: {{ recomputation.tag }}</span></li>
-                <li class="list-group-item"><span>VERSION: {{ recomputation.version }}</span></li>
-                <li class="list-group-item"><span>DATE: {{ recomputation.date }}</span></li>
+                <li class="list-group-item"><span>GitHub: {{ recomputation.github }}</span></li>
+                <li class="list-group-item"><span>Last Updated: {{ recomputation.date }}</span></li>
             </ul>
         </div>
     </div>
@@ -41,6 +41,7 @@
                             <th>DATE</th>
                             <th>PLAY</th>
                             <th>DOWNLOAD</th>
+                            <th class="delete">DELETE</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,7 +50,8 @@
                             <td>{{ recomputation.version }}</td>
                             <td>{{ recomputation.date }}</td>
                             <td><a onclick="recomputation_play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
-                            <td><a onclick="recomputation_download('{{ recomputation.name }}');"><i class="fa fa-download"></i> Download</a></td>
+                            <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name) }}"><i class="fa fa-download"></i> Download</a></td>
+                            <td><a onclick="recomputation_delete('{{ recomputation.name }}');" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
                         </tr>
 
                         <tr>
@@ -58,6 +60,7 @@
                             <td>{{ recomputation.date }}</td>
                             <td><a onclick="recomputation_play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
                             <td><a onclick="recomputation_download('{{ recomputation.name }}');"><i class="fa fa-download"></i> Download</a></td>
+                            <td><a onclick="recomputation_delete('{{ recomputation.name }}');" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
                         </tr>
 
                         <tr>
@@ -66,6 +69,7 @@
                             <td>{{ recomputation.date }}</td>
                             <td><a onclick="recomputation_play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
                             <td><a onclick="recomputation_download('{{ recomputation.name }}');"><i class="fa fa-download"></i> Download</a></td>
+                            <td><a onclick="recomputation_delete('{{ recomputation.name }}');" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
                         </tr>
                     </tbody>
                 </table>

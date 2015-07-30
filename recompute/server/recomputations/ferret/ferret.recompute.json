@@ -1,0 +1,16 @@
+{
+  "id": "4",
+  "name": "ferret",
+  "github_url": "github",
+  "releases": [
+    {
+      "tag": "tag",
+      "version": "version",
+      "date": "date",
+      "box": "box",
+      "box_version": "box_version",
+      "github_url": "github_url",
+      "github_commit": "github_commit"
+    }
+  ]
+}
