@@ -3,9 +3,7 @@ Recompute a project
 """
 
 import subprocess
-import os
 import sys
-import shutil
 import requests
 import yaml
 import datetime
@@ -33,11 +31,12 @@ def __execute(command, cwd):
         return False
 
 
-def __make_recomputefile(recomputation_data, recomputefile):
-    recomputefile_json = recomputation_data.to_json()
+def __make_recomputefile(recomputation_summary):
+    recomputefile_path = io.get_recomputefile_path(recomputation_summary.name)
+    with open(recomputefile_path, "w") as rfile:
+        rfile.write("{}".format(recomputation_summary.to_json()))
 
-    with open(recomputefile, "w") as rfile:
-        rfile.write("{0}".format(recomputefile_json))
+    return True
 
 
 def __make_vagrantbox(recomputation_summary):
@@ -54,6 +53,7 @@ def __make_vagrantbox(recomputation_summary):
     if success:
         __execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
         __execute(["vagrant", "destroy", "-f"], recomputation_dir)
+        __execute(["rm", ".vagrant/", "-rf"], recomputation_dir)
         __execute(["vagrant", "box", "add", name, vagrantbox], recomputation_dir)
 
         io.create_recomputation_vms_dir(name)
@@ -65,37 +65,40 @@ def __make_vagrantbox(recomputation_summary):
     return success
 
 
-def __make_vagrantfile(recomputation_data, vagrantfile_template, vagrantfile):
-    with open(vagrantfile_template, "r") as vtemplate:
-        contents = vtemplate.read()
+def __make_vagrantfile(recomputation_summary):
+    language = recomputation_summary.release.build.language
 
-    contents = contents.replace("<NAME>", recomputation_data.name)
-
-    build = recomputation_data.release.build
-
-    contents = contents.replace("<BOX>", build.box)
-    contents = contents.replace("<LANGUAGE_VERSION>", build.language_version)
-
-    contents = contents.replace("<GITHUB_URL>", build.github_url)
-    contents = contents.replace("<GITHUB_REPO_NAME>", build.github_repo_name)
-
-    contents = contents.replace("<ADD_APT_REPOSITORIES>", build.add_apts)
-    contents = contents.replace("<APT_GET_INSTALL>", build.apt_gets)
-    contents = contents.replace("<INSTALL_SCRIPT>", build.installs)
-    contents = contents.replace("<TEST_SCRIPT>", build.tests)
-
-    contents = contents.replace("<MEMORY>", str(build.memory))
-    contents = contents.replace("<CPUS>", str(build.cpus))
-
-    with open(vagrantfile, "w") as vfile:
-        vfile.write("{0}".format(contents))
-
-
-def __get_vagrantfile_template(language):
     if language in defaults.vagrantfile_templates_dict:
-        return io.template_vagrantfiles_dir_absolute + defaults.vagrantfile_templates_dict[language]
+        vagrantfile_template = io.get_vagrantfile_template_path(defaults.vagrantfile_templates_dict[language])
     else:
-        return None
+        return False
+
+    with open(vagrantfile_template, "r") as f:
+        vagrantfile = f.read()
+
+    vagrantfile = vagrantfile.replace("<NAME>", recomputation_summary.name)
+
+    build = recomputation_summary.release.build
+
+    vagrantfile = vagrantfile.replace("<BOX>", build.box)
+    vagrantfile = vagrantfile.replace("<LANGUAGE_VERSION>", build.language_version)
+
+    vagrantfile = vagrantfile.replace("<GITHUB_URL>", build.github_url)
+    vagrantfile = vagrantfile.replace("<GITHUB_REPO_NAME>", build.github_repo_name)
+
+    vagrantfile = vagrantfile.replace("<ADD_APT_REPOSITORIES>", build.add_apts)
+    vagrantfile = vagrantfile.replace("<APT_GET_INSTALL>", build.apt_gets)
+    vagrantfile = vagrantfile.replace("<INSTALL_SCRIPT>", build.installs)
+    vagrantfile = vagrantfile.replace("<TEST_SCRIPT>", build.tests)
+
+    vagrantfile = vagrantfile.replace("<MEMORY>", str(build.memory))
+    vagrantfile = vagrantfile.replace("<CPUS>", str(build.cpus))
+
+    vagrantfile_path = io.get_vagrantfile_path(recomputation_summary.name)
+    with open(vagrantfile_path, "w") as f:
+        f.write("{}".format(vagrantfile))
+
+    return True
 
 
 def __get_travis_script(github_url):
@@ -111,75 +114,83 @@ def __get_travis_script(github_url):
 
 def __get_language(travis_script, github_url):
     if travis_script is not None:
-        return travis_script["language"]
+        language = travis_script["language"]
     else:
         response = requests.get(github_url)
         soup = bs4.BeautifulSoup(response.text)
-        return soup.find("span", {"class": "lang"}).text.lower()
+        language = soup.find("span", {"class": "lang"}).text.lower()
 
-
-def __get_language_version(travis_script, language):
     if travis_script is not None:
         if language in travis_script:
-            return travis_script[language][-1]
+            return language, travis_script[language][-1]
     if language in defaults.languages_version_dict:
-        return defaults.languages_version_dict[language]
+        return language, defaults.languages_version_dict[language]
     else:
-        return None
+        return None, None
 
 
-def __get_recomputation_data(id, name, github_url, box):
-    """
-    """
+def __get_github_commit_sha(github_url):
+    response = requests.get(github_url)
+    soup = bs4.BeautifulSoup(response.text)
+    return soup.find("a", {"class": "sha-block"})["href"]
 
-    travis_script = __get_travis_script(github_url)
 
-    box_version = "TODO"
-
-    language = __get_language(travis_script, github_url)
-    language_ver = __get_language_version(travis_script, language)
-
-    github_repo_name = github_url.split("/")[-1]
-    github_commit = "TODO"
-
-    add_apt_repositories = list()
-    apt_install_packages = list()
-    install_scripts = list()
-    envs = list()
-    test_scripts = list()
+def __get_add_apts_repositories(travis_script):
+    apt_repositories = list()
 
     if travis_script is not None:
         if "before_install" in travis_script:
             travis_before_install = travis_script["before_install"]
-            # ADD_APT_REPOSITORIES
             for add_apt_repo in [line for line in travis_before_install if "add-apt-repository" in line]:
                 repositories = [repo for repo in add_apt_repo.split(" ") if repo.startswith("ppa:")]
-                add_apt_repositories.extend(repositories)
+                apt_repositories.extend(repositories)
 
+    return "\n".join(["add-apt-repository -y " + repo for repo in apt_repositories])
+
+
+def __get_apt_get_installs(travis_script):
+    apt_installs = list()
+
+    if travis_script is not None:
+        if "before_install" in travis_script:
+            travis_before_install = travis_script["before_install"]
             # apt-get install
             for apt_get_install in [line for line in travis_before_install if "apt-get install" in line]:
                 packages = [p for p in apt_get_install.split(" ") if p not in ["sudo", "apt-get", "install", "-y"]]
-                apt_install_packages.extend(packages)
+                apt_installs.extend(packages)
 
-        # apt-get install
         if "addons" in travis_script and "apt_packages" in travis_script["addons"]:
-            apt_install_packages.extend(travis_script["addons"]["apt_packages"])
+            apt_installs.extend(travis_script["addons"]["apt_packages"])
 
+    return " ".join(apt_installs) + "\n"
+
+
+def __get_install_scripts(recomputation_name, language, travis_script):
+    install_scripts = list()
+
+    if travis_script is not None:
         if "install" in travis_script:
             install_scripts.extend(travis_script["install"])
+    else:
+        install_scripts.extend(defaults.languages_install_dict[language])
 
+    # extra stuff for individual recomputations
+    if recomputation_name in defaults.boxes_install_scripts:
+        install_scripts.extend(defaults.boxes_install_scripts[recomputation_name])
+
+    return " \n".join(install_scripts)
+
+
+def __get_test_scripts(travis_script):
+    envs = list()
+    test_scripts = list()
+
+    if travis_script is not None:
         if "env" in travis_script:
             envs.extend(travis_script["env"])
 
         if "script" in travis_script:
             test_scripts.extend(travis_script["script"])
-
-    else:
-        install_scripts.extend(defaults.languages_install_dict[language])
-
-    # extra stuff for individual recomputations
-    if name in defaults.boxes_install_scripts:
-        install_scripts.extend(defaults.boxes_install_scripts[name])
 
     # clean up
     final_test_scripts = list()
@@ -190,51 +201,71 @@ def __get_recomputation_data(id, name, github_url, box):
         final_test_scripts.append(str("export " + env))
         final_test_scripts.extend([s for s in test_scripts if env.split("=", 1)[0] in s])
 
-    add_apts = "\n".join(["add-apt-repository -y " + repo for repo in add_apt_repositories])
-    apt_gets = " ".join(apt_install_packages) + "\n"
-    installs = " \n".join(install_scripts)
-    tests = " \n".join(final_test_scripts)
+    return " \n".join(final_test_scripts)
+
+
+def __gather_recomputation_summary(name, github_url, box):
+    """
+    """
+
+    id = config.recomputations_count
+
+    box_version = "TODO"
+
+    travis_script = __get_travis_script(github_url)
+
+    language, language_version = __get_language(travis_script, github_url)
+    if language is None:
+        raise UnknownLanguageException()
+
+    github_repo_name = github_url.split("/")[-1]
+    github_commit = __get_github_commit_sha(github_url)
+
+    add_apts = __get_add_apts_repositories(travis_script)
+    apt_gets = __get_apt_get_installs(travis_script)
+    installs = __get_install_scripts(name, language, travis_script)
+    tests = __get_test_scripts(travis_script)
 
     memory = defaults.vm_memory
     cpus = defaults.vm_cpus
 
-    build = recomputation.Build(box, box_version, language, language_ver, github_url, github_repo_name,
-                                github_commit, add_apts, apt_gets, installs, tests, memory, cpus)
-
     tag = "Latest"
     version = "0"
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    build = recomputation.Build(box, box_version, language, language_version, github_url, github_repo_name,
+                                github_commit, add_apts, apt_gets, installs, tests, memory, cpus)
     release = recomputation.Release(tag, version, date, build)
 
-    recomputation_data = recomputation.Recomputation(id, name, github_url, release)
-
-    return recomputation_data
+    return recomputation.Recomputation(id, name, github_url, release)
 
 
 def create_vm(name, github_url, box):
-    recomputation_dir = io.get_recomputation_dir(name)
-    vagrantfile = recomputation_dir + "Vagrantfile"
-    recomputefile = recomputation_dir + name + ".recompute.json"
+    io.create_recomputation_dir(name)
 
-    os.makedirs(recomputation_dir)
+    try:
+        recomputation_summary = __gather_recomputation_summary(name, github_url, box)
+    except UnknownLanguageException:
+        io.destroy_recomputation(name)
+        return False, "Did not understand the project programming language."
 
-    recomputation_data = __get_recomputation_data(config.recomputations_count, name, github_url, box)
-
-    language = recomputation_data.release.build.language
-    vagrantfile_template = __get_vagrantfile_template(language)
-    if vagrantfile_template is None:
-        os.rmdir(recomputation_dir)
+    if not __make_vagrantfile(recomputation_summary):
+        io.destroy_recomputation(name)
         return False, "Vagrantfile cannot be generated."
 
-    __make_vagrantfile(recomputation_data, vagrantfile_template, vagrantfile)
-    __make_vagrantbox(recomputation_data)
-    __make_recomputefile(recomputation_data, recomputefile)
-
-    if not io.exists_vagrantbox(name):
-        shutil.rmtree(recomputation_dir, ignore_errors=True)
+    if not __make_vagrantbox(recomputation_summary):
+        io.destroy_recomputation(name)
         return False, "Vagrantbox was not created."
 
-    print "Recomputed: {} @ {}".format(name, recomputation_dir)
+    if not __make_recomputefile(recomputation_summary):
+        io.destroy_recomputation(name)
+        return False, "Recomputefile was not created."
+
+    print "Recomputed: {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name))
     config.recomputations_count += 1
 
     return True, "Successful."
+
+
+class UnknownLanguageException(Exception):
+    pass
