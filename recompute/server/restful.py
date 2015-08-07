@@ -1,7 +1,8 @@
+import re
 import flask
 from . import config
 from . import recompute
-from . import file
+from . import io
 
 
 @config.recompute_app.route("/recomputation/create", methods=["POST"])
@@ -11,18 +12,19 @@ def create_recomputation():
 
     if recompute_form.validate_on_submit():
         name = recompute_form.name.data
+        name = re.sub(r"[^a-zA-Z0-9 \n\.]", "-", name)  # replace symbols with underscores
         github_url = recompute_form.github_url.data
         box = recompute_form.box.data
 
-        if file.exists_recomputation(name):
+        if io.exists_recomputation(name):
             flask.flash("Recomputation already exists.", "danger")
             return flask.redirect(flask.url_for("index_page"))
 
         successful, msg = recompute.create_vm(name, github_url, box)
 
         if successful:
-            path = file.get_vagrantbox_relative_path(name)
-            return flask.send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
+            return flask.send_file(io.get_vagrantbox_relative(name), mimetype="application/vnd.previewsystems.box",
+                                   as_attachment=True)
         else:
             flask.flash("Recomputation was unsuccessful. " + msg, "danger")
             return flask.redirect(flask.url_for("index_page"))
@@ -46,8 +48,8 @@ def delete_recomputation(name):
     recomputation = dict()
     recomputation["name"] = name
 
-    if file.exists_recomputation(name):
-        file.delete_recomputation(name)
+    if io.exists_recomputation(name):
+        io.delete_recomputation(name)
         flask.flash(name + " is removed", "warning")
         flask.render_template("recomputation404.html", name=name)
     else:
@@ -55,18 +57,9 @@ def delete_recomputation(name):
         flask.render_template("recomputation404.html", name=name)
 
 
-# @config.recompute_app.route("/vagrantfile/<name>", methods=["GET"])
-# def get_vagrantfile(name):
-#     path = file.get_vagrantfile_relative_path(name)
-#     if path is not None:
-#         return flask.send_file(path, mimetype="text/plain", as_attachment=True)
-#     else:
-#         return flask.jsonify(message="Vagrantfile found"), 400
-
-
 @config.recompute_app.route("/vagrantbox/download/<name>", methods=["GET"])
 def download_vagrantbox(name):
-    path = file.get_vagrantbox_relative_path(name)
+    path = io.get_vagrantbox_relative(name)
     if path is not None:
         return flask.send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
     else:

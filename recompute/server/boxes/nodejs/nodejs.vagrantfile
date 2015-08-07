@@ -1,6 +1,5 @@
 
 $rootScript = <<SCRIPT
-  cd /home/vagrant
   apt-get update -y
   apt-get install -y software-properties-common python-software-properties
   apt-get install -y curl git build-essential libssl-dev firefox
@@ -10,7 +9,6 @@ $rootScript = <<SCRIPT
 SCRIPT
 
 $userScript = <<SCRIPT
-  cd /home/vagrant
   curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
   echo "source /home/vagrant/.nvm/nvm.sh" >> /home/vagrant/.profile
   source /home/vagrant/.profile

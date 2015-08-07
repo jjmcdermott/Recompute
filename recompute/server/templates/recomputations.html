@@ -36,7 +36,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for recomputation in all_recomputations %}
+                {% for recomputation in all_recomputations_summary %}
                     <tr>
                         <td><a href="{{ url_for('recomputation_page', name=recomputation.name) }}">{{ recomputation.name }}</a></td>
                         <td>{{ recomputation.id }}</td>

@@ -1,20 +1,29 @@
-__all__ = ["config", "consts", "file", "forms", "pageserver", "play", "recomputation", "recompute", "recompute_learn",
+__all__ = ["config", "consts", "io", "forms", "pageserver", "play", "recomputation", "recompute", "defaults",
            "restful"]
 
 from tornado.ioloop import IOLoop
 from . import config
 from . import consts
-from . import file
+from . import io
 from . import forms
 from . import pageserver
 from . import play
 from . import recomputation
 from . import recompute
-from . import recompute_learn
+from . import defaults
 from . import restful
 
 
 def run(port):
-    config.recomputations_count = file.get_recomputations_count()
+    init()
     config.recompute_server.listen(port)
     IOLoop.instance().start()
+
+
+def init():
+    """
+    Initialization function for the web app
+    """
+
+    config.recomputations_count = io.get_recomputations_count()
+    io.create_recomputations_dir()

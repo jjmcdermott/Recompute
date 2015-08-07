@@ -24,3 +24,6 @@ recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
 tornado.log.enable_pretty_logging()
 
 recomputations_count = 0
+
+# how many recomputations to show in the "latest" list
+latest_recomputations_count = 5

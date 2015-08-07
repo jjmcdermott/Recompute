@@ -1,30 +1,17 @@
+# software-properties-common and python-software-properties (put both in case, should do more tests)
+# for getting add-apt-repository command to work in ubuntu 12.04 and/or 14.04 (cannot accurately recall now)
 
 $rootScript = <<SCRIPT
-  cd /home/vagrant
   apt-get update -y
   apt-get install -y software-properties-common python-software-properties
   apt-get install -y git build-essential gcc clang make autotools-dev autoconf cmake scons
-  
   apt-get update -y
-  apt-get install -y 
-
-SCRIPT
-
-$userScript = <<SCRIPT
-  cd /home/vagrant
-  git clone https://github.com/ampl/gecode -b master
-  cd gecode/
-  chmod +x configure
-  ./configure
-  make
-  sudo make install
-  
 SCRIPT
 
 Vagrant.configure("2") do |config|
 
   config.vm.box = "ubuntu/trusty64"
-  config.vm.hostname = "gecode.box"
+  config.vm.hostname = "cpp.box"
 
   # more cpu and memory
   config.vm.provider "virtualbox" do |v|
@@ -38,6 +25,5 @@ Vagrant.configure("2") do |config|
 
   # Shell provisioning
   config.vm.provision "shell", inline: $rootScript
-  config.vm.provision "shell", inline: $userScript
 
 end

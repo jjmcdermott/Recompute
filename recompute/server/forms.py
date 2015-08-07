@@ -14,6 +14,10 @@ class FilterRecomputationsForm(flask_wtf.Form):
     name = wtfStringField("name", validators=[wtfDataRequired()])
     clear = wtfBooleanField('clear')
 
+#
+# class EditRecomputationForm(flask_wtf.Form):
+#     name = wtfSelectField("name", validators=[wtfDataRequired()])
+#
 
 class FilterBoxesForm(flask_wtf.Form):
     language = wtfStringField("language", validators=[wtfDataRequired()])

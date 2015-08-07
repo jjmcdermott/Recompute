@@ -1,3 +1,7 @@
+"""
+Recompute a project
+"""
+
 import subprocess
 import os
 import sys
@@ -7,19 +11,21 @@ import yaml
 import datetime
 import bs4
 from . import config
-from . import file
+from . import io
 from . import recomputation
-from . import recompute_learn
+from . import defaults
 
 
 def __execute(command, cwd):
     print command
     p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
-    lines_iter = iter(p.stdout.readline, b"")
-    for line in lines_iter:
-        sys.stdout.write(line)
-        sys.stdout.flush()
-    p.communicate()
+    while True:
+        out = p.stdout.read(1)
+        if out == '' and p.poll() is not None:
+            break
+        if out != '':
+            sys.stdout.write(out)
+            sys.stdout.flush()
     rcode = p.returncode
     if rcode == 0:
         return True
@@ -34,20 +40,27 @@ def __make_recomputefile(recomputation_data, recomputefile):
         rfile.write("{0}".format(recomputefile_json))
 
 
-def __make_vagrantbox(recomputation_data):
-    recomputation_name = recomputation_data.name
-    vagrantbox = recomputation_name + ".box"
-    recomputation_dir = file.get_recomputation_absolute_dir(recomputation_name)
-    recomputation_vm_dir = recomputation_dir + "vm/"
+def __make_vagrantbox(recomputation_summary):
+    name = recomputation_summary.name
+    tag = recomputation_summary.release.tag
+    version = recomputation_summary.release.version
+
+    vagrantbox = name + ".box"
+
+    recomputation_dir = io.get_recomputation_dir(name)
+    recomputation_build_dir = io.get_recomputation_build_dir(name, tag, version)
 
     success = __execute(["vagrant", "up", "--provision"], recomputation_dir)
     if success:
         __execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
-        __execute(["vagrant", "destroy"], recomputation_dir)
-        __execute(["mkdir", "vm"], recomputation_dir)
-        __execute(["cp", vagrantbox, "vms/"], recomputation_dir)
-        __execute(["vagrant", "init", vagrantbox], recomputation_vm_dir)
-        __execute(["vagrant", "up"], recomputation_vm_dir)
+        __execute(["vagrant", "destroy", "-f"], recomputation_dir)
+        __execute(["vagrant", "box", "add", name, vagrantbox], recomputation_dir)
+
+        io.create_recomputation_vms_dir(name)
+        io.create_recomputation_build_dir(name, tag, version)
+
+        __execute(["vagrant", "init", name], recomputation_build_dir)
+        __execute(["vagrant", "up"], recomputation_build_dir)
 
     return success
 
@@ -79,8 +92,8 @@ def __make_vagrantfile(recomputation_data, vagrantfile_template, vagrantfile):
 
 
 def __get_vagrantfile_template(language):
-    if language in recompute_learn.vagrantfile_templates_dict:
-        return file.template_vagrantfiles_dir_absolute + recompute_learn.vagrantfile_templates_dict[language]
+    if language in defaults.vagrantfile_templates_dict:
+        return io.template_vagrantfiles_dir_absolute + defaults.vagrantfile_templates_dict[language]
     else:
         return None
 
@@ -109,8 +122,8 @@ def __get_language_version(travis_script, language):
     if travis_script is not None:
         if language in travis_script:
             return travis_script[language][-1]
-    if language in recompute_learn.default_languages_version_dict:
-        return recompute_learn.default_languages_version_dict[language]
+    if language in defaults.languages_version_dict:
+        return defaults.languages_version_dict[language]
     else:
         return None
 
@@ -162,7 +175,11 @@ def __get_recomputation_data(id, name, github_url, box):
             test_scripts.extend(travis_script["script"])
 
     else:
-        install_scripts.extend(recompute_learn.default_languages_installs_dict[language])
+        install_scripts.extend(defaults.languages_install_dict[language])
+
+    # extra stuff for individual recomputations
+    if name in defaults.boxes_install_scripts:
+        install_scripts.extend(defaults.boxes_install_scripts[name])
 
     # clean up
     final_test_scripts = list()
@@ -178,8 +195,8 @@ def __get_recomputation_data(id, name, github_url, box):
     installs = " \n".join(install_scripts)
     tests = " \n".join(final_test_scripts)
 
-    memory = recompute_learn.default_memory
-    cpus = recompute_learn.default_cpus
+    memory = defaults.vm_memory
+    cpus = defaults.vm_cpus
 
     build = recomputation.Build(box, box_version, language, language_ver, github_url, github_repo_name,
                                 github_commit, add_apts, apt_gets, installs, tests, memory, cpus)
@@ -195,7 +212,7 @@ def __get_recomputation_data(id, name, github_url, box):
 
 
 def create_vm(name, github_url, box):
-    recomputation_dir = file.get_recomputation_absolute_dir(name)
+    recomputation_dir = io.get_recomputation_dir(name)
     vagrantfile = recomputation_dir + "Vagrantfile"
     recomputefile = recomputation_dir + name + ".recompute.json"
 
@@ -213,9 +230,9 @@ def create_vm(name, github_url, box):
     __make_vagrantbox(recomputation_data)
     __make_recomputefile(recomputation_data, recomputefile)
 
-    if not file.exists_vagrantbox(name):
+    if not io.exists_vagrantbox(name):
         shutil.rmtree(recomputation_dir, ignore_errors=True)
-        return False, "Recomputation was unsuccessful."
+        return False, "Vagrantbox was not created."
 
     print "Recomputed: {} @ {}".format(name, recomputation_dir)
     config.recomputations_count += 1
