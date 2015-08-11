@@ -64,7 +64,7 @@ Your browser will start downloading the virtual machine containing gecode once i
 
 To start the virtual machine, use Vagrant in the directory containing the virtual machine:
 
-- `$ vagrant init`
+- `$ vagrant init gecode.box`
 - `$ vagrant up`
 - `$ vagrant ssh`
 
