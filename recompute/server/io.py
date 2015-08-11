@@ -32,13 +32,13 @@ def create_recomputation_vms_dir(name):
         os.makedirs(vms_dir)
 
 
-def create_recomputation_build_dir(recomputation_name, tag, version):
+def create_recomputation_build_dir(name, tag, version):
     """
     :param tag:
     :param version:
     """
 
-    build_dir = get_recomputation_build_dir(recomputation_name, tag, version)
+    build_dir = get_recomputation_build_dir(name, tag, version)
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
 
@@ -178,6 +178,15 @@ def exists_vagrantbox(name):
     """
 
     return get_vagrantfile_relative(name) is not None
+
+
+def remove_vagrantbox_cache(name):
+    """
+    TODO: fix
+    """
+
+    cache_dir = "{recomputation_dir}/.vagrant".format(recomputation_dir=get_recomputation_dir(name))
+    shutil.rmtree(cache_dir, ignore_errors=True)
 
 
 def exists_recomputation(name):

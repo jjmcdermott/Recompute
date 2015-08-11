@@ -1,13 +1,13 @@
 import flask_wtf
 from wtforms import StringField as wtfStringField, SelectField as wtfSelectField, BooleanField as wtfBooleanField
 from wtforms.validators import DataRequired as wtfDataRequired
-from . import consts
+from . import boxes
 
 
 class RecomputeForm(flask_wtf.Form):
     name = wtfStringField("name", validators=[wtfDataRequired()])
     github_url = wtfStringField("github_url", validators=[wtfDataRequired()])
-    box = wtfSelectField("box", choices=consts.RECOMPUTE_BOXES, validators=[wtfDataRequired()])
+    box = wtfSelectField("box", choices=boxes.RECOMPUTE_BOXES, validators=[wtfDataRequired()])
 
 
 class FilterRecomputationsForm(flask_wtf.Form):

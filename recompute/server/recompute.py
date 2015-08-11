@@ -12,6 +12,7 @@ from . import config
 from . import io
 from . import recomputation
 from . import defaults
+from . import boxes
 
 
 def __execute(command, cwd):
@@ -34,7 +35,7 @@ def __execute(command, cwd):
 def __make_recomputefile(recomputation_summary):
     recomputefile_path = io.get_recomputefile_path(recomputation_summary.name)
     with open(recomputefile_path, "w") as rfile:
-        rfile.write("{}".format(recomputation_summary.to_json()))
+        rfile.write("{}".format(recomputation_summary.to_json_pretty()))
 
     return True
 
@@ -53,9 +54,9 @@ def __make_vagrantbox(recomputation_summary):
     if success:
         __execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
         __execute(["vagrant", "destroy", "-f"], recomputation_dir)
-        __execute(["rm", ".vagrant/", "-rf"], recomputation_dir)
         __execute(["vagrant", "box", "add", name, vagrantbox], recomputation_dir)
 
+        io.remove_vagrantbox_cache(name)
         io.create_recomputation_vms_dir(name)
         io.create_recomputation_build_dir(name, tag, version)
 
@@ -132,7 +133,7 @@ def __get_language(travis_script, github_url):
 def __get_github_commit_sha(github_url):
     response = requests.get(github_url)
     soup = bs4.BeautifulSoup(response.text)
-    return soup.find("a", {"class": "sha-block"})["href"]
+    return soup.find("a", {"class": "sha-block"})["href"].split("/")[-1]
 
 
 def __get_add_apts_repositories(travis_script):
@@ -210,6 +211,7 @@ def __gather_recomputation_summary(name, github_url, box):
 
     id = config.recomputations_count
 
+    box_url = boxes.RECOMPUTE_BOXES_URL[box]
     box_version = "TODO"
 
     travis_script = __get_travis_script(github_url)
@@ -233,7 +235,7 @@ def __gather_recomputation_summary(name, github_url, box):
     version = "0"
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    build = recomputation.Build(box, box_version, language, language_version, github_url, github_repo_name,
+    build = recomputation.Build(box, box_url, box_version, language, language_version, github_url, github_repo_name,
                                 github_commit, add_apts, apt_gets, installs, tests, memory, cpus)
     release = recomputation.Release(tag, version, date, build)
 

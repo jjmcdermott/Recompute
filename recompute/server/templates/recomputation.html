@@ -39,6 +39,7 @@
                     <th>TAG</th>
                     <th>VERSION</th>
                     <th>GITHUB</th>
+                    <th>VM</th>
                     <th>LAST UPDATED</th>
                     <th>PLAY</th>
                     <th>DOWNLOAD</th>
@@ -52,6 +53,7 @@
                     <td>{{ release.tag }}</td>
                     <td>{{ release.version }}</td>
                     <td><a href="{{ release.github_url + '/tree/' + release.github_commit }}">{{ release.github_commit }}</a></td>
+                    <td><a href="{{ release.box_url }}">{{ release.box }}</a></td>
                     <td>{{ release.date }}</td>
                     <td><a onclick="play('{{ recomputation.name }}');"><i class="fa fa-play-circle"></i> Play</a></td>
                     <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name) }}"><i class="fa fa-download"></i> Vagrantbox</a></td>

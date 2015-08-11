@@ -4,6 +4,7 @@ $rootScript = <<SCRIPT
   apt-get install -y software-properties-common python-software-properties
   apt-get install -y curl git build-essential libssl-dev firefox
   apt-get update -y
+  apt-get clean -y
 SCRIPT
 
 $userScript = <<SCRIPT

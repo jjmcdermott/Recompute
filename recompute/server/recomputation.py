@@ -8,14 +8,14 @@ class Recomputation(object):
         self.github_url = github_url
         self.release = release
 
-    def to_json(self):
+    def to_json_pretty(self):
         recomputation_vars = dict()
         recomputation_vars["id"] = self.id
         recomputation_vars["name"] = self.name
         recomputation_vars["github_url"] = self.github_url
         recomputation_vars["releases"] = list()
         recomputation_vars["releases"].append(self.release.to_dict())
-        return json.dumps(recomputation_vars)
+        return json.dumps(recomputation_vars, indent=4, sort_keys=True)
 
 
 class Release(object):
@@ -31,6 +31,7 @@ class Release(object):
         release_vars["version"] = self.version
         release_vars["date"] = self.date
         release_vars["box"] = self.build.box
+        release_vars["box_url"] = self.build.box_url
         release_vars["box_version"] = self.build.box_version
         release_vars["github_url"] = self.build.github_url
         release_vars["github_commit"] = self.build.github_commit
@@ -38,9 +39,10 @@ class Release(object):
 
 
 class Build(object):
-    def __init__(self, box, box_version, language, language_ver, github_url, github_repo_name, github_commit,
+    def __init__(self, box, box_url, box_version, language, language_ver, github_url, github_repo_name, github_commit,
                  add_apts, apt_gets, installs, tests, memory, cpus):
         self.box = box
+        self.box_url = box_url
         self.box_version = box_version
         self.language = language
         self.language_version = language_ver

@@ -9,3 +9,10 @@ RECOMPUTE_BOXES = [
     (HASHICORP_PRECISE64, HASHICORP_PRECISE64),
     (HASHICORP_PRECISE32, HASHICORP_PRECISE32)
 ]
+
+RECOMPUTE_BOXES_URL = {
+    UBUNTU_TRUSTY64: "https://atlas.hashicorp.com/ubuntu/boxes/trusty64",
+    UBUNTU_TRUSTY32: "https://atlas.hashicorp.com/ubuntu/boxes/trusty32",
+    HASHICORP_PRECISE64: "https://atlas.hashicorp.com/hashicorp/boxes/precise64",
+    HASHICORP_PRECISE32: "https://atlas.hashicorp.com/hashicorp/boxes/precise32"
+}

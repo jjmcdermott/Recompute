@@ -49,7 +49,7 @@ def delete_recomputation(name):
     recomputation["name"] = name
 
     if io.exists_recomputation(name):
-        io.delete_recomputation(name)
+        io.destroy_recomputation(name)
         flask.flash(name + " is removed", "warning")
         flask.render_template("recomputation404.html", name=name)
     else:

@@ -4,6 +4,7 @@ $rootScript = <<SCRIPT
   apt-get install -y software-properties-common python-software-properties
   apt-get install -y git build-essential python<LANGUAGE_VERSION> python<LANGUAGE_VERSION>-dev python-pip python-virtualenv
   apt-get update -y
+  apt-get clean -y
 SCRIPT
 
 Vagrant.configure("2") do |config|

@@ -62,7 +62,7 @@ If you have all the dependencies installed, you should see that the server is cr
 was started. The process should finish within 10 minutes or longer depending on your host machine.
 Your browser will start downloading the virtual machine containing gecode once it's ready.
 
-To start the virtual machine, use Vagrant from the directory containing the virtual machine:
+To start the virtual machine, use Vagrant in the directory containing the virtual machine:
 
 - `$ vagrant init`
 - `$ vagrant up`

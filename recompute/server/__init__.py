@@ -1,9 +1,9 @@
-__all__ = ["config", "consts", "io", "forms", "pageserver", "play", "recomputation", "recompute", "defaults",
+__all__ = ["config", "boxes", "io", "forms", "pageserver", "play", "recomputation", "recompute", "defaults",
            "restful"]
 
 from tornado.ioloop import IOLoop
 from . import config
-from . import consts
+from . import boxes
 from . import io
 from . import forms
 from . import pageserver
