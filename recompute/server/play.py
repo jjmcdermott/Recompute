@@ -22,9 +22,9 @@ class PlayWebSocket(tornado.websocket.WebSocketHandler):
     def on_vagrant_ssh(self):
         self.write_message("\x1b[31mSSH into {}...\x1b[m\r\n\n".format(self.name))
 
-    def open(self, name):
+    def open(self, name, tag, version):
         self.name = name
-        self.terminal.handle_open(self.name)
+        self.terminal.handle_open(self.name, tag, version)
         self.log.info("Recomputation: {name} opened @ {ip} ".format(name=self.name, ip=self.request.remote_ip))
 
     def on_message(self, message):
@@ -48,7 +48,7 @@ class PlayTerminal(object):
         self.ioloop = tornado.ioloop.IOLoop.instance()
         self.recomputation_build_dir = None
 
-    def handle_open(self, name, tag="Latest", version="0"):
+    def handle_open(self, name, tag, version):
         from . import config
         from . import io
 

@@ -79,8 +79,8 @@ function apiStatus(data) {
 <script src="{{url_for('static', filename='play.js')}}"></script>
 
 <script>
-    function play(vm) {
-        var ws_url = "ws://" + window.location.host + "/ws/play/" + vm;
+    function play(vm, tag, version) {
+        var ws_url = "ws://" + window.location.host + "/ws/play/" + vm + "/" + tag + "/" + version;
         var terminal_args = {
             cols: 80,
             rows: 24,
@@ -88,7 +88,7 @@ function apiStatus(data) {
             screenKeys: true,
             cursorBlink: true
         }
-        var terminal = make_play_window(document.body, terminal_args, ws_url, vm);
+        var terminal = make_play_window(document.body, terminal_args, ws_url, vm, tag, version);
     }
 </script>
 

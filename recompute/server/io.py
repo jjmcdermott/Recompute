@@ -116,7 +116,7 @@ def get_vagrantfile_relative(name):
     return get_file_if_exists(name, "Vagrantfile", False)
 
 
-def get_vagrantbox_relative(name, tag="Latest", version="0"):
+def get_vagrantbox_relative(name, tag, version):
     """
     Used to download Vagrantbox
 

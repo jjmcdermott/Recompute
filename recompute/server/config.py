@@ -16,7 +16,7 @@ settings = {
     "debug": True
 }
 recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
-    (r"/ws/play/(.*)", play.PlayWebSocket),
+    (r"/ws/play/(.*)/(.*)/(.*)", play.PlayWebSocket),
     (r".*", tornado.web.FallbackHandler, dict(fallback=recompute_container))
 ], **settings))
 

@@ -57,9 +57,9 @@ def delete_recomputation(name):
         flask.render_template("recomputation404.html", name=name)
 
 
-@config.recompute_app.route("/vagrantbox/download/<name>", methods=["GET"])
-def download_vagrantbox(name):
-    path = io.get_vagrantbox_relative(name)
+@config.recompute_app.route("/vagrantbox/download/<name>/<tag>/<version>", methods=["GET"])
+def download_vagrantbox(name, tag, version):
+    path = io.get_vagrantbox_relative(name, tag, version)
     if path is not None:
         return flask.send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
     else:

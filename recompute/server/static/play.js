@@ -3,10 +3,10 @@
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
  */
 
-function make_play_window(root, terminal_args, ws_url, vm) {
+function make_play_window(root, terminal_args, ws_url, vm, tag, version) {
 
     var ws = new WebSocket(ws_url);
-    var win = new PlayWindow(ws, root, vm);
+    var win = new PlayWindow(ws, root, vm, tag, version);
     win.resize(terminal_args.cols, terminal_args.rows);
 
     ws.onopen = function(event) {
@@ -33,7 +33,7 @@ function make_play_window(root, terminal_args, ws_url, vm) {
     }
 }
 
-function PlayWindow(ws, root, vm) {
+function PlayWindow(ws, root, vm, tag, version) {
     this.socket = ws;
     this.root = root;
 
@@ -58,7 +58,7 @@ function PlayWindow(ws, root, vm) {
 
     this.title = document.createElement("div");
     this.title.className = "title";
-    this.title.innerHTML = vm
+    this.title.innerHTML = vm + " - " + tag + ", " + version
 
     this.cols = Terminal.geometry[0];
     this.rows = Terminal.geometry[1];
