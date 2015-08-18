@@ -10,22 +10,29 @@ class PlayWebSocket(tornado.websocket.WebSocketHandler):
     def __init__(self, application, request, **kwargs):
         super(PlayWebSocket, self).__init__(application, request, **kwargs)
         self.terminal = PlayTerminal(self)
-        self.recomputation_name = None
+        self.name = None
         self.log = logging.getLogger(__name__)
 
-    def open(self, recomputation_name):
-        self.recomputation_name = recomputation_name
-        self.write_message("\x1b[31mStarting {}...\x1b[m\r\n\n".format(self.recomputation_name))
-        self.terminal.handle_open(self.recomputation_name)
-        self.write_message("\x1b[31mSSH into {}...\x1b[m\r\n\n".format(self.recomputation_name))
-        self.log.info("Recomputation: {} opened @ {} ".format(self.recomputation_name, self.request.remote_ip))
+    def on_vagrant_init(self):
+        self.write_message("\x1b[31mInitializing {}...\x1b[m\r\n\n".format(self.name))
+
+    def on_vagrant_up(self):
+        self.write_message("\x1b[31mStarting {}...\x1b[m\r\n\n".format(self.name))
+
+    def on_vagrant_ssh(self):
+        self.write_message("\x1b[31mSSH into {}...\x1b[m\r\n\n".format(self.name))
+
+    def open(self, name):
+        self.name = name
+        self.terminal.handle_open(self.name)
+        self.log.info("Recomputation: {name} opened @ {ip} ".format(name=self.name, ip=self.request.remote_ip))
 
     def on_message(self, message):
         self.terminal.handle_message(message)
 
     def on_close(self):
         self.terminal.handle_close()
-        self.log.info("Recomputation: {} closed @ {} ".format(self.recomputation_name, self.request.remote_ip))
+        self.log.info("Recomputation: {name} closed @ {ip} ".format(name=self.name, ip=self.request.remote_ip))
 
     def on_pty_read(self, data):
         self.write_message(data)
@@ -39,24 +46,35 @@ class PlayTerminal(object):
         self.socket = socket
         self.pty = None
         self.ioloop = tornado.ioloop.IOLoop.instance()
+        self.recomputation_build_dir = None
 
     def handle_open(self, name, tag="Latest", version="0"):
         from . import config
         from . import io
 
-        build_dir = io.get_recomputation_build_dir(name, tag, version)
-        io.execute(["vagrant", "up"], build_dir)
+        self.recomputation_build_dir = io.get_recomputation_build_dir(name, tag, version)
+
+        self.socket.on_vagrant_init()
+        io.execute(["vagrant", "init", name], self.recomputation_build_dir)
+
+        self.socket.on_vagrant_up()
+        io.execute(["vagrant", "up"], self.recomputation_build_dir)
+
+        self.socket.on_vagrant_ssh()
+        argv = ["vagrant", "ssh"]
         cwd = os.path.join(config.recompute_app.root_path,
                            "recomputations/{name}/vms/{tag}_{version}".format(name=name, tag=tag, version=version))
-        argv = ["vagrant", "ssh"]
         env = os.environ.copy()
         env["TERM"] = "xterm"
         self.pty = ptyprocess.PtyProcessUnicode.spawn(argv=argv, cwd=cwd, env=env, dimensions=(24, 80))
         self.ioloop.add_handler(self.pty.fd, self.pty_read, self.ioloop.READ)
 
     def handle_close(self):
-        self.ioloop.remove_handler(self.pty.fd)
+        from . import io
+        io.execute(["vagrant", "halt"], self.recomputation_build_dir)
+
         os.close(self.pty.fd)
+        self.ioloop.remove_handler(self.pty.fd)
         self.pty.isalive()
 
     def handle_message(self, message):

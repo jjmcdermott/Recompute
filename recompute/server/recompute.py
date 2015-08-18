@@ -2,6 +2,7 @@
 Recompute a project
 """
 
+import shutil
 import requests
 import yaml
 import datetime
@@ -11,6 +12,7 @@ from . import io
 from . import recomputation
 from . import defaults
 from . import boxes
+
 
 def __make_recomputefile(recomputation_summary):
     recomputefile_path = io.get_recomputefile_path(recomputation_summary.name)
@@ -39,9 +41,7 @@ def __make_vagrantbox(recomputation_summary):
         io.remove_vagrantbox_cache(name)
         io.create_recomputation_vms_dir(name)
         io.create_recomputation_build_dir(name, tag, version)
-
-        io.execute(["vagrant", "init", name], recomputation_build_dir)
-        io.execute(["vagrant", "up"], recomputation_build_dir)
+        shutil.move(recomputation_dir + "/" + vagrantbox, recomputation_build_dir + "/" + vagrantbox)
 
     return success
 
@@ -223,7 +223,7 @@ def __gather_recomputation_summary(name, github_url, box):
 
 
 def create_vm(name, github_url, box):
-    io.create_recomputation_dir(name)
+    io.create_new_recomputation_dir(name)
 
     try:
         recomputation_summary = __gather_recomputation_summary(name, github_url, box)

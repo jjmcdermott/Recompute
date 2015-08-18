@@ -27,3 +27,4 @@ def init():
 
     config.recomputations_count = io.get_recomputations_count()
     io.create_recomputations_dir()
+    io.update_vagrantboxes()

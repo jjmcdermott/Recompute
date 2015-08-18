@@ -53,7 +53,7 @@ def boxes_page():
     from .forms import FilterBoxesForm
     filter_boxes_form = FilterBoxesForm()
 
-    all_boxes = io.get_all_boxes_data()
+    all_boxes = io.get_all_boxes_summary()
 
     if filter_boxes_form.validate_on_submit():
         language = filter_boxes_form.language.data
