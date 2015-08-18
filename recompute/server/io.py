@@ -2,6 +2,8 @@
 Accessing recomputation files, Vagrantboxes and Vagrantfiles
 """
 
+import subprocess
+import sys
 import os
 import shutil
 import json
@@ -211,3 +213,20 @@ def get_all_boxes_data():
     # TODO get rid of hardcoded
     return [{"language": "python", "version": "2.7"}, {"language": "c/c++"}, {"language": "node.js", "version": "0.10"},
             {"language": "gap", "version": "4.7.8"}, {"language": "gecode", "version": "4.4.0"}]
+
+
+def execute(command, cwd):
+    print command
+    p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
+    while True:
+        out = p.stdout.read(1)
+        if out == '' and p.poll() is not None:
+            break
+        if out != '':
+            sys.stdout.write(out)
+            sys.stdout.flush()
+    rcode = p.returncode
+    if rcode == 0:
+        return True
+    else:
+        return False

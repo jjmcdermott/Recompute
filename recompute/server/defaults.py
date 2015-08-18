@@ -26,5 +26,5 @@ languages_install_dict = {
 }
 
 boxes_install_scripts = {
-    "gecode": ["echo 'export LD_LIBRARY_PATH=/home/vagrant/gecode' >> ~/.bashrc", "source ~/.bashrc"]
+    "gecode": ["echo \"export LD_LIBRARY_PATH=/home/vagrant/gecode\" >> /home/vagrant/.bashrc", "source /home/vagrant/.bashrc"]
 }

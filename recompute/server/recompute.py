@@ -2,8 +2,6 @@
 Recompute a project
 """
 
-import subprocess
-import sys
 import requests
 import yaml
 import datetime
@@ -13,24 +11,6 @@ from . import io
 from . import recomputation
 from . import defaults
 from . import boxes
-
-
-def __execute(command, cwd):
-    print command
-    p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
-    while True:
-        out = p.stdout.read(1)
-        if out == '' and p.poll() is not None:
-            break
-        if out != '':
-            sys.stdout.write(out)
-            sys.stdout.flush()
-    rcode = p.returncode
-    if rcode == 0:
-        return True
-    else:
-        return False
-
 
 def __make_recomputefile(recomputation_summary):
     recomputefile_path = io.get_recomputefile_path(recomputation_summary.name)
@@ -50,18 +30,18 @@ def __make_vagrantbox(recomputation_summary):
     recomputation_dir = io.get_recomputation_dir(name)
     recomputation_build_dir = io.get_recomputation_build_dir(name, tag, version)
 
-    success = __execute(["vagrant", "up", "--provision"], recomputation_dir)
+    success = io.execute(["vagrant", "up", "--provision"], recomputation_dir)
     if success:
-        __execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
-        __execute(["vagrant", "destroy", "-f"], recomputation_dir)
-        __execute(["vagrant", "box", "add", name, vagrantbox], recomputation_dir)
+        io.execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
+        io.execute(["vagrant", "destroy", "-f"], recomputation_dir)
+        io.execute(["vagrant", "box", "add", "--force", name, vagrantbox], recomputation_dir)
 
         io.remove_vagrantbox_cache(name)
         io.create_recomputation_vms_dir(name)
         io.create_recomputation_build_dir(name, tag, version)
 
-        __execute(["vagrant", "init", name], recomputation_build_dir)
-        __execute(["vagrant", "up"], recomputation_build_dir)
+        io.execute(["vagrant", "init", name], recomputation_build_dir)
+        io.execute(["vagrant", "up"], recomputation_build_dir)
 
     return success
 
@@ -179,7 +159,7 @@ def __get_install_scripts(recomputation_name, language, travis_script):
     if recomputation_name in defaults.boxes_install_scripts:
         install_scripts.extend(defaults.boxes_install_scripts[recomputation_name])
 
-    return " \n".join(install_scripts)
+    return "\n  ".join(install_scripts)
 
 
 def __get_test_scripts(travis_script):

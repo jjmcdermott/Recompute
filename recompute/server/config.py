@@ -3,13 +3,12 @@ import tornado.wsgi
 import tornado.httpserver
 import tornado.web
 import tornado.log
+from . import play
 
 recompute_app = flask.Flask(__name__)
 recompute_app.config.from_object(__name__)
 recompute_app.config["SECRET_KEY"] = "SECRET!"
 recompute_app.debug = True
-
-from . import play
 
 recompute_container = tornado.wsgi.WSGIContainer(recompute_app)
 settings = {

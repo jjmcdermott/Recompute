@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/trusty64"
   config.vm.hostname = "python27.box"
 
-  config.vm.provider "virtualbox" do |v|
+  config.vm.prcd ovider "virtualbox" do |v|
     # more cpu and memory
     v.memory = <MEMORY>
     v.cpus = <CPUS>

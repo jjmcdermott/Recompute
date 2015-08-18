@@ -4,7 +4,6 @@ import ptyprocess
 import tornado.web
 import tornado.websocket
 import tornado.ioloop
-from .config import recompute_app
 
 
 class PlayWebSocket(tornado.websocket.WebSocketHandler):
@@ -16,8 +15,9 @@ class PlayWebSocket(tornado.websocket.WebSocketHandler):
 
     def open(self, recomputation_name):
         self.recomputation_name = recomputation_name
+        self.write_message("\x1b[31mStarting {}...\x1b[m\r\n\n".format(self.recomputation_name))
         self.terminal.handle_open(self.recomputation_name)
-        self.write_message("\x1b[31mRecomputation: {}!\x1b[m\r\n\n".format(self.recomputation_name))
+        self.write_message("\x1b[31mSSH into {}...\x1b[m\r\n\n".format(self.recomputation_name))
         self.log.info("Recomputation: {} opened @ {} ".format(self.recomputation_name, self.request.remote_ip))
 
     def on_message(self, message):
@@ -40,9 +40,15 @@ class PlayTerminal(object):
         self.pty = None
         self.ioloop = tornado.ioloop.IOLoop.instance()
 
-    def handle_open(self, recomputation_name):
+    def handle_open(self, name, tag="Latest", version="0"):
+        from . import config
+        from . import io
+
+        build_dir = io.get_recomputation_build_dir(name, tag, version)
+        io.execute(["vagrant", "up"], build_dir)
+        cwd = os.path.join(config.recompute_app.root_path,
+                           "recomputations/{name}/vms/{tag}_{version}".format(name=name, tag=tag, version=version))
         argv = ["vagrant", "ssh"]
-        cwd = os.path.join(recompute_app.root_path, "recomputations", recomputation_name, "vms", "Latest_0")
         env = os.environ.copy()
         env["TERM"] = "xterm"
         self.pty = ptyprocess.PtyProcessUnicode.spawn(argv=argv, cwd=cwd, env=env, dimensions=(24, 80))
