@@ -12,7 +12,7 @@ recompute_app.debug = True
 
 recompute_container = tornado.wsgi.WSGIContainer(recompute_app)
 settings = {
-    "auto_reload": True,
+    "auto_reload": False,
     "debug": True
 }
 recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
@@ -22,7 +22,9 @@ recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
 
 tornado.log.enable_pretty_logging()
 
-recomputations_count = 0
-
 # how many recomputations to show in the "latest" list
 latest_recomputations_count = 5
+
+# initialization variables
+recomputations_count = 0
+base_vagrantboxes_summary = None

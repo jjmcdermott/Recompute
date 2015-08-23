@@ -28,7 +28,7 @@ on Fedora 21 with Virtual Box 4.3 and Vagrant 1.7.2.
 
 You can install virtualenv with pip:
 
-- `$ pip install virtualenv`
+- `$ sudo pip install virtualenv`
 
 To create a new virtual environment:
 
@@ -57,7 +57,7 @@ To exit the virtual environment:
 
 To recompute this project:
 
-1. Start server
+1. Start server: `$ python run.py --port=[port]`
 
 2. Open a web browser and visit: `localhost:[port]`
 

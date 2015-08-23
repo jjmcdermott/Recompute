@@ -23,7 +23,8 @@ def create_recomputation():
         successful, msg = recompute.create_vm(name, github_url, box)
 
         if successful:
-            return flask.send_file(io.get_vagrantbox_relative(name), mimetype="application/vnd.previewsystems.box",
+            return flask.send_file(io.get_vagrantbox_relative(name, "Latest", "0"),
+                                   mimetype="application/vnd.previewsystems.box",
                                    as_attachment=True)
         else:
             flask.flash("Recomputation was unsuccessful. " + msg, "danger")

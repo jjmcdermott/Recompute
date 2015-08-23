@@ -7,6 +7,8 @@ import sys
 import os
 import shutil
 import json
+import re
+from . import boxes
 
 recomputations_dir = "recompute/server/recomputations"
 recomputations_dir_RELATIVE = "recomputations"
@@ -137,7 +139,7 @@ def get_all_recomputations_summary():
     for recomputation in next(os.walk(recomputations_dir))[1]:
         recomputations_summary.append(get_recomputation_summary(recomputation))
     recomputations_summary.sort(key=lambda r: r["id"])
-    return recomputations_summary
+    return list(reversed(recomputations_summary))
 
 
 def get_latest_recomputations_summary(count):
@@ -146,7 +148,7 @@ def get_latest_recomputations_summary(count):
     """
 
     recomputation_list = get_all_recomputations_summary()
-    return list(reversed(recomputation_list[-count:]))
+    return recomputation_list[-count:]
 
 
 def get_recomputations_count():
@@ -178,22 +180,77 @@ def get_all_boxes_summary():
             {"language": "gap", "version": "4.7.8"}, {"language": "gecode", "version": "4.4.0"}]
 
 
-def update_vagrantboxes():
-    execute(["vagrant", "box", "update"], recomputations_dir)
+def get_base_vagrantboxes_summary():
+    """
+    Return a list of vagrantboxes installed, where each element in a dictionary containing the name, provider, and version
+    of the vagrantbox.
+    """
+
+    _, output = execute(["vagrant", "box", "list"], save_output=True)
+    # 'vagrant box list' returns something like
+    # ubuntu/trusty64                                                 (virtualbox, 20150609.0.9)
+    # ubuntu/trusty64                                                 (virtualbox, 20150814.0.1)
+    # ubuntu/trusty64                                                 (virtualbox, 20150817.0.0)
+
+    vagrantboxes = [re.sub("[(),]", "", line).split() for line in output.split("\n") if line]
+    # get rid of repeating white spaces and brackets, so we are left with something like
+    # [['ubuntu/trusty64', 'virtualbox', '20150609.0.9'],
+    #  ['ubuntu/trusty64', 'virtualbox', '20150814.0.1'],
+    #  ['ubuntu/trusty64', 'virtualbox', '20150817.0.0']]
+    # "if line" to get rid of the trailing empty line
+
+    vagrantboxes_list = list()
+
+    for vagrantbox in vagrantboxes:
+        box_vars = dict()
+        box_vars["name"] = vagrantbox[0]
+        box_vars["provider"] = vagrantbox[1]
+        box_vars["version"] = vagrantbox[2]
+        vagrantboxes_list.append(box_vars)
+
+    return vagrantboxes_list
 
 
-def execute(command, cwd):
+def update_base_vagrantboxes():
+    vagrantboxes_summary = get_base_vagrantboxes_summary()
+    base_vagrantboxes_list = [box[0] for box in boxes.RECOMPUTE_BOXES]
+    base_vagrantboxes_summary = [box for box in vagrantboxes_summary if box["name"] in base_vagrantboxes_list]
+
+    for base_vagrantbox in base_vagrantboxes_summary:
+        name = base_vagrantbox["name"]
+        provider = base_vagrantbox["provider"]
+        version = base_vagrantbox["version"]
+
+        _, output = execute(["vagrant", "box", "update", "--box", name, "--provider", provider], save_output=True)
+        # 'vagrant box update --box BOX' returns something like
+        # ... Successfully added box 'ubuntu/trusty64' (v20150818.0.0) for 'virtualbox'!
+        # or
+        # ... Box 'ubuntu/trusty64' (v20150818.0.0) is running the latest version.
+
+        if any("Successfully added box" in line for line in output.split("\n")):
+            # remove old version
+            _, _ = execute(["vagrant", "box", "remove", name, "--box-version", version, "--provider", provider])
+
+
+def execute(command, cwd=None, save_output=False, socket=None):
     print command
+
+    output = ""
+
     p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
     while True:
         out = p.stdout.read(1)
+
         if out == '' and p.poll() is not None:
             break
         if out != '':
             sys.stdout.write(out)
             sys.stdout.flush()
-    rcode = p.returncode
-    if rcode == 0:
-        return True
+
+        if save_output:
+            output += out
+
+    if p.returncode == 0:
+        return True, output
     else:
-        return False
+        return False, output

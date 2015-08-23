@@ -32,7 +32,7 @@ def __make_vagrantbox(recomputation_summary):
     recomputation_dir = io.get_recomputation_dir(name)
     recomputation_build_dir = io.get_recomputation_build_dir(name, tag, version)
 
-    success = io.execute(["vagrant", "up", "--provision"], recomputation_dir)
+    success, _ = io.execute(["vagrant", "up", "--provision"], recomputation_dir)
     if success:
         io.execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
         io.execute(["vagrant", "destroy", "-f"], recomputation_dir)
@@ -135,7 +135,7 @@ def __get_apt_get_installs(travis_script):
     if travis_script is not None:
         if "before_install" in travis_script:
             travis_before_install = travis_script["before_install"]
-            # apt-get install
+
             for apt_get_install in [line for line in travis_before_install if "apt-get install" in line]:
                 packages = [p for p in apt_get_install.split(" ") if p not in ["sudo", "apt-get", "install", "-y"]]
                 apt_installs.extend(packages)
@@ -146,7 +146,7 @@ def __get_apt_get_installs(travis_script):
     return " ".join(apt_installs) + "\n"
 
 
-def __get_install_scripts(recomputation_name, language, travis_script):
+def __get_install_scripts(github_repo_name, language, travis_script):
     install_scripts = list()
 
     if travis_script is not None:
@@ -156,8 +156,8 @@ def __get_install_scripts(recomputation_name, language, travis_script):
         install_scripts.extend(defaults.languages_install_dict[language])
 
     # extra stuff for individual recomputations
-    if recomputation_name in defaults.boxes_install_scripts:
-        install_scripts.extend(defaults.boxes_install_scripts[recomputation_name])
+    if github_repo_name in defaults.boxes_install_scripts:
+        install_scripts.extend(defaults.boxes_install_scripts[github_repo_name])
 
     return "\n  ".join(install_scripts)
 
@@ -185,6 +185,12 @@ def __get_test_scripts(travis_script):
     return " \n".join(final_test_scripts)
 
 
+def __get_box_version(box):
+    for base_box in config.base_vagrantboxes_summary:
+        if base_box["name"] == box:
+            return base_box["version"]
+
+
 def __gather_recomputation_summary(name, github_url, box):
     """
     """
@@ -192,7 +198,7 @@ def __gather_recomputation_summary(name, github_url, box):
     id = config.recomputations_count
 
     box_url = boxes.RECOMPUTE_BOXES_URL[box]
-    box_version = "TODO"
+    box_version = __get_box_version(box)
 
     travis_script = __get_travis_script(github_url)
 
@@ -205,7 +211,7 @@ def __gather_recomputation_summary(name, github_url, box):
 
     add_apts = __get_add_apts_repositories(travis_script)
     apt_gets = __get_apt_get_installs(travis_script)
-    installs = __get_install_scripts(name, language, travis_script)
+    installs = __get_install_scripts(github_repo_name, language, travis_script)
     tests = __get_test_scripts(travis_script)
 
     memory = defaults.vm_memory
@@ -243,10 +249,14 @@ def create_vm(name, github_url, box):
         io.destroy_recomputation(name)
         return False, "Recomputefile was not created."
 
-    print "Recomputed: {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name))
+    server_prints("Recomputed: {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
     config.recomputations_count += 1
 
     return True, "Successful."
+
+
+def server_prints(message):
+    print "\033[94mRecompute: " + message + "\033[0m"
 
 
 class UnknownLanguageException(Exception):
