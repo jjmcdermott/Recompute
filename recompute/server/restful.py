@@ -39,8 +39,10 @@ def edit_recomputation(name):
     return flask.redirect(flask.url_for("recomputation_page", name=name))
 
 
-@config.recompute_app.route("/recomputation/rebuild/<name>", methods=["GET"])
+@config.recompute_app.route("/recomputation/update/<name>", methods=["GET"])
 def update_recomputation(name):
+    recompute_dict = io.read_recomputefile(name)
+    recompute.update_vm(name, recompute_dict["github_url"], recompute_dict["releases"][0]["box"])
     return flask.redirect(flask.url_for("recomputation_page", name=name))
 
 

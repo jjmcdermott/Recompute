@@ -115,7 +115,7 @@ def get_vagrantfile_relative(name):
     :param name: Recomputation
     """
 
-    return get_file_if_exists(name, "Vagrantfile", False)
+    return get_file_if_exists(name, "Vagrantfile", absolute_path=False)
 
 
 def get_vagrantbox_relative(name, tag, version):
@@ -125,19 +125,30 @@ def get_vagrantbox_relative(name, tag, version):
     :param name: Recomputation
     """
 
-    return get_file_if_exists(name, "vms/{tag}_{version}/{name}.box".format(tag=tag, version=version, name=name), False)
+    return get_file_if_exists(name, "vms/{tag}_{version}/{name}.box".format(tag=tag, version=version, name=name),
+                              absolute_path=False)
 
 
-def get_recomputation_summary(name):
-    with open(get_file_if_exists(name, name + ".recompute.json", True)) as recomputation_file:
-        return json.load(recomputation_file)
+def move_vagrantfile_to_build_dir(name, tag, version):
+    _, _ = execute(["mv", "Vagrantfile", "vms/{tag}_{version}/boxVagrantfile".format(tag=tag, version=version)],
+                   cwd=get_recomputation_dir(name))
+
+
+def read_recomputefile(name):
+    recompute_file = get_file_if_exists(name, name + ".recompute.json", absolute_path=True)
+
+    if recompute_file is None:
+        return None
+    else:
+        with open(recompute_file) as recomputation_file:
+            return json.load(recomputation_file)
 
 
 def get_all_recomputations_summary():
     recomputations_summary = list()
     # for each recomputation directory (name)
     for recomputation in next(os.walk(recomputations_dir))[1]:
-        recomputations_summary.append(get_recomputation_summary(recomputation))
+        recomputations_summary.append(read_recomputefile(recomputation))
     recomputations_summary.sort(key=lambda r: r["id"])
     return list(reversed(recomputations_summary))
 
@@ -148,7 +159,8 @@ def get_latest_recomputations_summary(count):
     """
 
     recomputation_list = get_all_recomputations_summary()
-    return recomputation_list[-count:]
+    print recomputation_list
+    return recomputation_list[:count]
 
 
 def get_recomputations_count():
@@ -172,6 +184,10 @@ def exists_recomputation(name):
 
 def destroy_recomputation(name):
     shutil.rmtree(get_recomputation_dir(name), ignore_errors=True)
+
+
+def destroy_build(name, tag, version):
+    shutil.rmtree(get_recomputation_build_dir(name, tag, version), ignore_errors=True)
 
 
 def get_all_boxes_summary():

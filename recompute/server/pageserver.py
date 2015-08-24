@@ -45,7 +45,7 @@ def recomputation_page(name):
     if not io.exists_recomputation(name):
         return flask.render_template("recomputation404.html", name=name)
     else:
-        return flask.render_template("recomputation.html", recomputation=io.get_recomputation_summary(name))
+        return flask.render_template("recomputation.html", recomputation=io.read_recomputefile(name))
 
 
 @config.recompute_app.route("/boxes", methods=["GET"])

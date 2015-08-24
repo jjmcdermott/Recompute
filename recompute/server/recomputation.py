@@ -8,13 +8,14 @@ class Recomputation(object):
         self.github_url = github_url
         self.release = release
 
-    def to_json_pretty(self):
+    def to_pretty_json(self, old_recompute_dict=None):
         recomputation_vars = dict()
         recomputation_vars["id"] = self.id
         recomputation_vars["name"] = self.name
         recomputation_vars["github_url"] = self.github_url
-        recomputation_vars["releases"] = list()
-        recomputation_vars["releases"].append(self.release.to_dict())
+        recomputation_vars["releases"] = [self.release.to_dict()]
+        if old_recompute_dict is not None:
+            recomputation_vars["releases"] = recomputation_vars["releases"] + old_recompute_dict["releases"]
         return json.dumps(recomputation_vars, indent=4, sort_keys=True)
 
 

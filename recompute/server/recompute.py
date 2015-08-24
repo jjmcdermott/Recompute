@@ -15,9 +15,11 @@ from . import boxes
 
 
 def __make_recomputefile(recomputation_summary):
+    recompute_dict = io.read_recomputefile(recomputation_summary.name)
     recomputefile_path = io.get_recomputefile_path(recomputation_summary.name)
-    with open(recomputefile_path, "w") as rfile:
-        rfile.write("{}".format(recomputation_summary.to_json_pretty()))
+
+    with open(recomputefile_path, "w") as recomputef:
+        recomputef.write("{}".format(recomputation_summary.to_pretty_json(recompute_dict)))
 
     return True
 
@@ -113,7 +115,8 @@ def __get_language(travis_script, github_url):
 def __get_github_commit_sha(github_url):
     response = requests.get(github_url)
     soup = bs4.BeautifulSoup(response.text)
-    return soup.find("a", {"class": "sha-block"})["href"].split("/")[-1]
+    print soup.find("a", {"class": "message"})["href"].split("/")[-1]
+    return soup.find("a", {"class": "message"})["href"].split("/")[-1]
 
 
 def __get_add_apts_repositories(travis_script):
@@ -191,6 +194,15 @@ def __get_box_version(box):
             return base_box["version"]
 
 
+def __get_current_build_version(name):
+    recompute_dict = io.read_recomputefile(name)
+
+    if recompute_dict is None:
+        return -1
+    else:
+        return recompute_dict["releases"][0]["version"]
+
+
 def __gather_recomputation_summary(name, github_url, box):
     """
     """
@@ -218,7 +230,7 @@ def __gather_recomputation_summary(name, github_url, box):
     cpus = defaults.vm_cpus
 
     tag = "Latest"
-    version = "0"
+    version = __get_current_build_version(name) + 1
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     build = recomputation.Build(box, box_url, box_version, language, language_version, github_url, github_repo_name,
@@ -249,9 +261,37 @@ def create_vm(name, github_url, box):
         io.destroy_recomputation(name)
         return False, "Recomputefile was not created."
 
-    server_prints("Recomputed: {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
-    config.recomputations_count += 1
+    io.move_vagrantfile_to_build_dir(name, recomputation_summary.release.tag, recomputation_summary.release.version)
 
+    config.recomputations_count += 1
+    server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
+    return True, "Successful."
+
+
+def update_vm(name, github_url, box):
+    try:
+        recomputation_summary = __gather_recomputation_summary(name, github_url, box)
+        tag = recomputation_summary.release.tag
+        version = recomputation_summary.release.version
+    except UnknownLanguageException:
+        return False, "Did not understand the project programming language."
+
+    if not __make_vagrantfile(recomputation_summary):
+        io.destroy_build(name, tag, version)
+        return False, "Vagrantfile cannot be generated."
+
+    if not __make_vagrantbox(recomputation_summary):
+        io.destroy_build(name, tag, version)
+        return False, "Vagrantbox was not created."
+
+    if not __make_recomputefile(recomputation_summary):
+        io.destroy_build(name, tag, version)
+        return False, "Recomputefile was not created."
+
+    io.move_vagrantfile_to_build_dir(name, tag, version)
+
+    config.recomputations_count += 1
+    server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
     return True, "Successful."
 
 

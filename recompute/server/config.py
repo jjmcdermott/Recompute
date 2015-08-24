@@ -9,10 +9,11 @@ recompute_app = flask.Flask(__name__)
 recompute_app.config.from_object(__name__)
 recompute_app.config["SECRET_KEY"] = "SECRET!"
 recompute_app.debug = True
+recompute_app.use_reloader = False
 
 recompute_container = tornado.wsgi.WSGIContainer(recompute_app)
 settings = {
-    "auto_reload": False,
+    "autoreload": False,
     "debug": True
 }
 recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
@@ -24,6 +25,9 @@ tornado.log.enable_pretty_logging()
 
 # how many recomputations to show in the "latest" list
 latest_recomputations_count = 5
+
+# how often to update base vms
+update_base_vms_timer = 5.0 * 60 * 60 * 24  # update every 24 hrs
 
 # initialization variables
 recomputations_count = 0
