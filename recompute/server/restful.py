@@ -12,7 +12,7 @@ def create_recomputation():
 
     if recompute_form.validate_on_submit():
         name = recompute_form.name.data
-        name = re.sub(r"[^a-zA-Z0-9 \n\.]", "-", name)  # replace symbols with underscores
+        name = re.sub(r"[^a-zA-Z0-9 \n\.]", "_", name)  # replace symbols with underscores
         github_url = recompute_form.github_url.data
         box = recompute_form.box.data
 

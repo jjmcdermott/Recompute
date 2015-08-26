@@ -26,15 +26,16 @@ def init():
     Initialization function for the web app
     """
 
-    recompute.server_prints("Creating recomputations directory...")
+    io.server_prints("Creating recomputations directory...")
     io.create_recomputations_dir()
 
-    recompute.server_prints("Getting recomputations count...")
+    io.server_prints("Getting recomputations count...")
     config.recomputations_count = io.get_recomputations_count()
 
     update_base_vagrantboxes()
+    clean_up_failed_recomputations()
 
-    recompute.server_prints("Server started.")
+    io.server_prints("Server started.")
 
 
 def update_base_vagrantboxes():
@@ -42,8 +43,17 @@ def update_base_vagrantboxes():
     t.daemon = True  # exit when ctrl-c is pressed
     t.start()
 
-    recompute.server_prints("Updating base boxes...")
+    io.server_prints("Updating base boxes...")
     io.update_base_vagrantboxes()
 
-    recompute.server_prints("Getting base boxes summary...")
+    io.server_prints("Refreshing base boxes information...")
     config.base_vagrantboxes_summary = io.get_base_vagrantboxes_summary()
+
+
+def clean_up_failed_recomputations():
+    t = threading.Timer(config.clean_up_timer, clean_up_failed_recomputations)
+    t.daemon = True
+    t.start()
+
+    io.server_prints("Cleaning up failed recomputations...")
+    io.remove_failed_recomputations()

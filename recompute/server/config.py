@@ -26,8 +26,9 @@ tornado.log.enable_pretty_logging()
 # how many recomputations to show in the "latest" list
 latest_recomputations_count = 5
 
-# how often to update base vms
-update_base_vms_timer = 5.0 * 60 * 60 * 24  # update every 24 hrs
+# update timer = 24 hrs
+update_base_vms_timer = 5.0 * 60 * 60 * 24
+clean_up_timer = 5.0 * 60 * 60 * 24
 
 # initialization variables
 recomputations_count = 0

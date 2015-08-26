@@ -264,7 +264,7 @@ def create_vm(name, github_url, box):
     io.move_vagrantfile_to_build_dir(name, recomputation_summary.release.tag, recomputation_summary.release.version)
 
     config.recomputations_count += 1
-    server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
+    io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
     return True, "Successful."
 
 
@@ -291,12 +291,8 @@ def update_vm(name, github_url, box):
     io.move_vagrantfile_to_build_dir(name, tag, version)
 
     config.recomputations_count += 1
-    server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
+    io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
     return True, "Successful."
-
-
-def server_prints(message):
-    print "\033[94mRecompute: " + message + "\033[0m"
 
 
 class UnknownLanguageException(Exception):

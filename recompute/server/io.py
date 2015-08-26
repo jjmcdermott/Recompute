@@ -135,7 +135,10 @@ def move_vagrantfile_to_build_dir(name, tag, version):
 
 
 def read_recomputefile(name):
-    recompute_file = get_file_if_exists(name, name + ".recompute.json", absolute_path=True)
+    """
+    Return a Dictionary representation of the recomputation
+    """
+    recompute_file = get_file_if_exists(name, "{name}.recompute.json".format(name=name), absolute_path=True)
 
     if recompute_file is None:
         return None
@@ -148,9 +151,20 @@ def get_all_recomputations_summary():
     recomputations_summary = list()
     # for each recomputation directory (name)
     for recomputation in next(os.walk(recomputations_dir))[1]:
-        recomputations_summary.append(read_recomputefile(recomputation))
+        recompute_dict = read_recomputefile(recomputation)
+        if recompute_dict is not None:
+            recomputations_summary.append(recompute_dict)
     recomputations_summary.sort(key=lambda r: r["id"])
     return list(reversed(recomputations_summary))
+
+
+def remove_failed_recomputations():
+    # for each recomputation directory (name)
+    for recomputation in next(os.walk(recomputations_dir))[1]:
+        recompute_dict = read_recomputefile(recomputation)
+        if recompute_dict is None:
+            shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
+            server_prints("Removed {name}.".format(name=recomputation))
 
 
 def get_latest_recomputations_summary(count):
@@ -159,7 +173,6 @@ def get_latest_recomputations_summary(count):
     """
 
     recomputation_list = get_all_recomputations_summary()
-    print recomputation_list
     return recomputation_list[:count]
 
 
@@ -270,3 +283,7 @@ def execute(command, cwd=None, save_output=False, socket=None):
         return True, output
     else:
         return False, output
+
+
+def server_prints(message):
+    print "\033[94m***Recompute: {message}\033[0m".format(message=message)
