@@ -12,6 +12,7 @@ from . import boxes
 
 recomputations_dir = "recompute/server/recomputations"
 recomputations_dir_RELATIVE = "recomputations"
+logs_dir = "recompute/server/recomputations/logs"
 base_boxes_dir = "recompute/server/boxes"
 
 
@@ -32,6 +33,16 @@ def get_recomputation_dir(name):
     return "{dir}/{name}".format(dir=recomputations_dir, name=name)
 
 
+def get_log_dir(name):
+    """
+    Return the absolute path of the recomputation log directory
+
+    :param name: Recomputation
+    """
+
+    return "{dir}/{name}".format(dir=logs_dir, name=name)
+
+
 def get_recomputation_dir_relative(name):
     """
     Return the relative path of the recomputation directory
@@ -48,6 +59,14 @@ def create_new_recomputation_dir(name):
         os.makedirs(recomputation_dir)
 
     return recomputation_dir
+
+
+def create_new_log_dir(name):
+    log_dir = get_log_dir(name)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    return log_dir
 
 
 def get_recomputation_vms_dir(name):
@@ -178,7 +197,12 @@ def get_latest_recomputations_summary(count):
 
 def get_recomputations_count():
     if os.path.exists(recomputations_dir):
-        return len(next(os.walk(recomputations_dir))[1])
+        count = 0
+        for recomputation in next(os.walk(recomputations_dir))[1]:
+            recompute_dict = read_recomputefile(recomputation)
+            if recompute_dict is not None:
+                count += 1
+        return count
     else:
         return 0
 
@@ -200,6 +224,18 @@ def destroy_recomputation(name):
 
 
 def destroy_build(name, tag, version):
+    # update recomputefile
+    recompute_dict = read_recomputefile(name)
+    recompute_dict["releases"] = [release for release in recompute_dict["releases"] if
+                                  release["tag"] != tag and release["version"] != version]
+
+    print recompute_dict
+
+    recomputefile_path = get_recomputefile_path(name)
+    with open(recomputefile_path, "w") as recomputef:
+        recomputef.write(json.dumps(recompute_dict, indent=4, sort_keys=True))
+
+    # remove build directory
     shutil.rmtree(get_recomputation_build_dir(name, tag, version), ignore_errors=True)
 
 
@@ -261,7 +297,7 @@ def update_base_vagrantboxes():
             _, _ = execute(["vagrant", "box", "remove", name, "--box-version", version, "--provider", provider])
 
 
-def execute(command, cwd=None, save_output=False, socket=None):
+def execute(command, cwd=None, save_output=False, socket=None, output_file=None):
     print command
 
     output = ""
@@ -286,4 +322,4 @@ def execute(command, cwd=None, save_output=False, socket=None):
 
 
 def server_prints(message):
-    print "\033[94m***Recompute: {message}\033[0m".format(message=message)
+    print "\033[94m$ Recompute: {message}\033[0m".format(message=message)

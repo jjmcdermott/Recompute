@@ -3,7 +3,8 @@ import tornado.wsgi
 import tornado.httpserver
 import tornado.web
 import tornado.log
-from . import play
+from . import play_socket
+from . import recompute_socket
 
 recompute_app = flask.Flask(__name__)
 recompute_app.config.from_object(__name__)
@@ -17,7 +18,8 @@ settings = {
     "debug": True
 }
 recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
-    (r"/ws/play/(.*)/(.*)/(.*)", play.PlayWebSocket),
+    (r"/ws/play/(.*)/(.*)/(.*)", play_socket.PlayWebSocket),
+    (r"/ws/recompute/(.*)", recompute_socket.RecomputeSocket),
     (r".*", tornado.web.FallbackHandler, dict(fallback=recompute_container))
 ], **settings))
 

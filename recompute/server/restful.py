@@ -70,6 +70,7 @@ def download_vagrantbox(name, tag, version):
         return flask.redirect(flask.url_for("index_page"))
 
 
-@config.recompute_app.route("/vagrantbox/delete/<name>", methods=["GET"])
-def delete_vagrantbox(name):
+@config.recompute_app.route("/vagrantbox/delete/<name>/<tag>/<version>", methods=["GET"])
+def delete_vagrantbox(name, tag, version):
+    io.destroy_build(name, tag, version)
     return flask.redirect(flask.url_for("recomputation_page", name=name))

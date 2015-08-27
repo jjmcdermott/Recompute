@@ -1,5 +1,5 @@
-__all__ = ["config", "boxes", "io", "forms", "pageserver", "play", "recomputation", "recompute", "defaults",
-           "restful"]
+__all__ = ["config", "boxes", "io", "forms", "pageserver", "play_socket", "recompute_socket", "recomputation",
+           "recompute", "defaults", "restful"]
 
 import threading
 from tornado.ioloop import IOLoop
@@ -8,7 +8,8 @@ from . import boxes
 from . import io
 from . import forms
 from . import pageserver
-from . import play
+from . import play_socket
+from . import recompute_socket
 from . import recomputation
 from . import recompute
 from . import defaults

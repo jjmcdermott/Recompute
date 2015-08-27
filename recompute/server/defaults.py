@@ -6,15 +6,14 @@ vagrantfile_templates_dict = {
     "node_js": "nodejs/nodejs.vagrantfile",
     "cpp": "cpp/cpp.vagrantfile",
     "c++": "cpp/cpp.vagrantfile",
-    "c": "cpp/cpp.vagrantfile"
+    "c": "cpp/cpp.vagrantfile",
+    "haskell": "haskell/haskell.vagrantfile",
+    "go": "go/go.vagrantfile"
 }
 
 languages_version_dict = {
     "python": "2.7",
-    "node_js": "0.10",
-    "cpp": "",
-    "c++": "",
-    "c": ""
+    "node_js": "0.10"
 }
 
 languages_install_dict = {
@@ -26,5 +25,6 @@ languages_install_dict = {
 }
 
 boxes_install_scripts = {
-    "gecode": ["echo \"export LD_LIBRARY_PATH=/home/vagrant/gecode\" >> /home/vagrant/.bashrc", "source /home/vagrant/.bashrc"]
+    "gecode": ["echo \"export LD_LIBRARY_PATH=/home/vagrant/gecode\" >> /home/vagrant/.bashrc",
+               "source /home/vagrant/.bashrc"]
 }

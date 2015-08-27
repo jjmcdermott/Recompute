@@ -57,7 +57,7 @@
                     <td>{{ release.date }}</td>
                     <td><a onclick="play('{{ recomputation.name }}', '{{ release.tag }}', '{{ release.version }}');"><i class="fa fa-play-circle"></i> Play</a></td>
                     <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name, tag=release.tag, version=release.version) }}"><i class="fa fa-download"></i> Vagrantbox</a></td>
-                    <td><a href="{{ url_for('delete_vagrantbox', name=recomputation.name) }}" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
+                    <td><a href="{{ url_for('delete_vagrantbox', name=recomputation.name, tag=release.tag, version=release.version) }}" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
                 </tr>
                 {% endfor %}
                 </tbody>

@@ -106,8 +106,11 @@ def __get_language(travis_script, github_url):
     if travis_script is not None:
         if language in travis_script:
             return language, travis_script[language][-1]
+
     if language in defaults.languages_version_dict:
         return language, defaults.languages_version_dict[language]
+    elif language is not None:
+        return language, ""
     else:
         return None, None
 
@@ -242,6 +245,7 @@ def __gather_recomputation_summary(name, github_url, box):
 
 def create_vm(name, github_url, box):
     io.create_new_recomputation_dir(name)
+    io.create_new_log_dir(name)
 
     try:
         recomputation_summary = __gather_recomputation_summary(name, github_url, box)

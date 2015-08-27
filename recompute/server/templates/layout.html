@@ -90,6 +90,11 @@ function apiStatus(data) {
         }
         var terminal = make_play_window(document.body, terminal_args, ws_url, vm, tag, version);
     }
+
+
+    function recompute(name, github_url, box) {
+        document.recompute_form.submit();
+    }
 </script>
 
 </body>

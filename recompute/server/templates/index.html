@@ -20,7 +20,7 @@
 
     <div class="row">
         <div class="top-buffer col-md-12 text-center">
-            <form class="form-inline" action="{{ url_for('create_recomputation') }}" method="POST">
+            <form name="recompute_form" class="form-inline" action="{{ url_for('create_recomputation') }}" method="POST">
                 {{ recompute_form.hidden_tag() }}
                 <div class="form-group">
                     <label for="name">Name</label>
