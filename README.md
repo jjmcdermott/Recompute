@@ -11,7 +11,7 @@ and access the virtual machines through a web-based terminal.
 
 ## Report
 
-The complete report is available at ![here](https://raw.github.com/cjw-charleswu/Recompute/master/report/report.pdf)
+The complete report is available at ![here](https://github.com/cjw-charleswu/Recompute/blob/master/report/report.pdf)
 
 
 ## Dependencies
