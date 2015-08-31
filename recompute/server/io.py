@@ -8,11 +8,13 @@ import os
 import shutil
 import json
 import re
+import time
 from . import boxes
 
 recomputations_dir = "recompute/server/recomputations"
 recomputations_dir_RELATIVE = "recomputations"
-logs_dir = "recompute/server/recomputations/logs"
+logs_dir = "recompute/server/logs"
+logs_dir_RELATIVE = "logs"
 base_boxes_dir = "recompute/server/boxes"
 
 
@@ -20,12 +22,15 @@ def create_recomputations_dir():
     if not os.path.exists(recomputations_dir):
         os.makedirs(recomputations_dir)
 
-    return recomputations_dir
+
+def create_logs_dir():
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
 
 
 def get_recomputation_dir(name):
     """
-    Return the absolute path of the recomputation directory
+    Return the path of the recomputation directory
 
     :param name: Recomputation
     """
@@ -33,24 +38,27 @@ def get_recomputation_dir(name):
     return "{dir}/{name}".format(dir=recomputations_dir, name=name)
 
 
+def get_recomputation_dir_relative(name):
+    """
+    Return the relative path of the recomputation directory
+    """
+
+    return "{dir}/{name}".format(dir=recomputations_dir_RELATIVE, name=name)
+
+
 def get_log_dir(name):
     """
-    Return the absolute path of the recomputation log directory
-
-    :param name: Recomputation
+    Return the path of the recomputation log directory
     """
 
     return "{dir}/{name}".format(dir=logs_dir, name=name)
 
 
-def get_recomputation_dir_relative(name):
+def create_log_filename(name):
     """
-    Return the relative path of the recomputation directory
-
-    :param name: Recomputation
+    Return a new log file name for the recomputation
     """
-
-    return "{dir}/{name}".format(dir=recomputations_dir_RELATIVE, name=name)
+    return "{dir}/{name}/{time}.txt".format(dir=logs_dir, name=name, time=time.strftime("%Y%m%d-%H%M%S"))
 
 
 def create_new_recomputation_dir(name):
@@ -66,31 +74,8 @@ def create_new_log_dir(name):
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    return log_dir
-
-
-def get_recomputation_vms_dir(name):
-    """
-    :param name: Recomputation
-    """
-    return "{dir}/vms".format(dir=get_recomputation_dir(name), name=name)
-
-
-def create_recomputation_vms_dir(name):
-    recomputation_vms_dir = get_recomputation_vms_dir(name)
-    if not os.path.exists(recomputation_vms_dir):
-        os.makedirs(recomputation_vms_dir)
-
-    return recomputation_vms_dir
-
 
 def get_recomputation_build_dir(name, tag, version):
-    """
-    :param name: Recomputation
-    :param tag: Tag
-    :param version: Version
-    """
-
     return "{dir}/vms/{tag}_{version}".format(dir=get_recomputation_dir(name), tag=tag, version=version)
 
 
@@ -129,7 +114,7 @@ def get_file_if_exists(recomputation_name, filename, absolute_path=True):
 
 def get_vagrantfile_relative(name):
     """
-    Used to download Vagrantfile
+    Return the file path of the recomputation Vagrantfile (for download)
 
     :param name: Recomputation
     """
@@ -139,9 +124,7 @@ def get_vagrantfile_relative(name):
 
 def get_vagrantbox_relative(name, tag, version):
     """
-    Used to download Vagrantbox
-
-    :param name: Recomputation
+    Return the file path of the recomputation Vagrantbox (for download)
     """
 
     return get_file_if_exists(name, "vms/{tag}_{version}/{name}.box".format(tag=tag, version=version, name=name),
@@ -149,14 +132,39 @@ def get_vagrantbox_relative(name, tag, version):
 
 
 def move_vagrantfile_to_build_dir(name, tag, version):
-    _, _ = execute(["mv", "Vagrantfile", "vms/{tag}_{version}/boxVagrantfile".format(tag=tag, version=version)],
-                   cwd=get_recomputation_dir(name))
+    old_vagrantfile = "{dir}/Vagrantfile".format(dir=get_recomputation_dir(name))
+    new_vagrantfile = "{dir}/boxVagrantfile".format(dir=get_recomputation_build_dir(name, tag, version))
+    shutil.move(old_vagrantfile, new_vagrantfile)
+
+
+def move_vagrantbox_to_build_dir(name, tag, version, box_name):
+    old_vagrantbox = "{dir}/{box}".format(dir=get_recomputation_dir(name), box=box_name)
+    new_vagrantbox = "{dir}/{box}".format(dir=get_recomputation_build_dir(name, tag, version), box=box_name)
+    shutil.move(old_vagrantbox, new_vagrantbox)
+
+
+def get_latest_log_file(name):
+    """
+    Return the latest log file for the recomputation
+
+    :param name: Recomputation
+    """
+
+    recomputation_log_dir = "{dir}/{name}".format(dir=logs_dir, name=name)
+    log_file_list = list()
+
+    for log_filename in next(os.walk(recomputation_log_dir))[2]:
+        log_file_list.append(log_filename)
+    log_file_list.sort()
+
+    return "{dir}/{name}".format(logs_dir_RELATIVE, name=log_file_list[0])
 
 
 def read_recomputefile(name):
     """
     Return a Dictionary representation of the recomputation
     """
+
     recompute_file = get_file_if_exists(name, "{name}.recompute.json".format(name=name), absolute_path=True)
 
     if recompute_file is None:
@@ -167,8 +175,11 @@ def read_recomputefile(name):
 
 
 def get_all_recomputations_summary():
+    """
+    Return a list of dictionaries, each representing a recomputation, ordered by decreasing ids
+    """
+
     recomputations_summary = list()
-    # for each recomputation directory (name)
     for recomputation in next(os.walk(recomputations_dir))[1]:
         recompute_dict = read_recomputefile(recomputation)
         if recompute_dict is not None:
@@ -186,13 +197,21 @@ def remove_failed_recomputations():
             server_prints("Removed {name}.".format(name=recomputation))
 
 
-def get_latest_recomputations_summary(count):
-    """
-    :param count: The number of recomputations summary to return
-    """
+def remove_logs():
+    for recomputation in next(os.walk(logs_dir))[1]:
+        shutil.rmtree("{dir}/{name}".format(dir=logs_dir, name=recomputation))
 
-    recomputation_list = get_all_recomputations_summary()
-    return recomputation_list[:count]
+
+def get_latest_recomputations_summary(count):
+    return get_all_recomputations_summary()[:count]
+
+
+def get_next_recomputation_id():
+    recomputation_summary = get_all_recomputations_summary()
+    if len(recomputation_summary) == 0:
+        return 0
+    else:
+        return recomputation_summary[0]["id"] + 1
 
 
 def get_recomputations_count():
@@ -228,8 +247,6 @@ def destroy_build(name, tag, version):
     recompute_dict = read_recomputefile(name)
     recompute_dict["releases"] = [release for release in recompute_dict["releases"] if
                                   release["tag"] != tag and release["version"] != version]
-
-    print recompute_dict
 
     recomputefile_path = get_recomputefile_path(name)
     with open(recomputefile_path, "w") as recomputef:
@@ -308,12 +325,17 @@ def execute(command, cwd=None, save_output=False, socket=None, output_file=None)
 
         if out == '' and p.poll() is not None:
             break
+
         if out != '':
             sys.stdout.write(out)
             sys.stdout.flush()
 
-        if save_output:
-            output += out
+            if save_output or output_file is not None:
+                output += out
+
+    if output_file is not None:
+        with open(output_file, "a") as f:
+            f.write(output)
 
     if p.returncode == 0:
         return True, output

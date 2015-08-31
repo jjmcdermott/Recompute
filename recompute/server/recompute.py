@@ -29,23 +29,23 @@ def __make_vagrantbox(recomputation_summary):
     tag = recomputation_summary.release.tag
     version = recomputation_summary.release.version
 
-    vagrantbox = name + ".box"
-
     recomputation_dir = io.get_recomputation_dir(name)
-    recomputation_build_dir = io.get_recomputation_build_dir(name, tag, version)
+    vagrantbox = name + ".box"
+    log_file = io.create_log_filename(name)
 
-    success, _ = io.execute(["vagrant", "up", "--provision"], recomputation_dir)
-    if success:
-        io.execute(["vagrant", "package", "--output", vagrantbox], recomputation_dir)
-        io.execute(["vagrant", "destroy", "-f"], recomputation_dir)
-        io.execute(["vagrant", "box", "add", "--force", name, vagrantbox], recomputation_dir)
+    provisioning_success, _ = io.execute(command=["vagrant", "up", "--provision"], cwd=recomputation_dir,
+                                         output_file=log_file)
+    io.execute(command=["vagrant", "package", "--output", vagrantbox], cwd=recomputation_dir, output_file=log_file)
+    io.execute(command=["vagrant", "destroy", "-f"], cwd=recomputation_dir, output_file=log_file)
+    io.remove_vagrantbox_cache(name)
 
-        io.remove_vagrantbox_cache(name)
-        io.create_recomputation_vms_dir(name)
+    if provisioning_success:
+        io.execute(command=["vagrant", "box", "add", "--force", name, vagrantbox], cwd=recomputation_dir,
+                   output_file=log_file)
         io.create_recomputation_build_dir(name, tag, version)
-        shutil.move(recomputation_dir + "/" + vagrantbox, recomputation_build_dir + "/" + vagrantbox)
+        io.move_vagrantbox_to_build_dir(name, tag, version, vagrantbox)
 
-    return success
+    return provisioning_success
 
 
 def __make_vagrantfile(recomputation_summary):
@@ -118,7 +118,6 @@ def __get_language(travis_script, github_url):
 def __get_github_commit_sha(github_url):
     response = requests.get(github_url)
     soup = bs4.BeautifulSoup(response.text)
-    print soup.find("a", {"class": "message"})["href"].split("/")[-1]
     return soup.find("a", {"class": "message"})["href"].split("/")[-1]
 
 
@@ -140,16 +139,14 @@ def __get_apt_get_installs(travis_script):
 
     if travis_script is not None:
         if "before_install" in travis_script:
-            travis_before_install = travis_script["before_install"]
-
-            for apt_get_install in [line for line in travis_before_install if "apt-get install" in line]:
+            for apt_get_install in [line for line in travis_script["before_install"] if "apt-get install" in line]:
                 packages = [p for p in apt_get_install.split(" ") if p not in ["sudo", "apt-get", "install", "-y"]]
                 apt_installs.extend(packages)
 
         if "addons" in travis_script and "apt_packages" in travis_script["addons"]:
             apt_installs.extend(travis_script["addons"]["apt_packages"])
 
-    return " ".join(apt_installs) + "\n"
+    return " ".join(apt_installs)
 
 
 def __get_install_scripts(github_repo_name, language, travis_script):
@@ -157,7 +154,11 @@ def __get_install_scripts(github_repo_name, language, travis_script):
 
     if travis_script is not None:
         if "install" in travis_script:
-            install_scripts.extend(travis_script["install"])
+            install_list = travis_script["install"]
+            if language == "haskell":
+                install_list = [install.replace("dependencies-only", "only-dependencies") for install in install_list]
+                install_list = ["$VAGRANT_USER '{install}'".format(install=install) for install in install_list]
+            install_scripts.extend(install_list)
     else:
         install_scripts.extend(defaults.languages_install_dict[language])
 
@@ -165,22 +166,26 @@ def __get_install_scripts(github_repo_name, language, travis_script):
     if github_repo_name in defaults.boxes_install_scripts:
         install_scripts.extend(defaults.boxes_install_scripts[github_repo_name])
 
-    return "\n  ".join(install_scripts)
+    return "\n  ".join(install_scripts) + "\n"
 
 
 def __get_test_scripts(travis_script):
     envs = list()
+    before_scripts = list()
     test_scripts = list()
 
     if travis_script is not None:
-        if "env" in travis_script:
-            envs.extend(travis_script["env"])
+        if "before_script" in travis_script:
+            before_scripts.extend(travis_script["before_script"])
 
         if "script" in travis_script:
             test_scripts.extend(travis_script["script"])
 
+        if "env" in travis_script:
+            envs.extend(travis_script["env"])
+
     # clean up
-    final_test_scripts = list()
+    final_test_scripts = [script for script in before_scripts]
     # non-tests statements
     final_test_scripts.extend([s for s in test_scripts if not any(env.split("=", 1)[0] in s for env in envs)])
     # tests statements, interpolated with different env variables
@@ -188,7 +193,7 @@ def __get_test_scripts(travis_script):
         final_test_scripts.append(str("export " + env))
         final_test_scripts.extend([s for s in test_scripts if env.split("=", 1)[0] in s])
 
-    return " \n".join(final_test_scripts)
+    return "\n  ".join(final_test_scripts) + "\n"
 
 
 def __get_box_version(box):
@@ -210,7 +215,7 @@ def __gather_recomputation_summary(name, github_url, box):
     """
     """
 
-    id = config.recomputations_count
+    id = io.get_next_recomputation_id()
 
     box_url = boxes.RECOMPUTE_BOXES_URL[box]
     box_version = __get_box_version(box)
@@ -227,9 +232,15 @@ def __gather_recomputation_summary(name, github_url, box):
     add_apts = __get_add_apts_repositories(travis_script)
     apt_gets = __get_apt_get_installs(travis_script)
     installs = __get_install_scripts(github_repo_name, language, travis_script)
-    tests = __get_test_scripts(travis_script)
+    if github_repo_name in defaults.ignore_test_scripts:
+        tests = ""
+    else:
+        tests = __get_test_scripts(travis_script)
 
-    memory = defaults.vm_memory
+    if language == "haskell":
+        memory = defaults.haskell_vm_memory
+    else:
+        memory = defaults.vm_memory
     cpus = defaults.vm_cpus
 
     tag = "Latest"
@@ -251,25 +262,30 @@ def create_vm(name, github_url, box):
         recomputation_summary = __gather_recomputation_summary(name, github_url, box)
     except UnknownLanguageException:
         io.destroy_recomputation(name)
-        return False, "Did not understand the project programming language."
+        return False, "Unknown project programming language."
 
     if not __make_vagrantfile(recomputation_summary):
         io.destroy_recomputation(name)
-        return False, "Vagrantfile cannot be generated."
+        return False, "Failed to create Vagrantfile."
 
     if not __make_vagrantbox(recomputation_summary):
-        io.destroy_recomputation(name)
-        return False, "Vagrantbox was not created."
+        # io.destroy_recomputation(name)
+        return False, "Failed to create Vagrantbox."
 
     if not __make_recomputefile(recomputation_summary):
         io.destroy_recomputation(name)
-        return False, "Recomputefile was not created."
+        return False, "Failed to create Recomputefile."
 
     io.move_vagrantfile_to_build_dir(name, recomputation_summary.release.tag, recomputation_summary.release.version)
 
     config.recomputations_count += 1
     io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
-    return True, "Successful."
+    return True, ""
+
+
+@config.recompute_celery.task(bind=True)
+def task_create_vm(self, name, github_url, box):
+    pass
 
 
 def update_vm(name, github_url, box):

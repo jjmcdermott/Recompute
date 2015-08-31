@@ -1,4 +1,5 @@
-vm_memory = 4098
+vm_memory = 2048
+haskell_vm_memory = 4096
 vm_cpus = 2
 
 vagrantfile_templates_dict = {
@@ -21,10 +22,13 @@ languages_install_dict = {
     "node_js": ["npm install"],
     "cpp": ["chmod +x configure", "./configure", "make", "sudo make install"],
     "c++": ["chmod +x configure", "./configure", "make", "sudo make install"],
-    "c": ["chmod +x configure", "./configure", "make", "sudo make install"]
+    "c": ["chmod +x configure", "./configure", "make", "sudo make install"],
+    "haskell": ["$VAGRANT_USER 'cabal configure'", "$VAGRANT_USER 'cabal install'"]
 }
 
 boxes_install_scripts = {
-    "gecode": ["echo \"export LD_LIBRARY_PATH=/home/vagrant/gecode\" >> /home/vagrant/.bashrc",
-               "source /home/vagrant/.bashrc"]
+    "gecode": ["echo \"export LD_LIBRARY_PATH=/home/vagrant/gecode\" >> /home/vagrant/.bashrc", "source /home/vagrant/.bashrc"],
+    "Idris-dev": ["$VAGRANT_USER 'sudo cabal configure'", "$VAGRANT_USER 'sudo cabal install'"]
 }
+
+ignore_test_scripts = ["Idris-dev"]

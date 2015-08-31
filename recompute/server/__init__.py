@@ -29,12 +29,16 @@ def init():
 
     io.server_prints("Creating recomputations directory...")
     io.create_recomputations_dir()
+    io.create_logs_dir()
 
     io.server_prints("Getting recomputations count...")
     config.recomputations_count = io.get_recomputations_count()
 
     update_base_vagrantboxes()
+
     clean_up_failed_recomputations()
+
+    clean_up_logs()
 
     io.server_prints("Server started.")
 
@@ -58,3 +62,12 @@ def clean_up_failed_recomputations():
 
     io.server_prints("Cleaning up failed recomputations...")
     io.remove_failed_recomputations()
+
+
+def clean_up_logs():
+    t = threading.Timer(config.clean_up_timer, clean_up_logs)
+    t.daemon = True
+    t.start()
+
+    io.server_prints("Cleaning up logs...")
+    io.remove_logs()

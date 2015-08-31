@@ -23,14 +23,15 @@ def create_recomputation():
         successful, msg = recompute.create_vm(name, github_url, box)
 
         if successful:
+            flask.flash("Successful recomputation.", "success")
             return flask.send_file(io.get_vagrantbox_relative(name, "Latest", "0"),
-                                   mimetype="application/vnd.previewsystems.box",
-                                   as_attachment=True)
+                                   mimetype="application/vnd.previewsystems.box", as_attachment=True)
         else:
-            flask.flash("Recomputation was unsuccessful. " + msg, "danger")
+            error_message = "Unsuccessful recomputation. {msg}. <a href={url}>Download log</a>.".format(msg=msg, url=flask.url_for("download_log_file", name=name))
+            flask.flash(error_message, "danger")
             return flask.redirect(flask.url_for("index_page"))
     else:
-        flask.flash("Recomputation was unsuccessful. Missing data.", "danger")
+        flask.flash("Unsuccessful recomputation. Missing data.", "danger")
         return flask.redirect(flask.url_for("index_page"))
 
 
@@ -66,7 +67,7 @@ def download_vagrantbox(name, tag, version):
     if path is not None:
         return flask.send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
     else:
-        flask.flash("Recomputation: " + name + " not found.", "danger")
+        flask.flash("Recomputation: {name} not found.".format(name=name), "danger")
         return flask.redirect(flask.url_for("index_page"))
 
 
@@ -74,3 +75,13 @@ def download_vagrantbox(name, tag, version):
 def delete_vagrantbox(name, tag, version):
     io.destroy_build(name, tag, version)
     return flask.redirect(flask.url_for("recomputation_page", name=name))
+
+
+@config.recompute_app.route("/log/<name>", methods=["GET"])
+def download_log_file(name):
+    path = io.get_latest_log_file(name)
+    if path is not None:
+        return flask.send_file(path, mimetype="text/plain", as_attachment=True)
+    else:
+        flask.flash("Log file for recomputation: {name} not found.".format(name, name), "danger")
+        return flask.redirect(flask.url_for("index_page"))

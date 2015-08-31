@@ -1,17 +1,19 @@
 
 $rootScript = <<SCRIPT
-  cd /home/vagrant
-  apt-get update -y
-  apt-get install -y software-properties-common python-software-properties
-  apt-get install -y golang
   <ADD_APT_REPOSITORIES>
   apt-get update -y
+  apt-get install -y software-properties-common python-software-properties git build-essential
+  apt-get install -y golang
   apt-get install -y <APT_GET_INSTALL>
 SCRIPT
 
 $userScript = <<SCRIPT
   cd /home/vagrant
-  git clone <GITHUB_URL> -b master
+
+  export VAGRANT_USER='sudo -u vagrant -H bash -l -c'
+  export HOME='/home/vagrant'
+
+  git clone --depth=50 <GITHUB_URL> -b master
   cd <GITHUB_REPO_NAME>/
   <INSTALL_SCRIPT>
   <TEST_SCRIPT>

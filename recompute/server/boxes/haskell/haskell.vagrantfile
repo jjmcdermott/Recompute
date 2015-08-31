@@ -1,17 +1,25 @@
 
 $rootScript = <<SCRIPT
-  cd /home/vagrant
-  apt-get update -y
-  apt-get install -y software-properties-common python-software-properties
-  apt-get install -y haskell-platform
   <ADD_APT_REPOSITORIES>
   apt-get update -y
+  apt-get install -y software-properties-common python-software-properties git build-essential
+  apt-get install -y haskell-platform pkg-config
   apt-get install -y <APT_GET_INSTALL>
 SCRIPT
 
 $userScript = <<SCRIPT
   cd /home/vagrant
-  git clone <GITHUB_URL> -b master
+
+  export VAGRANT_USER='sudo -u vagrant -H bash -l -c'
+  export HOME='/home/vagrant'
+
+  $VAGRANT_USER 'touch $HOME/.bashrc'
+  $VAGRANT_USER 'chmod 644 $HOME/.bashrc'
+  $VAGRANT_USER 'cabal update'
+  $VAGRANT_USER "echo 'export PATH=$PATH:$HOME/.cabal/bin/' >> $HOME/.bashrc"
+  $VAGRANT_USER 'source $HOME/.bashrc'
+
+  git clone --depth=50 <GITHUB_URL> -b master
   cd <GITHUB_REPO_NAME>/
   <INSTALL_SCRIPT>
   <TEST_SCRIPT>
