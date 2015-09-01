@@ -1,33 +1,34 @@
 import os
 import flask
-from . import config
-from . import io
+from recompute.server import config as recompute_config
+from recompute.server import io as recompute_io
 
 
-@config.recompute_app.route("/favicon.ico")
+@recompute_config.recompute_app.route("/favicon.ico")
 def favicon():
-    return flask.send_from_directory(os.path.join(config.recompute_app.root_path, "static"), "favicon.ico",
+    return flask.send_from_directory(os.path.join(recompute_config.recompute_app.root_path, "static"),
+                                     "favicon.ico",
                                      mimetype="image/vnd.microsoft.icon")
 
 
-@config.recompute_app.route("/", methods=["GET"])
+@recompute_config.recompute_app.route("/", methods=["GET"])
 def index_page():
     from .forms import RecomputeForm
     recompute_form = RecomputeForm()
 
-    recomputations_count = config.recomputations_count
-    latest_recomputations_summary = io.get_latest_recomputations_summary(config.latest_recomputations_count)
+    recomputations_count = recompute_config.recomputations_count
+    latest_recomputations_summary = recompute_io.get_recomputations_summary(recompute_config.latest_count)
 
     return flask.render_template("index.html", recompute_form=recompute_form, recomputations_count=recomputations_count,
                                  latest_recomputations_summary=latest_recomputations_summary)
 
 
-@config.recompute_app.route("/recomputations", methods=["GET", "POST"])
+@recompute_config.recompute_app.route("/recomputations", methods=["GET", "POST"])
 def recomputations_page():
     from .forms import FilterRecomputationsForm
     filter_recomputations_form = FilterRecomputationsForm()
 
-    all_recomputations_summary = io.get_all_recomputations_summary()
+    all_recomputations_summary = recompute_io.get_all_recomputations_summary()
 
     if filter_recomputations_form.validate_on_submit():
         name = filter_recomputations_form.name.data
@@ -40,20 +41,20 @@ def recomputations_page():
                                  all_recomputations_summary=all_recomputations_summary)
 
 
-@config.recompute_app.route("/recomputation/<string:name>", methods=["GET"])
+@recompute_config.recompute_app.route("/recomputation/<string:name>", methods=["GET"])
 def recomputation_page(name):
-    if not io.exists_recomputation(name):
+    if not recompute_io.exists_recomputation(name):
         return flask.render_template("recomputation404.html", name=name)
     else:
-        return flask.render_template("recomputation.html", recomputation=io.read_recomputefile(name))
+        return flask.render_template("recomputation.html", recomputation=recompute_io.read_recomputefile(name))
 
 
-@config.recompute_app.route("/boxes", methods=["GET"])
+@recompute_config.recompute_app.route("/boxes", methods=["GET"])
 def boxes_page():
     from .forms import FilterBoxesForm
     filter_boxes_form = FilterBoxesForm()
 
-    all_boxes = io.get_all_boxes_summary()
+    all_boxes = recompute_io.get_all_boxes_summary()
 
     if filter_boxes_form.validate_on_submit():
         language = filter_boxes_form.language.data

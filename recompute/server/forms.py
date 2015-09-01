@@ -1,18 +1,19 @@
 import flask_wtf
-from wtforms import StringField as wtfStringField, SelectField as wtfSelectField, BooleanField as wtfBooleanField
-from wtforms.validators import DataRequired as wtfDataRequired
-from . import boxes
+from wtforms import StringField, SelectField, BooleanField
+from wtforms.validators import DataRequired
+from recompute.server import boxes as recompute_boxes
 
 
 class RecomputeForm(flask_wtf.Form):
-    name = wtfStringField("name", validators=[wtfDataRequired()])
-    github_url = wtfStringField("github_url", validators=[wtfDataRequired()])
-    box = wtfSelectField("box", choices=boxes.RECOMPUTE_BOXES, validators=[wtfDataRequired()])
+    name = StringField("name", validators=[DataRequired()])
+    github_url = StringField("github_url", validators=[DataRequired()])
+    box = SelectField("box", choices=recompute_boxes.BASE_BOXES, validators=[DataRequired()])
 
 
 class FilterRecomputationsForm(flask_wtf.Form):
-    name = wtfStringField("name", validators=[wtfDataRequired()])
-    clear = wtfBooleanField('clear')
+    name = StringField("name", validators=[DataRequired()])
+    clear = BooleanField('clear')
+
 
 #
 # class EditRecomputationForm(flask_wtf.Form):
@@ -20,5 +21,5 @@ class FilterRecomputationsForm(flask_wtf.Form):
 #
 
 class FilterBoxesForm(flask_wtf.Form):
-    language = wtfStringField("language", validators=[wtfDataRequired()])
-    clear = wtfBooleanField('clear')
+    language = StringField("language", validators=[DataRequired()])
+    clear = BooleanField('clear')

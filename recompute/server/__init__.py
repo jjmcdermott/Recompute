@@ -1,19 +1,17 @@
-__all__ = ["config", "boxes", "io", "forms", "pageserver", "play_socket", "recompute_socket", "recomputation",
-           "recompute", "defaults", "restful"]
+__all__ = ["config", "boxes", "io", "forms", "pageserver", "sockets", "recomputation", "tasks", "defaults", "restful"]
 
 import threading
 from tornado.ioloop import IOLoop
-from . import config
-from . import boxes
-from . import io
-from . import forms
-from . import pageserver
-from . import play_socket
-from . import recompute_socket
-from . import recomputation
-from . import recompute
-from . import defaults
-from . import restful
+from recompute.server import config
+from recompute.server import boxes
+from recompute.server import io
+from recompute.server import forms
+from recompute.server import pageserver
+from recompute.server import sockets
+from recompute.server import recomputation
+from recompute.server import tasks
+from recompute.server import defaults
+from recompute.server import restful
 
 
 def run(port):

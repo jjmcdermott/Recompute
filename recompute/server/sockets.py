@@ -89,3 +89,16 @@ class PlayTerminal(object):
             self.socket.on_pty_read(data)
         except EOFError:
             self.socket.on_pty_exit()
+
+
+class RecomputeSocket(tornado.websocket.WebSocketHandler):
+    def __init__(self, application, request, **kwargs):
+        super(RecomputeSocket, self).__init__(application, request, **kwargs)
+
+    def on_message(self, message):
+        pass
+
+
+class RecomputeTerminal(object):
+    def __init__(self, socket):
+        pass

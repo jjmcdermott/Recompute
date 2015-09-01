@@ -9,7 +9,7 @@ import shutil
 import json
 import re
 import time
-from . import boxes
+from recompute.server import boxes as recompute_boxes
 
 recomputations_dir = "recompute/server/recomputations"
 recomputations_dir_RELATIVE = "recomputations"
@@ -188,21 +188,7 @@ def get_all_recomputations_summary():
     return list(reversed(recomputations_summary))
 
 
-def remove_failed_recomputations():
-    # for each recomputation directory (name)
-    for recomputation in next(os.walk(recomputations_dir))[1]:
-        recompute_dict = read_recomputefile(recomputation)
-        if recompute_dict is None:
-            shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
-            server_prints("Removed {name}.".format(name=recomputation))
-
-
-def remove_logs():
-    for recomputation in next(os.walk(logs_dir))[1]:
-        shutil.rmtree("{dir}/{name}".format(dir=logs_dir, name=recomputation))
-
-
-def get_latest_recomputations_summary(count):
+def get_recomputations_summary(count):
     return get_all_recomputations_summary()[:count]
 
 
@@ -228,6 +214,20 @@ def get_recomputations_count():
 
 def exists_vagrantbox(name):
     return get_vagrantfile_relative(name) is not None
+
+
+def remove_failed_recomputations():
+    # for each recomputation directory (name)
+    for recomputation in next(os.walk(recomputations_dir))[1]:
+        recompute_dict = read_recomputefile(recomputation)
+        if recompute_dict is None:
+            shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
+            server_prints("Removed {name}.".format(name=recomputation))
+
+
+def remove_logs():
+    for recomputation in next(os.walk(logs_dir))[1]:
+        shutil.rmtree("{dir}/{name}".format(dir=logs_dir, name=recomputation))
 
 
 def remove_vagrantbox_cache(name):
@@ -295,7 +295,7 @@ def get_base_vagrantboxes_summary():
 
 def update_base_vagrantboxes():
     vagrantboxes_summary = get_base_vagrantboxes_summary()
-    base_vagrantboxes_list = [box[0] for box in boxes.RECOMPUTE_BOXES]
+    base_vagrantboxes_list = [box[0] for box in recompute_boxes.BASE_BOXES]
     base_vagrantboxes_summary = [box for box in vagrantboxes_summary if box["name"] in base_vagrantboxes_list]
 
     for base_vagrantbox in base_vagrantboxes_summary:

@@ -2,21 +2,20 @@
 Recompute a project
 """
 
-import shutil
 import requests
 import yaml
 import datetime
 import bs4
-from . import config
-from . import io
-from . import recomputation
-from . import defaults
-from . import boxes
+from recompute.server import io as recompute_io
+from recompute.server import defaults as recompute_defaults
+from recompute.server import config as recompute_config
+from recompute.server import boxes as recompute_boxes
+from recompute.server import recomputation
 
 
 def __make_recomputefile(recomputation_summary):
-    recompute_dict = io.read_recomputefile(recomputation_summary.name)
-    recomputefile_path = io.get_recomputefile_path(recomputation_summary.name)
+    recompute_dict = recompute_io.read_recomputefile(recomputation_summary.name)
+    recomputefile_path = recompute_io.get_recomputefile_path(recomputation_summary.name)
 
     with open(recomputefile_path, "w") as recomputef:
         recomputef.write("{}".format(recomputation_summary.to_pretty_json(recompute_dict)))
@@ -29,21 +28,22 @@ def __make_vagrantbox(recomputation_summary):
     tag = recomputation_summary.release.tag
     version = recomputation_summary.release.version
 
-    recomputation_dir = io.get_recomputation_dir(name)
+    recomputation_dir = recompute_io.get_recomputation_dir(name)
     vagrantbox = name + ".box"
-    log_file = io.create_log_filename(name)
+    log_file = recompute_io.create_log_filename(name)
 
-    provisioning_success, _ = io.execute(command=["vagrant", "up", "--provision"], cwd=recomputation_dir,
-                                         output_file=log_file)
-    io.execute(command=["vagrant", "package", "--output", vagrantbox], cwd=recomputation_dir, output_file=log_file)
-    io.execute(command=["vagrant", "destroy", "-f"], cwd=recomputation_dir, output_file=log_file)
-    io.remove_vagrantbox_cache(name)
+    provisioning_success, _ = recompute_io.execute(command=["vagrant", "up", "--provision"], cwd=recomputation_dir,
+                                                   output_file=log_file)
+    recompute_io.execute(command=["vagrant", "package", "--output", vagrantbox], cwd=recomputation_dir,
+                         output_file=log_file)
+    recompute_io.execute(command=["vagrant", "destroy", "-f"], cwd=recomputation_dir, output_file=log_file)
+    recompute_io.remove_vagrantbox_cache(name)
 
     if provisioning_success:
-        io.execute(command=["vagrant", "box", "add", "--force", name, vagrantbox], cwd=recomputation_dir,
-                   output_file=log_file)
-        io.create_recomputation_build_dir(name, tag, version)
-        io.move_vagrantbox_to_build_dir(name, tag, version, vagrantbox)
+        recompute_io.execute(command=["vagrant", "box", "add", "--force", name, vagrantbox], cwd=recomputation_dir,
+                             output_file=log_file)
+        recompute_io.create_recomputation_build_dir(name, tag, version)
+        recompute_io.move_vagrantbox_to_build_dir(name, tag, version, vagrantbox)
 
     return provisioning_success
 
@@ -51,8 +51,9 @@ def __make_vagrantbox(recomputation_summary):
 def __make_vagrantfile(recomputation_summary):
     language = recomputation_summary.release.build.language
 
-    if language in defaults.vagrantfile_templates_dict:
-        vagrantfile_template = io.get_vagrantfile_template_path(defaults.vagrantfile_templates_dict[language])
+    if language in recompute_defaults.vagrantfile_templates_dict:
+        vagrantfile_template = recompute_io.get_vagrantfile_template_path(
+            recompute_defaults.vagrantfile_templates_dict[language])
     else:
         return False
 
@@ -77,7 +78,7 @@ def __make_vagrantfile(recomputation_summary):
     vagrantfile = vagrantfile.replace("<MEMORY>", str(build.memory))
     vagrantfile = vagrantfile.replace("<CPUS>", str(build.cpus))
 
-    vagrantfile_path = io.get_vagrantfile_path(recomputation_summary.name)
+    vagrantfile_path = recompute_io.get_vagrantfile_path(recomputation_summary.name)
     with open(vagrantfile_path, "w") as f:
         f.write("{}".format(vagrantfile))
 
@@ -107,8 +108,8 @@ def __get_language(travis_script, github_url):
         if language in travis_script:
             return language, travis_script[language][-1]
 
-    if language in defaults.languages_version_dict:
-        return language, defaults.languages_version_dict[language]
+    if language in recompute_defaults.languages_version_dict:
+        return language, recompute_defaults.languages_version_dict[language]
     elif language is not None:
         return language, ""
     else:
@@ -160,11 +161,11 @@ def __get_install_scripts(github_repo_name, language, travis_script):
                 install_list = ["$VAGRANT_USER '{install}'".format(install=install) for install in install_list]
             install_scripts.extend(install_list)
     else:
-        install_scripts.extend(defaults.languages_install_dict[language])
+        install_scripts.extend(recompute_defaults.languages_install_dict[language])
 
     # extra stuff for individual recomputations
-    if github_repo_name in defaults.boxes_install_scripts:
-        install_scripts.extend(defaults.boxes_install_scripts[github_repo_name])
+    if github_repo_name in recompute_defaults.boxes_install_scripts:
+        install_scripts.extend(recompute_defaults.boxes_install_scripts[github_repo_name])
 
     return "\n  ".join(install_scripts) + "\n"
 
@@ -197,13 +198,13 @@ def __get_test_scripts(travis_script):
 
 
 def __get_box_version(box):
-    for base_box in config.base_vagrantboxes_summary:
+    for base_box in recompute_config.base_vagrantboxes_summary:
         if base_box["name"] == box:
             return base_box["version"]
 
 
 def __get_current_build_version(name):
-    recompute_dict = io.read_recomputefile(name)
+    recompute_dict = recompute_io.read_recomputefile(name)
 
     if recompute_dict is None:
         return -1
@@ -215,9 +216,9 @@ def __gather_recomputation_summary(name, github_url, box):
     """
     """
 
-    id = io.get_next_recomputation_id()
+    id = recompute_io.get_next_recomputation_id()
 
-    box_url = boxes.RECOMPUTE_BOXES_URL[box]
+    box_url = recompute_boxes.BASE_BOXES_URL[box]
     box_version = __get_box_version(box)
 
     travis_script = __get_travis_script(github_url)
@@ -232,16 +233,16 @@ def __gather_recomputation_summary(name, github_url, box):
     add_apts = __get_add_apts_repositories(travis_script)
     apt_gets = __get_apt_get_installs(travis_script)
     installs = __get_install_scripts(github_repo_name, language, travis_script)
-    if github_repo_name in defaults.ignore_test_scripts:
+    if github_repo_name in recompute_defaults.ignore_test_scripts:
         tests = ""
     else:
         tests = __get_test_scripts(travis_script)
 
     if language == "haskell":
-        memory = defaults.haskell_vm_memory
+        memory = recompute_defaults.haskell_vm_memory
     else:
-        memory = defaults.vm_memory
-    cpus = defaults.vm_cpus
+        memory = recompute_defaults.vm_memory
+    cpus = recompute_defaults.vm_cpus
 
     tag = "Latest"
     version = __get_current_build_version(name) + 1
@@ -255,17 +256,17 @@ def __gather_recomputation_summary(name, github_url, box):
 
 
 def create_vm(name, github_url, box):
-    io.create_new_recomputation_dir(name)
-    io.create_new_log_dir(name)
+    recompute_io.create_new_recomputation_dir(name)
+    recompute_io.create_new_log_dir(name)
 
     try:
         recomputation_summary = __gather_recomputation_summary(name, github_url, box)
     except UnknownLanguageException:
-        io.destroy_recomputation(name)
+        recompute_io.destroy_recomputation(name)
         return False, "Unknown project programming language."
 
     if not __make_vagrantfile(recomputation_summary):
-        io.destroy_recomputation(name)
+        recompute_io.destroy_recomputation(name)
         return False, "Failed to create Vagrantfile."
 
     if not __make_vagrantbox(recomputation_summary):
@@ -273,19 +274,47 @@ def create_vm(name, github_url, box):
         return False, "Failed to create Vagrantbox."
 
     if not __make_recomputefile(recomputation_summary):
-        io.destroy_recomputation(name)
+        recompute_io.destroy_recomputation(name)
         return False, "Failed to create Recomputefile."
 
-    io.move_vagrantfile_to_build_dir(name, recomputation_summary.release.tag, recomputation_summary.release.version)
+    recompute_io.move_vagrantfile_to_build_dir(name, recomputation_summary.release.tag,
+                                               recomputation_summary.release.version)
 
-    config.recomputations_count += 1
-    io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
+    recompute_config.recomputations_count += 1
+    recompute_io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=recompute_io.get_recomputation_dir(name)))
     return True, ""
 
 
-@config.recompute_celery.task(bind=True)
+# testing
+@recompute_config.recompute_celery.task(bind=True)
 def task_create_vm(self, name, github_url, box):
-    pass
+    recompute_io.create_new_recomputation_dir(name)
+    recompute_io.create_new_log_dir(name)
+
+    try:
+        recomputation_summary = __gather_recomputation_summary(name, github_url, box)
+    except UnknownLanguageException:
+        recompute_io.destroy_recomputation(name)
+        return False, "Unknown project programming language."
+
+    if not __make_vagrantfile(recomputation_summary):
+        recompute_io.destroy_recomputation(name)
+        return False, "Failed to create Vagrantfile."
+
+    if not __make_vagrantbox(recomputation_summary):
+        # io.destroy_recomputation(name)
+        return False, "Failed to create Vagrantbox."
+
+    if not __make_recomputefile(recomputation_summary):
+        recompute_io.destroy_recomputation(name)
+        return False, "Failed to create Recomputefile."
+
+    recompute_io.move_vagrantfile_to_build_dir(name, recomputation_summary.release.tag,
+                                               recomputation_summary.release.version)
+
+    recompute_config.recomputations_count += 1
+    recompute_io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=recompute_io.get_recomputation_dir(name)))
+    return True, ""
 
 
 def update_vm(name, github_url, box):
@@ -297,21 +326,22 @@ def update_vm(name, github_url, box):
         return False, "Did not understand the project programming language."
 
     if not __make_vagrantfile(recomputation_summary):
-        io.destroy_build(name, tag, version)
+        recompute_io.destroy_build(name, tag, version)
         return False, "Vagrantfile cannot be generated."
 
     if not __make_vagrantbox(recomputation_summary):
-        io.destroy_build(name, tag, version)
+        recompute_io.destroy_build(name, tag, version)
         return False, "Vagrantbox was not created."
 
     if not __make_recomputefile(recomputation_summary):
-        io.destroy_build(name, tag, version)
+        recompute_io.destroy_build(name, tag, version)
         return False, "Recomputefile was not created."
 
-    io.move_vagrantfile_to_build_dir(name, tag, version)
+    recompute_io.move_vagrantfile_to_build_dir(name, tag, version)
 
-    config.recomputations_count += 1
-    io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
+    recompute_config.recomputations_count += 1
+    recompute_io.server_prints(
+        "Recomputed {name} @ {dir}".format(name=name, dir=recompute_io.get_recomputation_dir(name)))
     return True, "Successful."
 
 
