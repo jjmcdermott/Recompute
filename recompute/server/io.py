@@ -157,7 +157,7 @@ def get_latest_log_file(name):
         log_file_list.append(log_filename)
     log_file_list.sort()
 
-    return "{dir}/{name}".format(logs_dir_RELATIVE, name=log_file_list[0])
+    return "{dir}/{name}/{log}".format(dir=logs_dir_RELATIVE, name=name, log=log_file_list[0])
 
 
 def read_recomputefile(name):

@@ -28,10 +28,10 @@ def create_recomputation():
             return flask.send_file(recompute_io.get_vagrantbox_relative(name, "Latest", "0"),
                                    mimetype="application/vnd.previewsystems.box", as_attachment=True)
         else:
-            error_message = "Unsuccessful recomputation: {msg}. <a href={url}>Download log</a>.".format(
+            error_message = "Unsuccessful recomputation: {msg} <a href='{url}'>Download log</a>.".format(
                 msg=msg, url=flask.url_for("download_log_file", name=name)
             )
-            flask.flash(error_message, "danger")
+            flask.flash(flask.Markup(error_message), "danger")
             return flask.redirect(flask.url_for("index_page"))
     else:
         flask.flash("Unsuccessful recomputation. Missing data.", "danger")
