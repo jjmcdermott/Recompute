@@ -5,6 +5,9 @@
 *logs/
 *backup/
 
+# redis
+dump.rdb
+
 # pycharm
 *.idea/
 
