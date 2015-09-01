@@ -6,3 +6,4 @@ pyyaml
 tornado
 ptyprocess
 celery
+redis

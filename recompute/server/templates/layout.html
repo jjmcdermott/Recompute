@@ -77,6 +77,7 @@ function apiStatus(data) {
 
 <script src="{{url_for('static', filename='term.js')}}"></script>
 <script src="{{url_for('static', filename='play.js')}}"></script>
+<script src="{{url_for('static', filename='recompute.js')}}"></script>
 
 <script>
     function play(vm, tag, version) {
@@ -88,12 +89,14 @@ function apiStatus(data) {
             screenKeys: true,
             cursorBlink: true
         }
-        var terminal = make_play_window(document.body, terminal_args, ws_url, vm, tag, version);
+        make_play_window(document.body, terminal_args, ws_url, vm, tag, version);
     }
 
 
     function recompute(name, github_url, box) {
-        document.recompute_form.submit();
+        var ws_url = "ws://" + window.location.host + "/ws/recompute/" + name + "/" + github_url + "/" + version;
+        make_recompute_window(ws_url, name, github_url, box)
+        <!--document.recompute_form.submit();-->
     }
 </script>
 

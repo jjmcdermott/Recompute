@@ -17,7 +17,7 @@ recompute_app.use_reloader = False
 
 recompute_celery = celery.Celery(recompute_app.name, broker=recompute_app.config["CELERY_BROKER_URL"])
 recompute_celery.conf.update(recompute_app.config)
-recompute_celery.start(argv=["celery", "worker", "-l", "info"])
+# recompute_celery.start(argv=["celery", "worker", "-l", "info"])
 
 recompute_container = tornado.wsgi.WSGIContainer(recompute_app)
 settings = {
@@ -26,7 +26,7 @@ settings = {
 }
 recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
     (r"/ws/play/(.*)/(.*)/(.*)", play_socket.PlayWebSocket),
-    (r"/ws/recompute/(.*)", recompute_socket.RecomputeSocket),
+    (r"/ws/recompute/(.*)/(.*)/(.*)", recompute_socket.RecomputeSocket),
     (r".*", tornado.web.FallbackHandler, dict(fallback=recompute_container))
 ], **settings))
 
