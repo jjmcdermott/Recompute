@@ -1,7 +1,9 @@
 __all__ = ["config", "boxes", "io", "forms", "pageserver", "sockets", "recomputation", "tasks", "defaults", "restful"]
 
 import threading
-from tornado.ioloop import IOLoop
+import signal
+import tornado.ioloop
+import logging
 from recompute.server import config
 from recompute.server import boxes
 from recompute.server import io
@@ -13,11 +15,29 @@ from recompute.server import tasks
 from recompute.server import defaults
 from recompute.server import restful
 
+is_closing = False
 
-def run(address, port):
+
+def run(address="0.0.0.0", port=5000):
     init()
-    config.recompute_server.listen(port, address)
-    IOLoop.instance().start()
+    signal.signal(signal.SIGINT, signal_handler)
+    config.recompute_server.bind(port=port, address=address)
+    config.recompute_server.start(0)
+    tornado.ioloop.PeriodicCallback(try_exit, 100).start()
+    tornado.ioloop.IOLoop.instance().start()
+
+
+def signal_handler(signum, frame):
+    global is_closing
+    logging.info('Exiting...')
+    is_closing = True
+
+
+def try_exit():
+    global is_closing
+    if is_closing:
+        tornado.ioloop.IOLoop.instance().stop()
+        logging.info('Exit success')
 
 
 def init():

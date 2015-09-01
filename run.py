@@ -8,13 +8,13 @@ def main():
     )
 
     parser.add_argument(
-        "--port", dest="port", type=int, default=5000,
-        help="Port of the server"
+        "--host", dest="host", type=str, default="0.0.0.0",
+        help="IP address of the server"
     )
 
     parser.add_argument(
-        "--host", dest="host", type=str, default="0.0.0.0",
-        help="IP address of the server"
+        "--port", dest="port", type=int, default=5000,
+        help="Port of the server"
     )
 
     args = parser.parse_args()

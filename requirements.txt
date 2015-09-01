@@ -7,3 +7,4 @@ tornado
 ptyprocess
 celery
 redis
+uwsgi
