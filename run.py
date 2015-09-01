@@ -12,9 +12,14 @@ def main():
         help="Port of the server"
     )
 
+    parser.add_argument(
+        "--host", dest="host", type=str, default="0.0.0.0",
+        help="IP address of the server"
+    )
+
     args = parser.parse_args()
 
-    recompute.server.run(args.port)
+    recompute.server.run(args.host, args.port)
 
 
 if __name__ == "__main__":

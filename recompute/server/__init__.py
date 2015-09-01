@@ -14,9 +14,9 @@ from recompute.server import defaults
 from recompute.server import restful
 
 
-def run(port):
+def run(address, port):
     init()
-    config.recompute_server.listen(port)
+    config.recompute_server.listen(port, address)
     IOLoop.instance().start()
 
 
