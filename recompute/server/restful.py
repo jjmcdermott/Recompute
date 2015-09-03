@@ -11,8 +11,7 @@ def create_recomputation():
     recompute_form = RecomputeForm()
 
     if recompute_form.validate_on_submit():
-        name = recompute_form.name.data
-        name = re.sub(r"[^a-zA-Z0-9 \n\.]", "_", name)  # replace symbols with underscores
+        name = recompute_form.recomputation.data
         github_url = recompute_form.github_url.data
         box = recompute_form.box.data
 
@@ -86,5 +85,5 @@ def download_log_file(name):
     if path is not None:
         return flask.send_file(path, mimetype="text/plain", as_attachment=True)
     else:
-        flask.flash("Log file for recomputation: {name} not found.".format(name, name), "danger")
+        flask.flash("Log file for recomputation: {name} not found.".format(name=name), "danger")
         return flask.redirect(flask.url_for("index_page"))

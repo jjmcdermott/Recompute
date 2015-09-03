@@ -52,7 +52,7 @@ Exit the virtual environment:
 The server is a Python Tornado + Flask application.
 
 #### Server
-The IP address and port number are optional. By default, the server will run @ localhost:5000.
+The IP address and port number are optional. By default, the server will run at localhost:5000.
 
     $ cd Recompute/
     $ source venv/bin/activate
@@ -62,7 +62,7 @@ The IP address and port number are optional. By default, the server will run @ l
     (venv) $ python run.py --host=[host] --port=[port]
 
 
-Visit the front page of the web application @ [host]:[port]
+Visit the front page of the web application at [host]:[port]
 
 ![recompute][8]
 

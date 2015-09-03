@@ -1,5 +1,4 @@
 import flask
-import celery
 import tornado.wsgi
 import tornado.httpserver
 import tornado.web
@@ -14,13 +13,6 @@ recompute_app.config["CELERY_RESULT_BACKEND"] = "redis://localhost:6379/0"
 recompute_app.debug = True
 recompute_app.use_reloader = False
 
-recompute_celery = celery.Celery(recompute_app.name, broker=recompute_app.config["CELERY_BROKER_URL"])
-recompute_celery.conf.update(recompute_app.config)
-# recompute_celery_worker = CeleryCommand(recompute_celery)
-# celery_worker_thread = threading.Thread(target=recompute_celery_worker.execute_from_commandline, args=(["-c 1"],))
-# celery_worker_thread.daemon = True
-# celery_worker_thread.start()
-
 recompute_container = tornado.wsgi.WSGIContainer(recompute_app)
 settings = {
     "autoreload": False,
@@ -28,7 +20,7 @@ settings = {
 }
 recompute_server = tornado.httpserver.HTTPServer(tornado.web.Application([
     (r"/ws/play/(.*)/(.*)/(.*)", recompute_sockets.PlayWebSocket),
-    (r"/ws/recompute/(.*)/(.*)/(.*)", recompute_sockets.RecomputeSocket),
+    (r"/ws/recompute/(.*)", recompute_sockets.RecomputeSocket),
     (r".*", tornado.web.FallbackHandler, dict(fallback=recompute_container))
 ], **settings))
 
@@ -44,3 +36,5 @@ latest_count = 5
 # update timer = 24 hrs
 update_base_vms_timer = 5.0 * 60 * 60 * 24
 clean_up_timer = 5.0 * 60 * 60 * 24
+
+recomputation_sockets = dict()

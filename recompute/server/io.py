@@ -321,17 +321,19 @@ def execute(command, cwd=None, save_output=False, socket=None, output_file=None)
 
     p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
     while True:
-        out = p.stdout.read(1)
+        line = p.stdout.readline()
 
-        if out == '' and p.poll() is not None:
+        if line == '' and p.poll() is not None:
             break
 
-        if out != '':
-            sys.stdout.write(out)
-            sys.stdout.flush()
+        if line != '':
+            print line.rstrip()
 
             if save_output or output_file is not None:
-                output += out
+                output += line
+
+            if socket is not None:
+                socket.on_progress(line)
 
     if output_file is not None:
         with open(output_file, "a") as f:

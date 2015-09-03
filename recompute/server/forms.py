@@ -5,7 +5,7 @@ from recompute.server import boxes as recompute_boxes
 
 
 class RecomputeForm(flask_wtf.Form):
-    name = StringField("name", validators=[DataRequired()])
+    recomputation = StringField("recomputation", validators=[DataRequired()])
     github_url = StringField("github_url", validators=[DataRequired()])
     box = SelectField("box", choices=recompute_boxes.BASE_BOXES, validators=[DataRequired()])
 

@@ -22,7 +22,7 @@ def run(address="0.0.0.0", port=5000):
     init()
     signal.signal(signal.SIGINT, signal_handler)
     recompute_config.recompute_server.bind(port=port, address=address)
-    recompute_config.recompute_server.start(0)
+    recompute_config.recompute_server.start()
     tornado.ioloop.PeriodicCallback(try_exit, 100).start()
     tornado.ioloop.IOLoop.instance().start()
 

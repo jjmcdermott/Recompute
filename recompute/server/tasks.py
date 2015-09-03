@@ -31,17 +31,25 @@ def __make_vagrantbox(recomputation_summary):
     recomputation_dir = recompute_io.get_recomputation_dir(name)
     vagrantbox = name + ".box"
     log_file = recompute_io.create_log_filename(name)
+    socket = None
+    print recompute_config.recomputation_sockets
+    if name in recompute_config.recomputation_sockets:
+        socket = recompute_config.recomputation_sockets[name]
+        print socket
 
-    provisioning_success, _ = recompute_io.execute(command=["vagrant", "up", "--provision"], cwd=recomputation_dir,
-                                                   output_file=log_file)
-    recompute_io.execute(command=["vagrant", "package", "--output", vagrantbox], cwd=recomputation_dir,
-                         output_file=log_file)
-    recompute_io.execute(command=["vagrant", "destroy", "-f"], cwd=recomputation_dir, output_file=log_file)
+    vagrant_up = ["vagrant", "up", "--provision"]
+    provisioning_success, _ = recompute_io.execute(command=vagrant_up, cwd=recomputation_dir, socket=socket, output_file=log_file)
+
+    vagrant_package = ["vagrant", "package", "--output", vagrantbox]
+    recompute_io.execute(command=vagrant_package, cwd=recomputation_dir, socket=socket, output_file=log_file)
+
+    vagrant_destroy = ["vagrant", "destroy", "-f"]
+    recompute_io.execute(command=vagrant_destroy, cwd=recomputation_dir, socket=socket, output_file=log_file)
     recompute_io.remove_vagrantbox_cache(name)
 
     if provisioning_success:
-        recompute_io.execute(command=["vagrant", "box", "add", "--force", name, vagrantbox], cwd=recomputation_dir,
-                             output_file=log_file)
+        vagrant_add = ["vagrant", "box", "add", "--force", name, vagrantbox]
+        recompute_io.execute(command=vagrant_add, cwd=recomputation_dir, socket=socket, output_file=log_file)
         recompute_io.create_recomputation_build_dir(name, tag, version)
         recompute_io.move_vagrantbox_to_build_dir(name, tag, version, vagrantbox)
 
@@ -256,38 +264,6 @@ def __gather_recomputation_summary(name, github_url, box):
 
 
 def create_vm(name, github_url, box):
-    recompute_io.create_new_recomputation_dir(name)
-    recompute_io.create_new_log_dir(name)
-
-    try:
-        recomputation_summary = __gather_recomputation_summary(name, github_url, box)
-    except UnknownLanguageException:
-        recompute_io.destroy_recomputation(name)
-        return False, "Unknown project programming language."
-
-    if not __make_vagrantfile(recomputation_summary):
-        recompute_io.destroy_recomputation(name)
-        return False, "Failed to create Vagrantfile."
-
-    if not __make_vagrantbox(recomputation_summary):
-        # io.destroy_recomputation(name)
-        return False, "Failed to create Vagrantbox."
-
-    if not __make_recomputefile(recomputation_summary):
-        recompute_io.destroy_recomputation(name)
-        return False, "Failed to create Recomputefile."
-
-    recompute_io.move_vagrantfile_to_build_dir(name, recomputation_summary.release.tag,
-                                               recomputation_summary.release.version)
-
-    recompute_config.recomputations_count += 1
-    recompute_io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=recompute_io.get_recomputation_dir(name)))
-    return True, ""
-
-
-# testing
-@recompute_config.recompute_celery.task(bind=True)
-def task_create_vm(self, name, github_url, box):
     recompute_io.create_new_recomputation_dir(name)
     recompute_io.create_new_log_dir(name)
 

@@ -5,6 +5,3 @@ requests
 pyyaml
 tornado
 ptyprocess
-celery
-redis
-uwsgi

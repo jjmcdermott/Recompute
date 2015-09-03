@@ -81,7 +81,6 @@ function apiStatus(data) {
 
 <script>
     function play(vm, tag, version) {
-        var ws_url = "ws://" + window.location.host + "/ws/play/" + vm + "/" + tag + "/" + version;
         var terminal_args = {
             cols: 80,
             rows: 24,
@@ -89,14 +88,13 @@ function apiStatus(data) {
             screenKeys: true,
             cursorBlink: true
         }
-        make_play_window(document.body, terminal_args, ws_url, vm, tag, version);
+        make_play_window(document.body, terminal_args, vm, tag, version);
     }
 
 
     function recompute(name, github_url, box) {
-        var ws_url = "ws://" + window.location.host + "/ws/recompute/" + name + "/" + github_url + "/" + version;
-        make_recompute_window(ws_url, name, github_url, box)
-        <!--document.recompute_form.submit();-->
+        make_recompute_window(name, github_url, box)
+        document.recompute_form.submit();
     }
 </script>
 

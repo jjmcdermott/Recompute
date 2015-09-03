@@ -3,8 +3,8 @@
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
  */
 
-function make_play_window(root, terminal_args, ws_url, vm, tag, version) {
-
+function make_play_window(root, terminal_args, vm, tag, version) {
+    var ws_url = "ws://" + window.location.host + "/ws/play/" + vm + "/" + tag + "/" + version;
     var ws = new WebSocket(ws_url);
     var win = new PlayWindow(ws, root, vm, tag, version);
     win.resize(terminal_args.cols, terminal_args.rows);

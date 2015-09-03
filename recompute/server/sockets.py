@@ -9,18 +9,9 @@ import tornado.ioloop
 class PlayWebSocket(tornado.websocket.WebSocketHandler):
     def __init__(self, application, request, **kwargs):
         super(PlayWebSocket, self).__init__(application, request, **kwargs)
-        self.terminal = PlayTerminal(self)
         self.name = None
+        self.terminal = PlayTerminal(self)
         self.log = logging.getLogger(__name__)
-
-    def on_vagrant_init(self):
-        self.write_message("\x1b[31mInitializing {}...\x1b[m\r\n\n".format(self.name))
-
-    def on_vagrant_up(self):
-        self.write_message("\x1b[31mStarting {}...\x1b[m\r\n\n".format(self.name))
-
-    def on_vagrant_ssh(self):
-        self.write_message("\x1b[31mSSH into {}...\x1b[m\r\n\n".format(self.name))
 
     def open(self, name, tag, version):
         self.name = name
@@ -33,6 +24,15 @@ class PlayWebSocket(tornado.websocket.WebSocketHandler):
     def on_close(self):
         self.terminal.handle_close()
         self.log.info("Recomputation: {name} closed @ {ip} ".format(name=self.name, ip=self.request.remote_ip))
+
+    def on_vagrant_init(self):
+        self.write_message("\x1b[31mvagrant init (Initializing {}...)\x1b[m\r\n\n".format(self.name))
+
+    def on_vagrant_up(self):
+        self.write_message("\x1b[31mvagrant up (Starting {}...)\x1b[m\r\n\n".format(self.name))
+
+    def on_vagrant_ssh(self):
+        self.write_message("\x1b[31mvagrant ssh(SSH into {}...)\x1b[m\r\n\n".format(self.name))
 
     def on_pty_read(self, data):
         self.write_message(data)
@@ -49,29 +49,28 @@ class PlayTerminal(object):
         self.recomputation_build_dir = None
 
     def handle_open(self, name, tag, version):
-        from . import config
-        from . import io
+        from recompute.server import io as recompute_io
 
-        self.recomputation_build_dir = io.get_recomputation_build_dir(name, tag, version)
+        self.recomputation_build_dir = recompute_io.get_recomputation_build_dir(name, tag, version)
 
         self.socket.on_vagrant_init()
-        io.execute(["vagrant", "init", name], self.recomputation_build_dir)
+        recompute_io.execute(["vagrant", "init", name], self.recomputation_build_dir)
 
         self.socket.on_vagrant_up()
-        io.execute(["vagrant", "up"], self.recomputation_build_dir)
+        recompute_io.execute(["vagrant", "up"], self.recomputation_build_dir)
 
         self.socket.on_vagrant_ssh()
         argv = ["vagrant", "ssh"]
-        cwd = os.path.join(config.recompute_app.root_path,
-                           "recomputations/{name}/vms/{tag}_{version}".format(name=name, tag=tag, version=version))
+        cwd = self.recomputation_build_dir
         env = os.environ.copy()
         env["TERM"] = "xterm"
         self.pty = ptyprocess.PtyProcessUnicode.spawn(argv=argv, cwd=cwd, env=env, dimensions=(24, 80))
         self.ioloop.add_handler(self.pty.fd, self.pty_read, self.ioloop.READ)
 
     def handle_close(self):
-        from . import io
-        io.execute(["vagrant", "halt"], self.recomputation_build_dir)
+        from recompute.server import io as recompute_io
+
+        recompute_io.execute(["vagrant", "halt"], self.recomputation_build_dir)
 
         os.close(self.pty.fd)
         self.ioloop.remove_handler(self.pty.fd)
@@ -95,10 +94,16 @@ class RecomputeSocket(tornado.websocket.WebSocketHandler):
     def __init__(self, application, request, **kwargs):
         super(RecomputeSocket, self).__init__(application, request, **kwargs)
 
+    def open(self, name):
+        from recompute.server import config as recompute_config
+        recompute_config.recomputation_sockets[name] = self
+        print recompute_config.recomputation_sockets
+
     def on_message(self, message):
         pass
 
-
-class RecomputeTerminal(object):
-    def __init__(self, socket):
+    def on_close(self):
         pass
+
+    def on_progress(self, message):
+        self.write_message(message)
