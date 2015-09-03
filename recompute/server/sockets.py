@@ -105,5 +105,8 @@ class RecomputeSocket(tornado.websocket.WebSocketHandler):
     def on_close(self):
         pass
 
-    def on_progress(self, message):
+    def send_progress(self, message):
         self.write_message(message)
+
+    def send_close(self):
+        self.close()

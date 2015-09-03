@@ -38,7 +38,8 @@ def __make_vagrantbox(recomputation_summary):
         print socket
 
     vagrant_up = ["vagrant", "up", "--provision"]
-    provisioning_success, _ = recompute_io.execute(command=vagrant_up, cwd=recomputation_dir, socket=socket, output_file=log_file)
+    provisioning_success, _ = recompute_io.execute(command=vagrant_up, cwd=recomputation_dir, socket=socket,
+                                                   output_file=log_file)
 
     vagrant_package = ["vagrant", "package", "--output", vagrantbox]
     recompute_io.execute(command=vagrant_package, cwd=recomputation_dir, socket=socket, output_file=log_file)
@@ -289,7 +290,8 @@ def create_vm(name, github_url, box):
                                                recomputation_summary.release.version)
 
     recompute_config.recomputations_count += 1
-    recompute_io.server_prints("Recomputed {name} @ {dir}".format(name=name, dir=recompute_io.get_recomputation_dir(name)))
+    recompute_io.server_prints(
+        "Recomputed {name} @ {dir}".format(name=name, dir=recompute_io.get_recomputation_dir(name)))
     return True, ""
 
 
@@ -318,6 +320,11 @@ def update_vm(name, github_url, box):
     recompute_config.recomputations_count += 1
     recompute_io.server_prints(
         "Recomputed {name} @ {dir}".format(name=name, dir=recompute_io.get_recomputation_dir(name)))
+
+    if name in recompute_config.recomputation_sockets:
+        recompute_config.recomputation_sockets[name].send_close()
+        del recompute_config.recomputation_sockets[name]
+
     return True, "Successful."
 
 

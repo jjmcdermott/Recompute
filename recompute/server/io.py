@@ -333,7 +333,7 @@ def execute(command, cwd=None, save_output=False, socket=None, output_file=None)
                 output += line
 
             if socket is not None:
-                socket.on_progress(line)
+                socket.send_progress(line)
 
     if output_file is not None:
         with open(output_file, "a") as f:
