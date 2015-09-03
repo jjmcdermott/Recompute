@@ -303,15 +303,15 @@ def update_base_vagrantboxes():
         provider = base_vagrantbox["provider"]
         version = base_vagrantbox["version"]
 
-        _, output = execute(["vagrant", "box", "update", "--box", name, "--provider", provider], save_output=True)
+        execute(["vagrant", "box", "update", "--box", name, "--provider", provider], save_output=True)
         # 'vagrant box update --box BOX' returns something like
         # ... Successfully added box 'ubuntu/trusty64' (v20150818.0.0) for 'virtualbox'!
         # or
         # ... Box 'ubuntu/trusty64' (v20150818.0.0) is running the latest version.
-
-        if any("Successfully added box" in line for line in output.split("\n")):
-            # remove old version
-            _, _ = execute(["vagrant", "box", "remove", name, "--box-version", version, "--provider", provider])
+        #
+        # if any("Successfully added box" in line for line in output.split("\n")):
+        #     # remove old version
+        #     _, _ = execute(["vagrant", "box", "remove", name, "--box-version", version, "--provider", provider])
 
 
 def execute(command, cwd=None, save_output=False, socket=None, output_file=None):
