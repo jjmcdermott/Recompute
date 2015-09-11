@@ -3,6 +3,7 @@ import tornado.gen
 
 import io
 import tasks
+import forms
 
 
 class Recompute(tornado.web.RequestHandler):
@@ -12,36 +13,44 @@ class Recompute(tornado.web.RequestHandler):
         github_url = self.get_argument("github_url")
         box = self.get_argument("box")
 
+        form = forms.RecomputeForm(self.request.arguments)
+        if not form.validate():
+            # flash
+            self.set_status(400)
+            self.finish("Invalid request")
+            raise tornado.gen.Return()
+
         if io.exists_recomputation(name):
+            # flash
             self.reverse_url("index")
 
         status_code, err = yield tasks.recompute(name, github_url, box)
 
-        if success:
-            self.write("done")
-            self.flush()
+        if status_code:
+            self.finish(self.reverse_url("download_vm", name, "Latest", 0))
+        else:
+            self.set_status(500)
+            self.finish("Recomputation failed")
 
 
 class EditRecomputation(tornado.web.RequestHandler):
-    def get(self):
-        self.finish("ok")
-        # self.redirect(self.reverse_url("recomputation", name))
+    def get(self, name):
+        self.redirect(self.reverse_url("recomputation", name))
 
 
 class UpdateRecomputation(tornado.web.RequestHandler):
     def post(self):
         name = self.get_argument("recomputation")
-        github_url = self.get_argument("github_url")
-        box = self.get_argument("box")
+        newest_vm = io.get_newest_vm(name)
 
-        if io.exists_recomputation(name):
-            self.reverse_url("index")
+        status_code, err = yield tasks.recompute(name, newest_vm["github_url"], newest_vm["box"])
 
-        successful, msg = yield tasks.recompute(name, github_url, box)
-
-        if successful:
-            self.write("done")
-            self.flush()
+        if status_code:
+            newest_vm = io.get_newest_vm(name)
+            self.finish(self.reverse_url("download_vm", name, newest_vm["tag"], newest_vm["version"]))
+        else:
+            self.set_status(500)
+            self.finish("Recomputation failed")
 
 
 class DeleteRecomputation(tornado.web.RequestHandler):
@@ -49,7 +58,8 @@ class DeleteRecomputation(tornado.web.RequestHandler):
     Deletes the entire recomputation repository
     """
 
-    def get(self, name):
+    def post(self):
+        name = self.get_argument("recomputation")
         if io.exists_recomputation(name):
             io.destroy_recomputation(name)
             # flask.flash(name + " is removed", "warning")
@@ -70,7 +80,6 @@ class DownloadVM(tornado.web.RequestHandler):
         size = io.get_file_size(path)
 
         if path is None:
-            self.clear()
             self.set_status(404)
             self.finish("VM not found")
         else:
@@ -79,15 +88,15 @@ class DownloadVM(tornado.web.RequestHandler):
             self.set_header("Content-Disposition", "attachment; filename={name}.box".format(name=name))
             self.set_header("Content-Length", size)
 
-        with open(path, "rb") as f:
-            while True:
-                data = f.read(16384)
-                if not data:
-                    break
-                self.write(data)
-                self.flush()
+            with open(path, "rb") as f:
+                while True:
+                    data = f.read(16384)
+                    if not data:
+                        break
+                    self.write(data)
+                    self.flush()
 
-        self.finish()
+            self.finish()
 
 
 class DeleteVM(tornado.web.RequestHandler):
@@ -110,7 +119,6 @@ class DownloadLog(tornado.web.RequestHandler):
         size = io.get_file_size(path)
 
         if path is None:
-            self.clear()
             self.set_status(404)
             self.finish("Log file not found")
         else:
@@ -119,12 +127,12 @@ class DownloadLog(tornado.web.RequestHandler):
             self.set_header("Content-Disposition", "attachment; filename={name}.txt".format(name=name))
             self.set_header("Content-Length", size)
 
-        with open(path, "rb") as f:
-            while True:
-                data = f.read(16384)
-                if not data:
-                    break
-                self.write(data)
-                self.flush()
+            with open(path, "rb") as f:
+                while True:
+                    data = f.read(16384)
+                    if not data:
+                        break
+                    self.write(data)
+                    self.flush()
 
-        self.finish()
+            self.finish()

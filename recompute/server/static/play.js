@@ -18,10 +18,6 @@ function make_play_window(root, terminal_args, vm, tag, version) {
 
         term.open(win.element);
 
-        ws.onopen = function(event) {
-            term.write("\x1b[31mWelcome to term.js!\x1b[m\r\n");
-        };
-
         ws.onmessage = function(event) {
             term.write(event.data);
         };

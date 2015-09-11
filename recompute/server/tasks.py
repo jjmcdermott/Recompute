@@ -38,6 +38,8 @@ class AsyncRecomputator(object):
             if self.output_file is not None:
                 with open(self.output_file, "a") as f:
                     f.write(line)
+            if self.output_socket is not None:
+                self.output_socket.send_progress(line)
 
         stdout_stream.read_until(delimiter="\n", callback=on_stdout_readline)
 
@@ -53,10 +55,13 @@ class AsyncRecomputator(object):
             if self.output_file is not None:
                 with open(self.output_file, "a") as f:
                     f.write(line)
+            if self.output_socket is not None:
+                self.output_socket.send_progress(line)
 
         stderr_stream.read_until(delimiter="\n", callback=on_stderr_readline)
 
         exit_code = yield p.wait_for_exit(raise_error=False)
+
         if exit_code == 0:
             raise tornado.gen.Return(True)
         else:
@@ -70,42 +75,34 @@ def make_vm(recomputation_obj):
     version = recomputation_obj.version
     vagrantbox = io.get_vm_name(name)
 
-    cwd = io.get_recomputation_dir(name)
+    cwd = io.get_recomputation_vm_dir(name, tag, version)
     output_socket = sockets.RecomputeSocket.get_socket(name)
-    output_file = io.create_log_filename(name)
+    output_file = io.get_log_file(name)
 
     recomputator = AsyncRecomputator(name=name, cwd=cwd, output_socket=output_socket, output_file=output_file)
 
     vagrant_up = "vagrant up --provision"
-    successful = recomputator.run(vagrant_up)
+    successful = yield recomputator.run(vagrant_up)
 
     vagrant_package = "vagrant package --output {}".format(vagrantbox)
-    recomputator.run(vagrant_package)
-
-    vagrant_destroy = "vagrant destroy -f"
-    recomputator.run(vagrant_destroy)
-    io.remove_vagrantbox_cache(name)
-
-    if successful:
-        vagrant_add = "vagrant box add --force {name} {box} ".format(name=name, box=vagrantbox)
-        recomputator.run(vagrant_add)
-        io.create_recomputation_vm_dir(name, tag, version)
-        io.move_vagrantbox_to_vm_dir(name, tag, version)
-        io.move_vagrantfile_to_vm_dir(name, tag, version)
+    yield recomputator.run(vagrant_package)
 
     raise tornado.gen.Return(successful)
 
 
-def make_recomputefile(recomputation_summary):
-    recompute_dict = io.read_recomputefile(recomputation_summary.name)
-    recomputefile_path = io.get_recomputefile_path(recomputation_summary.name)
+def make_recomputefile(recomputation_obj):
+    old_recompute_dict = io.read_recomputefile(recomputation_obj.name)
+    recomputefile_path = io.get_recomputefile(recomputation_obj.name)
 
-    with open(recomputefile_path, "w") as recomputef:
-        recomputef.write("{}".format(recomputation_summary.to_pretty_json(recompute_dict)))
+    if old_recompute_dict is None:
+        recomputation_obj.id = io.get_next_recomputation_id()
+
+    with open(recomputefile_path, "w") as f:
+        f.write("{}".format(recomputation_obj.to_pretty_json(old_recompute_dict)))
 
 
 def make_vagrantfile(recomputation_obj):
-    vagrantfile_template = io.get_vagrantfile_template_path(recomputation_obj.github_obj.programming_language)
+    vagrantfile_template = io.get_vagrantfile_template(recomputation_obj.github_obj.programming_language)
     with open(vagrantfile_template, "r") as f:
         vagrantfile = f.read()
 
@@ -147,7 +144,7 @@ def make_vagrantfile(recomputation_obj):
     vagrantfile = vagrantfile.replace("<MEMORY>", str(recomputation_obj.memory))
     vagrantfile = vagrantfile.replace("<CPUS>", str(recomputation_obj.cpus))
 
-    vagrantfile_path = io.get_vagrantfile_path(recomputation_obj.name)
+    vagrantfile_path = io.get_vagrantfile(recomputation_obj.name, recomputation_obj.tag, recomputation_obj.version)
     with open(vagrantfile_path, "w") as f:
         f.write("{}".format(vagrantfile))
 
@@ -158,6 +155,7 @@ def make_recomputation_object(name, github_url, box):
 
     box_url = io.get_base_vm_url(box)
     box_version = io.get_base_vm_version(box)
+    print box_version
 
     github_obj = parser.GitHubParser.parse(github_url)
 
@@ -187,8 +185,7 @@ def recompute(name, github_url, box):
     err: Error message
     """
 
-    io.create_new_recomputation_dir(name)
-    io.create_new_log_dir(name)
+    io.create_recomputation_dir(name)
 
     try:
         recomputation_obj = make_recomputation_object(name, github_url, box)
@@ -196,52 +193,21 @@ def recompute(name, github_url, box):
         raise tornado.gen.Return((False, "Programming language not found"))
 
     programming_language = recomputation_obj.github_obj.programming_language
-    if not programming_language in defaults.vagrantfile_templates_dict:
+    if programming_language not in defaults.vagrantfile_templates_dict:
         raise tornado.gen.Return((False, "{} is not recognized".format(programming_language)))
 
+    io.create_recomputation_vm_dir(name, recomputation_obj.tag, recomputation_obj.version)
+
     make_vagrantfile(recomputation_obj)
-    make_recomputefile(recomputation_obj)
 
     successful = yield make_vm(recomputation_obj)
 
     if successful:
+        make_recomputefile(recomputation_obj)
         raise tornado.gen.Return((True, ""))
     else:
         raise tornado.gen.Return((False, "Failed"))
 
 
-#
-# def update_vm(name, github_url, box):
-#     try:
-#         recomputation_summary = __gather_recomputation_summary(name, github_url, box)
-#         tag = recomputation_summary.release.tag
-#         version = recomputation_summary.release.version
-#     except UnknownLanguageException:
-#         return False, "Did not understand the project programming language."
-#
-#     if not __make_vagrantfile(recomputation_summary):
-#         io.destroy_vm(name, tag, version)
-#         return False, "Vagrantfile cannot be generated."
-#
-#     if not __make_vagrantbox(recomputation_summary):
-#         io.destroy_vm(name, tag, version)
-#         return False, "Vagrantbox was not created."
-#
-#     if not __make_recomputefile(recomputation_summary):
-#         io.destroy_vm(name, tag, version)
-#         return False, "Recomputefile was not created."
-#
-#     io.move_vagrantfile_to_build_dir(name, tag, version)
-#
-#     io.server_prints(
-#         "Recomputed {name} @ {dir}".format(name=name, dir=io.get_recomputation_dir(name)))
-#
-#     if name in config.recomputation_sockets_dict:
-#         config.recomputation_sockets_dict[name].send_close()
-#         del config.recomputation_sockets_dict[name]
-#
-#     return True, "Successful."
-#
-#
 class ParseLanguageException(Exception):
     pass

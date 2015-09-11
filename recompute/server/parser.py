@@ -37,7 +37,7 @@ class GitHubParser(object):
         github_obj.latest_commit = GitHubParser.__get_github_commit_sha(github_page)
 
         travis_obj = TravisObject()
-        travis_obj.add_apt_repositories = GitHubParser.__get_add_apt_repositories(travis_script)
+        travis_obj.add_apt_repositories_list = GitHubParser.__get_add_apt_repositories(travis_script)
         travis_obj.apt_get_installs_list = GitHubParser.__get_apt_get_installs(travis_script)
         travis_obj.install_scripts_list = GitHubParser.__get_install_scripts(github_obj.repo_name, travis_script)
         travis_obj.test_scripts_list = GitHubParser.__get_test_scripts(travis_script)

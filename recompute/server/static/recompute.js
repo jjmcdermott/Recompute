@@ -15,7 +15,13 @@ function make_recompute_window(name, github_url, box) {
         ws.onclose = function(event) {
             win.destroy();
         }
+
+        ws.onerror = function(event) {
+            win.destroy();
+        }
     }
+
+    return win
 }
 
 function RecomputeWindow(ws, name, github_url, box) {

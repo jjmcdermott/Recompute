@@ -1,7 +1,3 @@
-"""
-Accessing recomputation files, Vagrantboxes and Vagrantfiles
-"""
-
 import subprocess
 import os
 import shutil
@@ -45,23 +41,31 @@ def get_log_dir(name):
     return "{dir}/{name}".format(dir=logs_dir, name=name)
 
 
-def create_log_filename(name):
-    """
-    Return a new log file name for the recomputation
-    """
-    return "{dir}/{name}/{time}.txt".format(dir=logs_dir, name=name, time=time.strftime("%Y%m%d-%H%M%S"))
+def get_recomputation_vm_dir(name, tag, version):
+    return "{dir}/vms/{tag}_{version}".format(dir=get_recomputation_dir(name), tag=tag, version=version)
 
 
-def create_new_recomputation_dir(name):
+def create_recomputation_dir(name):
     recomputation_dir = get_recomputation_dir(name)
     if not os.path.exists(recomputation_dir):
         os.makedirs(recomputation_dir)
 
-
-def create_new_log_dir(name):
     log_dir = get_log_dir(name)
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
+
+
+def create_recomputation_vm_dir(name, tag, version):
+    recomputation_build_dir = get_recomputation_vm_dir(name, tag, version)
+    if not os.path.exists(recomputation_build_dir):
+        os.makedirs(recomputation_build_dir)
+
+
+def get_log_file(name):
+    """
+    Return a new log file name for the recomputation
+    """
+    return "{dir}/{name}/{time}.txt".format(dir=logs_dir, name=name, time=time.strftime("%Y%m%d-%H%M%S"))
 
 
 def get_base_vm_url(box):
@@ -74,27 +78,15 @@ def get_base_vm_version(box):
             return base_box["version"]
 
 
-def get_recomputation_vm_dir(name, tag, version):
-    return "{dir}/vms/{tag}_{version}".format(dir=get_recomputation_dir(name), tag=tag, version=version)
+def get_vagrantfile(name, tag, version):
+    return "{dir}/Vagrantfile".format(dir=get_recomputation_vm_dir(name, tag, version))
 
 
-def create_recomputation_vm_dir(name, tag, version):
-    recomputation_build_dir = get_recomputation_vm_dir(name, tag, version)
-    if not os.path.exists(recomputation_build_dir):
-        os.makedirs(recomputation_build_dir)
-
-    return recomputation_build_dir
-
-
-def get_vagrantfile_path(name):
-    return "{dir}/Vagrantfile".format(dir=get_recomputation_dir(name))
-
-
-def get_recomputefile_path(name):
+def get_recomputefile(name):
     return "{dir}/{name}.recompute.json".format(dir=get_recomputation_dir(name), name=name)
 
 
-def get_vagrantfile_template_path(language):
+def get_vagrantfile_template(language):
     if language in defaults.vagrantfile_templates_dict:
         return "{dir}/{template}".format(dir=base_boxes_dir, template=defaults.vagrantfile_templates_dict[language])
     else:
@@ -106,26 +98,15 @@ def get_next_build_version(name):
     if recompute_dict is None:
         return 0
     else:
-        return recompute_dict["releases"][0]["version"] + 1
+        return recompute_dict["vms"][0]["version"] + 1
 
 
 def get_file_if_exists(recomputation_name, filename):
     path = "{dir}/{filename}".format(dir=get_recomputation_dir(recomputation_name), filename=filename)
-
-    if os.path.isfile("{dir}/{filename}".format(dir=get_recomputation_dir(recomputation_name), filename=filename)):
+    if os.path.isfile(path):
         return path
     else:
         return None
-
-
-def get_vagrantfile_relative(name):
-    """
-    Return the file path of the recomputation Vagrantfile (for download)
-
-    :param name: Recomputation
-    """
-
-    return get_file_if_exists(name, "Vagrantfile")
 
 
 def get_vm_path(name, tag, version):
@@ -143,18 +124,6 @@ def get_file_size(path):
         return os.path.getsize(path)
 
 
-def move_vagrantfile_to_vm_dir(name, tag, version):
-    old_vagrantfile = "{dir}/Vagrantfile".format(dir=get_recomputation_dir(name))
-    new_vagrantfile = "{dir}/boxVagrantfile".format(dir=get_recomputation_vm_dir(name, tag, version))
-    shutil.move(old_vagrantfile, new_vagrantfile)
-
-
-def move_vagrantbox_to_vm_dir(name, tag, version, ):
-    old_vagrantbox = "{dir}/{name}".format(dir=get_recomputation_dir(name), name=get_vm_name(name))
-    new_vagrantbox = "{dir}/{name}".format(dir=get_recomputation_vm_dir(name, tag, version), name=get_vm_name(name))
-    shutil.move(old_vagrantbox, new_vagrantbox)
-
-
 def get_latest_log_file(name):
     """
     Returns the latest log file for the recomputation
@@ -168,12 +137,17 @@ def get_latest_log_file(name):
     return "{dir}/{name}/{log}".format(dir=logs_dir, name=name, log=log_file_list[0])
 
 
+def get_newest_vm(name):
+    recompute_dict = read_recomputefile(name)
+    return recompute_dict["vms"][0]
+
+
 def read_recomputefile(name):
     """
-    Return a Dictionary representation of the recomputation
+    Returns a Dictionary representation of the recomputation
     """
 
-    recompute_file = get_file_if_exists(name, "{name}.recompute.json".format(name=name), absolute_path=True)
+    recompute_file = get_file_if_exists(name, "{name}.recompute.json".format(name=name))
 
     if recompute_file is None:
         return None
@@ -182,9 +156,9 @@ def read_recomputefile(name):
             return json.load(recomputation_file)
 
 
-def get_all_recomputations_summary():
+def get_all_recomputations_summary(count=0):
     """
-    Return a list of dictionaries, each representing a recomputation, ordered by decreasing ids
+    Returns a list of dictionaries, each representing a recomputation, ordered by decreasing ids
     """
 
     recomputations_summary = list()
@@ -193,11 +167,13 @@ def get_all_recomputations_summary():
         if recompute_dict is not None:
             recomputations_summary.append(recompute_dict)
     recomputations_summary.sort(key=lambda r: r["id"])
-    return list(reversed(recomputations_summary))
 
+    ordered_by_ids = list(reversed(recomputations_summary))
 
-def get_recomputations_summary(count):
-    return get_all_recomputations_summary()[:count]
+    if count != 0:
+        return ordered_by_ids[:count]
+    else:
+        return ordered_by_ids
 
 
 def get_next_recomputation_id():
@@ -220,26 +196,18 @@ def get_recomputations_count():
         return 0
 
 
-def exists_vagrantbox(name):
-    return get_vagrantfile_relative(name) is not None
-
-
 def remove_failed_recomputations():
     # for each recomputation directory (name)
     for recomputation in next(os.walk(recomputations_dir))[1]:
         recompute_dict = read_recomputefile(recomputation)
         if recompute_dict is None:
             shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
-            server_log_info("Removed {name}.".format(name=recomputation))
+            server_log_info("Removed {}.".format(recomputation))
 
 
 def remove_logs():
     for recomputation in next(os.walk(logs_dir))[1]:
         shutil.rmtree("{dir}/{name}".format(dir=logs_dir, name=recomputation))
-
-
-def remove_vagrantbox_cache(name):
-    shutil.rmtree("{dir}/.vagrant".format(dir=get_recomputation_dir(name)), ignore_errors=True)
 
 
 def exists_recomputation(name):
@@ -256,7 +224,7 @@ def destroy_vm(name, tag, version):
     recompute_dict["releases"] = [release for release in recompute_dict["releases"] if
                                   release["tag"] != tag and release["version"] != version]
 
-    recomputefile_path = get_recomputefile_path(name)
+    recomputefile_path = get_recomputefile(name)
     with open(recomputefile_path, "w") as recomputef:
         recomputef.write(json.dumps(recompute_dict, indent=4, sort_keys=True))
 
@@ -276,7 +244,7 @@ def get_base_vms_list():
     of the vagrantbox.
     """
 
-    _, output = execute(["vagrant", "box", "list"], save_output=True)
+    output = execute("vagrant box list")
     # 'vagrant box list' returns something like
     # ubuntu/trusty64                                                 (virtualbox, 20150609.0.9)
     # ubuntu/trusty64                                                 (virtualbox, 20150814.0.1)
@@ -311,7 +279,7 @@ def update_base_vagrantboxes():
         provider = base_vm["provider"]
         version = base_vm["version"]
 
-        _, output = execute(["vagrant", "box", "update", "--box", name, "--provider", provider], save_output=True)
+        output = execute("vagrant box update --box {name} --provider {}".format(name=name, provider=provider))
         # 'vagrant box update --box BOX' returns something like
         # ... Successfully added box 'ubuntu/trusty64' (v20150818.0.0) for 'virtualbox'!
         # or
@@ -319,15 +287,15 @@ def update_base_vagrantboxes():
         #
         if any("Successfully added box" in line for line in output.split("\n")):
             # remove old version
-            _, _ = execute(["vagrant", "box", "remove", name, "--box-version", version, "--provider", provider])
+            execute("vagrant box remove {name} --box-version {version} --provider {provider}".format(name=name,
+                                                                                                     version=version,
+                                                                                                     provider=provider))
 
 
-def execute(command, cwd=None, save_output=False, socket=None, output_file=None):
-    print command
-
+def execute(command, cwd=None):
     output = ""
 
-    p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
+    p = subprocess.Popen(command.split(), cwd=cwd, stdout=subprocess.PIPE)
     while True:
         line = p.stdout.readline()
 
@@ -335,22 +303,9 @@ def execute(command, cwd=None, save_output=False, socket=None, output_file=None)
             break
 
         if line != '':
-            print line.rstrip()
+            output += output
 
-            if save_output or output_file is not None:
-                output += line
-
-            if socket is not None:
-                socket.send_progress(line)
-
-    if output_file is not None:
-        with open(output_file, "a") as f:
-            f.write(output)
-
-    if p.returncode == 0:
-        return True, output
-    else:
-        return False, output
+    return output
 
 
 def server_log_info(task, info=""):

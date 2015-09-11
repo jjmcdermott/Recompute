@@ -33,9 +33,11 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li {% if request.path == reverse_url('index') %} class="active" {% end %}><a href="{{ reverse_url('index') }}">Home</a></li>
-                <li {% if request.path == reverse_url('recomputations') %} class="active" {% end %}><a href="{{ reverse_url('recomputations') }}">Recomputations</a></li>
-             </ul>
+                <li {% if request.path== reverse_url(
+                'index') %} class="active" {% end %}><a href="{{ reverse_url('index') }}">Home</a></li>
+                <li {% if request.path== reverse_url(
+                'recomputations') %} class="active" {% end %}><a href="{{ reverse_url('recomputations') }}">Recomputations</a></li>
+            </ul>
         </div>
         <!--/.nav-collapse -->
     </div>
@@ -55,6 +57,8 @@
 function apiStatus(data) {
   console.log(data.status);
 }
+
+
 </script>
 <script src="https://status.github.com/api/status.json?callback=apiStatus"></script>
 
@@ -81,9 +85,33 @@ function apiStatus(data) {
 
 
     function recompute(name, github_url, box) {
-        make_recompute_window(name, github_url, box)
-        document.recompute_form.submit();
+        win = make_recompute_window(name, github_url, box);
+        $("span#running_status").html("Running...");
+        $("span#running_status").css("visibility", "visible");
+        $.post("{{ reverse_url('recompute') }}", { "recomputation": name, "github_url": github_url, "box": box }, function(data) {
+            win.destroy();
+            window.location.reload();
+        }).error(function(data) {
+            $("span#running_status").css("visibility", "hidden");
+            win.destroy();
+            alert(data.status + " Server: " + data.responseText);
+        });
     }
+
+    function update_recomputation(name, github_url, box) {
+        make_recompute_window(name, github_url, box);
+        $.post("{{ reverse_url('update_recomputation') }}", { "name": name }, function() {
+            window.location.reload();
+        });
+    }
+
+    function delete_recomputation(name) {
+        $.post("{{ reverse_url('delete_recomputation') }}", { "name": name }, function() {
+            window.location.reload();
+        });
+    }
+
+
 </script>
 
 </body>

@@ -3,6 +3,7 @@ import json
 
 class RecomputationObject(object):
     def __init__(self, name, github_obj, box, box_url, box_version, memory, cpus, tag, version, date):
+        self.id = None
         self.name = name
         self.github_obj = github_obj
         self.box = box
@@ -16,6 +17,7 @@ class RecomputationObject(object):
 
     def to_pretty_json(self, old_recompute_dict=None):
         recomputation_vars = dict()
+        recomputation_vars["id"] = self.id
         recomputation_vars["name"] = self.name
         recomputation_vars["vms"] = list()
         vm = dict()

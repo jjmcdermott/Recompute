@@ -1,6 +1,7 @@
 __author__ = "Chi-Jui Wu <cjw21@st-andrews.ac.uk>"
 
-__all__ = ["config", "boxes", "io", "forms", "pageserver", "sockets", "models", "tasks", "defaults", "restful", "parser"]
+__all__ = ["config", "boxes", "io", "forms", "pageserver", "sockets", "models", "tasks", "defaults", "restful",
+           "parser"]
 
 import threading
 
@@ -21,7 +22,7 @@ def run(host, port):
     """
     Run Recompute
     """
-    # init()
+    init()
     config.app.start(host, port)
 
 
@@ -64,5 +65,5 @@ def remove_logs_thread():
     t.daemon = True
     t.start()
 
-    io.server_log_info("Removing logs")
+    io.server_log_info("Removing old logs")
     io.remove_logs()

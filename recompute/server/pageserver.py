@@ -13,7 +13,7 @@ class Index(tornado.web.RequestHandler):
     def get(self):
         form = forms.RecomputeForm()
         recomputations_count = io.get_recomputations_count()
-        latest_recomputations = io.get_recomputations_summary(config.latest_recomputations_count)
+        latest_recomputations = io.get_all_recomputations_summary(config.latest_recomputations_count)
         self.render("index.html", recompute_form=form, recomputations_count=recomputations_count,
                     latest_recomputations=latest_recomputations)
 

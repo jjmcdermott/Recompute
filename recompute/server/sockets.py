@@ -28,9 +28,6 @@ class PlayWebSocket(tornado.websocket.WebSocketHandler):
         self.terminal.handle_close()
         self.log.info("Recomputation: {name} closed @ {ip} ".format(name=self.name, ip=self.request.remote_ip))
 
-    def on_vagrant_init(self):
-        self.write_message("\x1b[31mvagrant init (Initializing {}...)\x1b[m\r\n\n".format(self.name))
-
     def on_vagrant_up(self):
         self.write_message("\x1b[31mvagrant up (Starting {}...)\x1b[m\r\n\n".format(self.name))
 
@@ -49,27 +46,24 @@ class PlayTerminal(object):
         self.socket = socket
         self.pty = None
         self.ioloop = tornado.ioloop.IOLoop.instance()
-        self.recomputation_build_dir = None
+        self.recomputation_vm_dir = None
 
     def handle_open(self, name, tag, version):
-        self.recomputation_build_dir = io.get_recomputation_build_dir(name, tag, version)
-
-        self.socket.on_vagrant_init()
-        io.execute(["vagrant", "init", name], self.recomputation_build_dir)
+        self.recomputation_vm_dir = io.get_recomputation_vm_dir(name, tag, version)
 
         self.socket.on_vagrant_up()
-        io.execute(["vagrant", "up"], self.recomputation_build_dir)
+        io.execute("vagrant up", self.recomputation_vm_dir)
 
         self.socket.on_vagrant_ssh()
-        argv = ["vagrant", "ssh"]
-        cwd = self.recomputation_build_dir
+        argv = "vagrant ssh".split()
+        cwd = self.recomputation_vm_dir
         env = os.environ.copy()
         env["TERM"] = "xterm"
         self.pty = ptyprocess.PtyProcessUnicode.spawn(argv=argv, cwd=cwd, env=env, dimensions=(24, 80))
         self.ioloop.add_handler(self.pty.fd, self.pty_read, self.ioloop.READ)
 
     def handle_close(self):
-        io.execute(["vagrant", "halt"], self.recomputation_build_dir)
+        io.execute("vagrant halt", self.recomputation_vm_dir)
 
         os.close(self.pty.fd)
         self.ioloop.remove_handler(self.pty.fd)
@@ -101,13 +95,10 @@ class RecomputeSocket(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         pass
 
-    def on_close(self):
-        del config.recomputation_sockets_dict[self.name]
-
     def send_progress(self, message):
         self.write_message(message)
 
-    def send_close(self):
+    def try_close(self):
         self.close()
 
     @classmethod
@@ -116,3 +107,9 @@ class RecomputeSocket(tornado.websocket.WebSocketHandler):
             return config.recomputation_sockets_dict[name]
         else:
             return None
+
+    @classmethod
+    def remove_socket(cls, name):
+        if name in config.recomputation_sockets_dict:
+            config.recomputation_sockets_dict[name].try_close()
+            del config.recomputation_sockets_dict[name]

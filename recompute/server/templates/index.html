@@ -37,6 +37,7 @@
 
                 <!--<button type="submit" class="btn btn-primary">Create</button>-->
                 <button type="button" onclick="recompute(recomputation.value, github_url.value, box.value);" class="btn btn-primary">Create</button>
+                <span id="running_status" style="visibility:hidden">Running...</span>
             </form>
         </div>
 
@@ -62,11 +63,11 @@
                     <tr>
                         <td><a href="{{ reverse_url('recomputation', recomputation['name']) }}">{{ recomputation["name"] }}</a></td>
                         <td>{{ recomputation["id"] }}</td>
-                        <td>{{ recomputation["releases"][0]["tag"] }}</td>
-                        <td>{{ recomputation["releases"][0]["version"] }}</td>
-                        <td>{{ recomputation["releases"][0]["date"] }}</td>
-                        <td><a onclick="play('{{ recomputation['name'] }}', '{{ recomputation['releases'][0]['tag'] }}', '{{ recomputation['releases'][0]['version'] }}');"><i class="fa fa-play-circle"></i> Play</a></td>
-                        <td><a href="{{ reverse_url('index') }}"><i class="fa fa-download"></i> VM</a></td>
+                        <td>{{ recomputation["vms"][0]["tag"] }}</td>
+                        <td>{{ recomputation["vms"][0]["version"] }}</td>
+                        <td>{{ recomputation["vms"][0]["date"] }}</td>
+                        <td><a onclick="play('{{ recomputation['name'] }}', '{{ recomputation['vms'][0]['tag'] }}', '{{ recomputation['vms'][0]['version'] }}');"><i class="fa fa-play-circle"></i> Play</a></td>
+                        <td><a href="{{ reverse_url('download_vm', recomputation['name'], recomputation['vms'][0]['tag'], recomputation['vms'][0]['version']) }}"><i class="fa fa-download"></i> VM</a></td>
                     </tr>
                 {% end %}
                 </tbody>

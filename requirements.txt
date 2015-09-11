@@ -3,3 +3,4 @@ requests
 pyyaml
 tornado
 ptyprocess
+wtforms_tornado
