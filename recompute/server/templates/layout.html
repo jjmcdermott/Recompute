@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title class="text-center">Recompute</title>
 
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="shortcut icon" href="{{ static_url('favicon.ico') }}">
 
-    <link rel="stylesheet" href="{{url_for('static', filename='jquery-ui.min.css')}}">
-    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{ static_url('jquery-ui.min.css') }}">
+    <link rel="stylesheet" href="{{ static_url('bootstrap.min.css') }}">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
-    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
-    <link rel="stylesheet" href="{{url_for('static', filename='play.css')}}">
+    <link rel="stylesheet" href="{{ static_url('style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('play.css') }}">
 </head>
 
 <body>
@@ -33,32 +33,20 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li {% if request.path== url_for('index_page') %} class="active" {% endif %}><a href="{{ url_for('index_page') }}">Home</a></li>
-                <li {% if request.path== url_for('recomputations_page') %} class="active" {% endif %}><a href="{{ url_for('recomputations_page') }}">Recomputations</a></li>
-                <!--<li {% if request.path== url_for('boxes_page') %} class="active" {% endif %}><a href="{{ url_for('boxes_page') }}">Boxes</a></li>-->
-            </ul>
+                <li {% if request.path == reverse_url('index') %} class="active" {% end %}><a href="{{ reverse_url('index') }}">Home</a></li>
+                <li {% if request.path == reverse_url('recomputations') %} class="active" {% end %}><a href="{{ reverse_url('recomputations') }}">Recomputations</a></li>
+             </ul>
         </div>
         <!--/.nav-collapse -->
     </div>
 </div>
 
 {% block jumbo %}
-{% endblock %}
+{% end %}
 
 <div class="container">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="alert alert-{{category}}" style="margin-top: 20px;">
-        <button type="button" class="close" data-dismiss="alert">×</button>
-        {{ message }}
-    </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
-
-    {% block content %}{% endblock %}
+    {% block content %}{% end %}
 
 </div>
 <!-- /.container -->
@@ -75,9 +63,9 @@ function apiStatus(data) {
 <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
-<script src="{{url_for('static', filename='term.js')}}"></script>
-<script src="{{url_for('static', filename='play.js')}}"></script>
-<script src="{{url_for('static', filename='recompute.js')}}"></script>
+<script src="{{ static_url('term.js') }}"></script>
+<script src="{{ static_url('play.js') }}"></script>
+<script src="{{ static_url('recompute.js') }}"></script>
 
 <script>
     function play(vm, tag, version) {

@@ -3,12 +3,13 @@
 {% block content %}
 
 <div class="page-header">
-    <h1>Recomputation: {{ recomputation.name }}</h1>
+    <h1>Recomputation: {{ recomputation["name"] }}</h1>
     <h4>Description</h4>
     <h4>
-        <a href="{{ url_for('edit_recomputation', name=recomputation.name) }}"><i class="fa fa-pencil"></i> Edit</a>&nbsp;&nbsp;
-        <a href="{{ url_for('update_recomputation', name=recomputation.name) }}"><i class="fa fa-refresh"></i> Update</a>&nbsp;&nbsp;
-        <a href="{{ url_for('delete_recomputation', name=recomputation.name) }}" class="delete"><i class="fa fa-trash-o"></i> Delete</a>
+        <a href="{{ reverse_url('edit_recomputation') }}"><i class="fa fa-pencil"></i> Edit</a>&nbsp;&nbsp;
+        <a href="{{ reverse_url('update_recomputation', recomputation['name']) }}"><i class="fa fa-refresh"></i> Update</a>&nbsp;&nbsp;
+        <a href="{{ reverse_url('delete_recomputation', recomputation['name']) }}" class="delete"><i
+                class="fa fa-trash-o"></i> Delete</a>
     </h4>
 </div>
 
@@ -16,10 +17,11 @@
 <div class="row">
     <div class="col-md-4">
         <ul class="list-group">
-            <li class="list-group-item"><span>Name: {{ recomputation.name }}</span></li>
-            <li class="list-group-item"><span>ID: {{ recomputation.id }}</span></li>
-            <li class="list-group-item"><span>GitHub: <a href="{{ recomputation.github_url }}">{{ recomputation.github_url }}</a></span></li>
-            <li class="list-group-item"><span>Last Updated: {{ recomputation.releases[0].date }}</span></li>
+            <li class="list-group-item"><span>Name: {{ recomputation["name"] }}</span></li>
+            <li class="list-group-item"><span>ID: {{ recomputation["id"] }}</span></li>
+            <li class="list-group-item"><span>GitHub: <a href="{{ recomputation['github_url'] }}">{{
+                recomputation["github_url"] }}</a></span></li>
+            <li class="list-group-item"><span>Last Updated: {{ recomputation["releases"][0]["date"] }}</span></li>
         </ul>
     </div>
 </div>
@@ -48,22 +50,22 @@
                 </thead>
 
                 <tbody>
-                {% for release in recomputation.releases %}
+                {% for release in recomputation["releases"] %}
                 <tr>
-                    <td>{{ release.tag }}</td>
-                    <td>{{ release.version }}</td>
-                    <td><a href="{{ release.github_url + '/tree/' + release.github_commit }}">{{ release.github_commit }}</a></td>
-                    <td><a href="{{ release.box_url + '/versions/' + release.box_version }}">{{ release.box + ' v.' + release.box_version }}</a></td>
-                    <td>{{ release.date }}</td>
-                    <td><a onclick="play('{{ recomputation.name }}', '{{ release.tag }}', '{{ release.version }}');"><i class="fa fa-play-circle"></i> Play</a></td>
-                    <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name, tag=release.tag, version=release.version) }}"><i class="fa fa-download"></i> Vagrantbox</a></td>
-                    <td><a href="{{ url_for('delete_vagrantbox', name=recomputation.name, tag=release.tag, version=release.version) }}" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
+                    <td>{{ release["tag"] }}</td>
+                    <td>{{ release["version"] }}</td>
+                    <td><a href="{{ release['github_url'] + '/tree/' + release['github_commit'] }}">{{ release["github_commit"] }}</a></td>
+                    <td><a href="{{ release['box_url'] + '/versions/' + release['box_version'] }}">{{ release["box"] + " v." + release["box_version"] }}</a></td>
+                    <td>{{ release["date"] }}</td>
+                    <td><a onclick="play('{{ recomputation['name'] }}', '{{ release['tag'] }}', '{{ release['version'] }}');"><i class="fa fa-play-circle"></i> Play</a></td>
+                    <td><a href="{{ reverse_url('download_vm', recomputation['name'], release['tag'], release['version']) }}"><i class="fa fa-download"></i> VM</a></td>
+                    <td><a href="{{ reverse_url('delete_vm', recomputation['name'], release['tag'], release['version']) }}" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
                 </tr>
-                {% endfor %}
+                {% end %}
                 </tbody>
 
             </table>
         </div>
     </div>
 </div>
-{% endblock %}
+{% end %}

@@ -1,4 +1,3 @@
-
 {% extends "layout.html" %}
 
 {% block jumbo %}
@@ -14,27 +13,26 @@
         </div>
     </div>
 
-{% endblock %}
+{% end %}
 
 {% block content %}
 
     <div class="row">
         <div class="top-buffer col-md-12 text-center">
-            <form name="recompute_form" class="form-inline" action="{{ url_for('create_recomputation') }}" method="POST">
-                {{ recompute_form.hidden_tag() }}
+            <form name="recompute_form" class="form-inline" action="{{ reverse_url('recompute') }}" method="POST">
                 <div class="form-group">
                     <label for="name">Name</label>
-                    {{ recompute_form.recomputation(class="form-control", placeholder="Name", size="15")}}
+                    {{ recompute_form.recomputation(class_="form-control", placeholder="Name", size="15") }}
                 </div>
 
                 <div class="form-group">
                     <label for="github_url">GitHub URL</label>
-                    {{ recompute_form.github_url(class="form-control", placeholder="URL", size="40")}}
+                    {{ recompute_form.github_url(class_="form-control", placeholder="URL", size="40") }}
                 </div>
 
                 <div class="form-group">
                     <label for="box">Box</label>
-                    {{ recompute_form.box(class="form-control")}}
+                    {{ recompute_form.box(class_="form-control") }}
                 </div>
 
                 <!--<button type="submit" class="btn btn-primary">Create</button>-->
@@ -44,7 +42,7 @@
 
         <div class="top-buffer col-md-12">
             <header>LATEST RECOMPUTATION
-                <div class="more"><a href="{{ url_for('recomputations_page') }}"><i class="fa fa-plus-square-o"></i> MORE</a></div>
+                <div class="more"><a href="{{ reverse_url('index') }}"><i class="fa fa-plus-square-o"></i> MORE</a></div>
             </header>
 
             <table class="table table-striped table-hover">
@@ -60,20 +58,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for recomputation in latest_recomputations_summary %}
+                {% for recomputation in latest_recomputations %}
                     <tr>
-                        <td><a href="{{ url_for('recomputation_page', name=recomputation.name) }}">{{ recomputation.name }}</a></td>
-                        <td>{{ recomputation.id }}</td>
-                        <td>{{ recomputation.releases[0].tag }}</td>
-                        <td>{{ recomputation.releases[0].version }}</td>
-                        <td>{{ recomputation.releases[0].date }}</td>
-                        <td><a onclick="play('{{ recomputation.name }}', '{{ recomputation.releases[0].tag }}', '{{ recomputation.releases[0].version }}');"><i class="fa fa-play-circle"></i> Play</a></td>
-                        <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name, tag=recomputation.releases[0].tag, version=recomputation.releases[0].version) }}"><i class="fa fa-download"></i> Vagrantbox</a></td>
+                        <td><a href="{{ reverse_url('recomputation', recomputation['name']) }}">{{ recomputation["name"] }}</a></td>
+                        <td>{{ recomputation["id"] }}</td>
+                        <td>{{ recomputation["releases"][0]["tag"] }}</td>
+                        <td>{{ recomputation["releases"][0]["version"] }}</td>
+                        <td>{{ recomputation["releases"][0]["date"] }}</td>
+                        <td><a onclick="play('{{ recomputation['name'] }}', '{{ recomputation['releases'][0]['tag'] }}', '{{ recomputation['releases'][0]['version'] }}');"><i class="fa fa-play-circle"></i> Play</a></td>
+                        <td><a href="{{ reverse_url('index') }}"><i class="fa fa-download"></i> VM</a></td>
                     </tr>
-                {% endfor %}
+                {% end %}
                 </tbody>
             </table>
         </div>
     </div>
 
-{% endblock %}
+{% end %}

@@ -4,7 +4,7 @@ $rootScript = <<SCRIPT
   apt-get update -y
   apt-get install -y software-properties-common python-software-properties git build-essential
   apt-get install -y python<LANGUAGE_VERSION> python<LANGUAGE_VERSION>-dev python-pip python-virtualenv
-  apt-get install -y <APT_GET_INSTALL>
+  apt-get install -y <APT_GET_INSTALLS>
 SCRIPT
 
 $userScript = <<SCRIPT
@@ -17,8 +17,8 @@ $userScript = <<SCRIPT
   cd <GITHUB_REPO_NAME>/
   virtualenv venv
   source venv/bin/activate
-  <INSTALL_SCRIPT>
-  <TEST_SCRIPT>
+  <INSTALL_SCRIPTS>
+  <TEST_SCRIPTS>
 SCRIPT
 
 Vagrant.configure("2") do |config|

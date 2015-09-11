@@ -5,6 +5,9 @@ import tornado.web
 import tornado.websocket
 import tornado.ioloop
 
+import config
+import io
+
 
 class PlayWebSocket(tornado.websocket.WebSocketHandler):
     def __init__(self, application, request, **kwargs):
@@ -49,15 +52,13 @@ class PlayTerminal(object):
         self.recomputation_build_dir = None
 
     def handle_open(self, name, tag, version):
-        from recompute.server import io as recompute_io
-
-        self.recomputation_build_dir = recompute_io.get_recomputation_build_dir(name, tag, version)
+        self.recomputation_build_dir = io.get_recomputation_build_dir(name, tag, version)
 
         self.socket.on_vagrant_init()
-        recompute_io.execute(["vagrant", "init", name], self.recomputation_build_dir)
+        io.execute(["vagrant", "init", name], self.recomputation_build_dir)
 
         self.socket.on_vagrant_up()
-        recompute_io.execute(["vagrant", "up"], self.recomputation_build_dir)
+        io.execute(["vagrant", "up"], self.recomputation_build_dir)
 
         self.socket.on_vagrant_ssh()
         argv = ["vagrant", "ssh"]
@@ -68,9 +69,7 @@ class PlayTerminal(object):
         self.ioloop.add_handler(self.pty.fd, self.pty_read, self.ioloop.READ)
 
     def handle_close(self):
-        from recompute.server import io as recompute_io
-
-        recompute_io.execute(["vagrant", "halt"], self.recomputation_build_dir)
+        io.execute(["vagrant", "halt"], self.recomputation_build_dir)
 
         os.close(self.pty.fd)
         self.ioloop.remove_handler(self.pty.fd)
@@ -93,20 +92,27 @@ class PlayTerminal(object):
 class RecomputeSocket(tornado.websocket.WebSocketHandler):
     def __init__(self, application, request, **kwargs):
         super(RecomputeSocket, self).__init__(application, request, **kwargs)
+        self.name = None
 
     def open(self, name):
-        from recompute.server import config as recompute_config
-        recompute_config.recomputation_sockets[name] = self
-        print recompute_config.recomputation_sockets
+        self.name = name
+        config.recomputation_sockets_dict[name] = self
 
     def on_message(self, message):
         pass
 
     def on_close(self):
-        pass
+        del config.recomputation_sockets_dict[self.name]
 
     def send_progress(self, message):
         self.write_message(message)
 
     def send_close(self):
         self.close()
+
+    @classmethod
+    def get_socket(cls, name):
+        if name in config.recomputation_sockets_dict:
+            return config.recomputation_sockets_dict[name]
+        else:
+            return None

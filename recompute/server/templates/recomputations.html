@@ -11,11 +11,10 @@
         <div class="col-md-12">
             <div class="row">
                 <div class="col-md-6">
-                    <form class="form-inline" action="{{ url_for('recomputations_page') }}" method="POST">
-                        {{ filter_recomputations_form.hidden_tag() }}
+                    <form class="form-inline" action="{{ reverse_url('recomputations') }}" method="POST">
                         <div class="form-group">
                             <label for="name" >Name</label>
-                            {{ filter_recomputations_form.name(class="form-control", placeholder="Name") }}
+                            {{ filter_recomputations_form.name(class_="form-control", placeholder="Name") }}
                         </div>
 
                         <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Search</button>
@@ -36,19 +35,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for recomputation in all_recomputations_summary %}
+                {% for recomputation in all_recomputations %}
                     <tr>
-                        <td><a href="{{ url_for('recomputation_page', name=recomputation.name) }}">{{ recomputation.name }}</a></td>
-                        <td>{{ recomputation.id }}</td>
-                        <td>{{ recomputation.releases[0].tag }}</td>
-                        <td>{{ recomputation.releases[0].version }}</td>
-                        <td>{{ recomputation.releases[0].date }}</td>
-                        <td><a onclick="play('{{ recomputation.name }}', '{{ recomputation.releases[0].tag }}', '{{ recomputation.releases[0].version }}');"><i class="fa fa-play-circle"></i> Play</a></td>
-                        <td><a href="{{ url_for('download_vagrantbox', name=recomputation.name, tag=recomputation.releases[0].tag, version=recomputation.releases[0].version) }}"><i class="fa fa-download"></i> Vagrantbox</a></td>
+                        <td><a href="{{ reverse_url('recomputation', recomputation['name']) }}">{{ recomputation["name"] }}</a></td>
+                        <td>{{ recomputation["id"] }}</td>
+                        <td>{{ recomputation["releases"][0]["tag"] }}</td>
+                        <td>{{ recomputation["releases"][0]["version"] }}</td>
+                        <td>{{ recomputation["releases"][0]["date"] }}</td>
+                        <td><a onclick="play('{{ recomputation['name'] }}', '{{ recomputation['releases'][0]['tag'] }}', '{{ recomputation['releases'][0]['version'] }}');"><i class="fa fa-play-circle"></i> Play</a></td>
+                        <td><a href="{{ reverse_url('download_vm', recomputation['name'], recomputation['releases'][0]['tag'], recomputation['releases'][0]['version']) }}"><i class="fa fa-download"></i> Vagrantbox</a></td>
                     </tr>
-                {% endfor %}
+                {% end %}
                 </tbody>
             </table>
         </div>
     </div>
-{% endblock %}
+{% end %}

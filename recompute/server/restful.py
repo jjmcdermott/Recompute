@@ -1,89 +1,130 @@
-import re
-import flask
-from recompute.server import config as recompute_config
-from recompute.server import io as recompute_io
-from recompute.server import tasks as recompute_tasks
+import tornado.web
+import tornado.gen
+
+import io
+import tasks
 
 
-@recompute_config.recompute_app.route("/recomputation/create", methods=["POST"])
-def create_recomputation():
-    from .forms import RecomputeForm
-    recompute_form = RecomputeForm()
+class Recompute(tornado.web.RequestHandler):
+    @tornado.gen.coroutine
+    def post(self):
+        name = self.get_argument("recomputation")
+        github_url = self.get_argument("github_url")
+        box = self.get_argument("box")
 
-    if recompute_form.validate_on_submit():
-        name = recompute_form.recomputation.data
-        github_url = recompute_form.github_url.data
-        box = recompute_form.box.data
+        if io.exists_recomputation(name):
+            self.reverse_url("index")
 
-        if recompute_io.exists_recomputation(name):
-            flask.flash("Recomputation already exists.", "danger")
-            return flask.redirect(flask.url_for("index_page"))
+        status_code, err = yield tasks.recompute(name, github_url, box)
 
-        successful, msg = recompute_tasks.create_vm(name, github_url, box)
-        # task = recompute_tasks.
+        if success:
+            self.write("done")
+            self.flush()
+
+
+class EditRecomputation(tornado.web.RequestHandler):
+    def get(self):
+        self.finish("ok")
+        # self.redirect(self.reverse_url("recomputation", name))
+
+
+class UpdateRecomputation(tornado.web.RequestHandler):
+    def post(self):
+        name = self.get_argument("recomputation")
+        github_url = self.get_argument("github_url")
+        box = self.get_argument("box")
+
+        if io.exists_recomputation(name):
+            self.reverse_url("index")
+
+        successful, msg = yield tasks.recompute(name, github_url, box)
 
         if successful:
-            flask.flash("Successful recomputation.", "success")
-            return flask.send_file(recompute_io.get_vagrantbox_relative(name, "Latest", "0"),
-                                   mimetype="application/vnd.previewsystems.box", as_attachment=True)
+            self.write("done")
+            self.flush()
+
+
+class DeleteRecomputation(tornado.web.RequestHandler):
+    """
+    Deletes the entire recomputation repository
+    """
+
+    def get(self, name):
+        if io.exists_recomputation(name):
+            io.destroy_recomputation(name)
+            # flask.flash(name + " is removed", "warning")
         else:
-            error_message = "Unsuccessful recomputation: {msg} <a href='{url}'>Download log</a>.".format(
-                msg=msg, url=flask.url_for("download_log_file", name=name)
-            )
-            flask.flash(flask.Markup(error_message), "danger")
-            return flask.redirect(flask.url_for("index_page"))
-    else:
-        flask.flash("Unsuccessful recomputation. Missing data.", "danger")
-        return flask.redirect(flask.url_for("index_page"))
+            pass
+            # flask.flash(name + " not found", "error")
+
+        self.render("recomputation404.html", name=name)
 
 
-@recompute_config.recompute_app.route("/recomputation/edit/<name>", methods=["GET"])
-def edit_recomputation(name):
-    return flask.redirect(flask.url_for("recomputation_page", name=name))
+class DownloadVM(tornado.web.RequestHandler):
+    """
+    Downloads the recomputation virtual machine with a particular tag and version
+    """
+
+    def get(self, name, tag, version):
+        path = io.get_vm_path(name, tag, version)
+        size = io.get_file_size(path)
+
+        if path is None:
+            self.clear()
+            self.set_status(404)
+            self.finish("VM not found")
+        else:
+            self.set_header("Content-Type", "application/vnd.previewsystems.box")
+            self.set_header("Content-Description", "VM")
+            self.set_header("Content-Disposition", "attachment; filename={name}.box".format(name=name))
+            self.set_header("Content-Length", size)
+
+        with open(path, "rb") as f:
+            while True:
+                data = f.read(16384)
+                if not data:
+                    break
+                self.write(data)
+                self.flush()
+
+        self.finish()
 
 
-@recompute_config.recompute_app.route("/recomputation/update/<name>", methods=["GET"])
-def update_recomputation(name):
-    recompute_dict = recompute_io.read_recomputefile(name)
-    recompute_tasks.update_vm(name, recompute_dict["github_url"], recompute_dict["releases"][0]["box"])
-    return flask.redirect(flask.url_for("recomputation_page", name=name))
+class DeleteVM(tornado.web.RequestHandler):
+    """
+    Deletes the recomputation virtual machine with a particular tag and version
+    """
+
+    def get(self, name, tag, version):
+        io.destroy_vm(name, tag, version)
+        self.redirect(self.reverse_url("recomputation", name))
 
 
-@recompute_config.recompute_app.route("/recomputation/delete/<name>", methods=["GET"])
-def delete_recomputation(name):
-    recomputation = dict()
-    recomputation["name"] = name
+class DownloadLog(tornado.web.RequestHandler):
+    """
+    Downloads the latest recomputation log file
+    """
 
-    if recompute_io.exists_recomputation(name):
-        recompute_io.destroy_recomputation(name)
-        flask.flash(name + " is removed", "warning")
-        flask.render_template("recomputation404.html", name=name)
-    else:
-        flask.flash(name + " not found", "error")
-        flask.render_template("recomputation404.html", name=name)
+    def get(self, name):
+        path = io.get_latest_log_file(name)
+        size = io.get_file_size(path)
 
+        if path is None:
+            self.clear()
+            self.set_status(404)
+            self.finish("Log file not found")
+        else:
+            self.set_header("Content-Type", "text/plain")
+            self.set_header("Content-Description", "Log")
+            self.set_header("Content-Disposition", "attachment; filename={name}.txt".format(name=name))
+            self.set_header("Content-Length", size)
 
-@recompute_config.recompute_app.route("/vagrantbox/download/<name>/<tag>/<version>", methods=["GET"])
-def download_vagrantbox(name, tag, version):
-    path = recompute_io.get_vagrantbox_relative(name, tag, version)
-    if path is not None:
-        return flask.send_file(path, mimetype="application/vnd.previewsystems.box", as_attachment=True)
-    else:
-        flask.flash("Recomputation: {name} not found.".format(name=name), "danger")
-        return flask.redirect(flask.url_for("index_page"))
+        with open(path, "rb") as f:
+            while True:
+                data = f.read(16384)
+                if not data:
+                    break
+                self.write(data)
+                self.flush()
 
-
-@recompute_config.recompute_app.route("/vagrantbox/delete/<name>/<tag>/<version>", methods=["GET"])
-def delete_vagrantbox(name, tag, version):
-    recompute_io.destroy_build(name, tag, version)
-    return flask.redirect(flask.url_for("recomputation_page", name=name))
-
-
-@recompute_config.recompute_app.route("/log/<name>", methods=["GET"])
-def download_log_file(name):
-    path = recompute_io.get_latest_log_file(name)
-    if path is not None:
-        return flask.send_file(path, mimetype="text/plain", as_attachment=True)
-    else:
-        flask.flash("Log file for recomputation: {name} not found.".format(name=name), "danger")
-        return flask.redirect(flask.url_for("index_page"))
+        self.finish()

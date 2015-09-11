@@ -1,6 +1,6 @@
-vm_memory = 2048
+recomputation_vm_memory = 2048
 haskell_vm_memory = 4096
-vm_cpus = 2
+recomputation_vm_cpus = 2
 
 vagrantfile_templates_dict = {
     "python": "python/python.vagrantfile",

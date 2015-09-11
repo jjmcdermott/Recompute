@@ -3,18 +3,17 @@ Accessing recomputation files, Vagrantboxes and Vagrantfiles
 """
 
 import subprocess
-import sys
 import os
 import shutil
 import json
 import re
 import time
-from recompute.server import boxes as recompute_boxes
+
+import boxes
+import defaults
 
 recomputations_dir = "recompute/server/recomputations"
-recomputations_dir_RELATIVE = "recomputations"
 logs_dir = "recompute/server/logs"
-logs_dir_RELATIVE = "logs"
 base_boxes_dir = "recompute/server/boxes"
 
 
@@ -38,14 +37,6 @@ def get_recomputation_dir(name):
     return "{dir}/{name}".format(dir=recomputations_dir, name=name)
 
 
-def get_recomputation_dir_relative(name):
-    """
-    Return the relative path of the recomputation directory
-    """
-
-    return "{dir}/{name}".format(dir=recomputations_dir_RELATIVE, name=name)
-
-
 def get_log_dir(name):
     """
     Return the path of the recomputation log directory
@@ -66,8 +57,6 @@ def create_new_recomputation_dir(name):
     if not os.path.exists(recomputation_dir):
         os.makedirs(recomputation_dir)
 
-    return recomputation_dir
-
 
 def create_new_log_dir(name):
     log_dir = get_log_dir(name)
@@ -75,12 +64,22 @@ def create_new_log_dir(name):
         os.makedirs(log_dir)
 
 
-def get_recomputation_build_dir(name, tag, version):
+def get_base_vm_url(box):
+    return boxes.BASE_BOXES_URL[box]
+
+
+def get_base_vm_version(box):
+    for base_box in get_base_vms_list():
+        if base_box["name"] == box:
+            return base_box["version"]
+
+
+def get_recomputation_vm_dir(name, tag, version):
     return "{dir}/vms/{tag}_{version}".format(dir=get_recomputation_dir(name), tag=tag, version=version)
 
 
-def create_recomputation_build_dir(name, tag, version):
-    recomputation_build_dir = get_recomputation_build_dir(name, tag, version)
+def create_recomputation_vm_dir(name, tag, version):
+    recomputation_build_dir = get_recomputation_vm_dir(name, tag, version)
     if not os.path.exists(recomputation_build_dir):
         os.makedirs(recomputation_build_dir)
 
@@ -95,19 +94,26 @@ def get_recomputefile_path(name):
     return "{dir}/{name}.recompute.json".format(dir=get_recomputation_dir(name), name=name)
 
 
-def get_vagrantfile_template_path(template):
-    return "{dir}/{template}".format(dir=base_boxes_dir, template=template)
+def get_vagrantfile_template_path(language):
+    if language in defaults.vagrantfile_templates_dict:
+        return "{dir}/{template}".format(dir=base_boxes_dir, template=defaults.vagrantfile_templates_dict[language])
+    else:
+        return None
 
 
-def get_file_if_exists(recomputation_name, filename, absolute_path=True):
-    recomputation_dir = get_recomputation_dir(recomputation_name)
-    recomputation_dir_relative = get_recomputation_dir_relative(recomputation_name)
+def get_next_build_version(name):
+    recompute_dict = read_recomputefile(name)
+    if recompute_dict is None:
+        return 0
+    else:
+        return recompute_dict["releases"][0]["version"] + 1
 
-    if os.path.exists(recomputation_dir) and os.path.isfile(recomputation_dir + "/" + filename):
-        if absolute_path:
-            return "{dir}/{filename}".format(dir=recomputation_dir, filename=filename)
-        else:
-            return "{dir}/{filename}".format(dir=recomputation_dir_relative, filename=filename)
+
+def get_file_if_exists(recomputation_name, filename):
+    path = "{dir}/{filename}".format(dir=get_recomputation_dir(recomputation_name), filename=filename)
+
+    if os.path.isfile("{dir}/{filename}".format(dir=get_recomputation_dir(recomputation_name), filename=filename)):
+        return path
     else:
         return None
 
@@ -119,45 +125,47 @@ def get_vagrantfile_relative(name):
     :param name: Recomputation
     """
 
-    return get_file_if_exists(name, "Vagrantfile", absolute_path=False)
+    return get_file_if_exists(name, "Vagrantfile")
 
 
-def get_vagrantbox_relative(name, tag, version):
-    """
-    Return the file path of the recomputation Vagrantbox (for download)
-    """
-
-    return get_file_if_exists(name, "vms/{tag}_{version}/{name}.box".format(tag=tag, version=version, name=name),
-                              absolute_path=False)
+def get_vm_path(name, tag, version):
+    return get_file_if_exists(name, "vms/{tag}_{version}/{name}.box".format(tag=tag, version=version, name=name))
 
 
-def move_vagrantfile_to_build_dir(name, tag, version):
+def get_vm_name(name, provider="VirtualBox"):
+    return "{name}.box".format(name=name)
+
+
+def get_file_size(path):
+    if path is None or not os.path.isfile(path):
+        return 0
+    else:
+        return os.path.getsize(path)
+
+
+def move_vagrantfile_to_vm_dir(name, tag, version):
     old_vagrantfile = "{dir}/Vagrantfile".format(dir=get_recomputation_dir(name))
-    new_vagrantfile = "{dir}/boxVagrantfile".format(dir=get_recomputation_build_dir(name, tag, version))
+    new_vagrantfile = "{dir}/boxVagrantfile".format(dir=get_recomputation_vm_dir(name, tag, version))
     shutil.move(old_vagrantfile, new_vagrantfile)
 
 
-def move_vagrantbox_to_build_dir(name, tag, version, box_name):
-    old_vagrantbox = "{dir}/{box}".format(dir=get_recomputation_dir(name), box=box_name)
-    new_vagrantbox = "{dir}/{box}".format(dir=get_recomputation_build_dir(name, tag, version), box=box_name)
+def move_vagrantbox_to_vm_dir(name, tag, version, ):
+    old_vagrantbox = "{dir}/{name}".format(dir=get_recomputation_dir(name), name=get_vm_name(name))
+    new_vagrantbox = "{dir}/{name}".format(dir=get_recomputation_vm_dir(name, tag, version), name=get_vm_name(name))
     shutil.move(old_vagrantbox, new_vagrantbox)
 
 
 def get_latest_log_file(name):
     """
-    Return the latest log file for the recomputation
-
-    :param name: Recomputation
+    Returns the latest log file for the recomputation
     """
 
     recomputation_log_dir = "{dir}/{name}".format(dir=logs_dir, name=name)
     log_file_list = list()
-
     for log_filename in next(os.walk(recomputation_log_dir))[2]:
         log_file_list.append(log_filename)
     log_file_list.sort()
-
-    return "{dir}/{name}/{log}".format(dir=logs_dir_RELATIVE, name=name, log=log_file_list[0])
+    return "{dir}/{name}/{log}".format(dir=logs_dir, name=name, log=log_file_list[0])
 
 
 def read_recomputefile(name):
@@ -222,7 +230,7 @@ def remove_failed_recomputations():
         recompute_dict = read_recomputefile(recomputation)
         if recompute_dict is None:
             shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
-            server_prints("Removed {name}.".format(name=recomputation))
+            server_log_info("Removed {name}.".format(name=recomputation))
 
 
 def remove_logs():
@@ -242,7 +250,7 @@ def destroy_recomputation(name):
     shutil.rmtree(get_recomputation_dir(name), ignore_errors=True)
 
 
-def destroy_build(name, tag, version):
+def destroy_vm(name, tag, version):
     # update recomputefile
     recompute_dict = read_recomputefile(name)
     recompute_dict["releases"] = [release for release in recompute_dict["releases"] if
@@ -253,7 +261,7 @@ def destroy_build(name, tag, version):
         recomputef.write(json.dumps(recompute_dict, indent=4, sort_keys=True))
 
     # remove build directory
-    shutil.rmtree(get_recomputation_build_dir(name, tag, version), ignore_errors=True)
+    shutil.rmtree(get_recomputation_vm_dir(name, tag, version), ignore_errors=True)
 
 
 def get_all_boxes_summary():
@@ -262,7 +270,7 @@ def get_all_boxes_summary():
             {"language": "gap", "version": "4.7.8"}, {"language": "gecode", "version": "4.4.0"}]
 
 
-def get_base_vagrantboxes_summary():
+def get_base_vms_list():
     """
     Return a list of vagrantboxes installed, where each element in a dictionary containing the name, provider, and version
     of the vagrantbox.
@@ -294,24 +302,24 @@ def get_base_vagrantboxes_summary():
 
 
 def update_base_vagrantboxes():
-    vagrantboxes_summary = get_base_vagrantboxes_summary()
-    base_vagrantboxes_list = [box[0] for box in recompute_boxes.BASE_BOXES]
-    base_vagrantboxes_summary = [box for box in vagrantboxes_summary if box["name"] in base_vagrantboxes_list]
+    base_vms_list = get_base_vms_list()
+    base_boxes_list = [box[0] for box in boxes.BASE_BOXES]
+    current_base_vms = [vm for vm in base_vms_list if vm["name"] in base_boxes_list]
 
-    for base_vagrantbox in base_vagrantboxes_summary:
-        name = base_vagrantbox["name"]
-        provider = base_vagrantbox["provider"]
-        version = base_vagrantbox["version"]
+    for base_vm in current_base_vms:
+        name = base_vm["name"]
+        provider = base_vm["provider"]
+        version = base_vm["version"]
 
-        execute(["vagrant", "box", "update", "--box", name, "--provider", provider], save_output=True)
+        _, output = execute(["vagrant", "box", "update", "--box", name, "--provider", provider], save_output=True)
         # 'vagrant box update --box BOX' returns something like
         # ... Successfully added box 'ubuntu/trusty64' (v20150818.0.0) for 'virtualbox'!
         # or
         # ... Box 'ubuntu/trusty64' (v20150818.0.0) is running the latest version.
         #
-        # if any("Successfully added box" in line for line in output.split("\n")):
-        #     # remove old version
-        #     _, _ = execute(["vagrant", "box", "remove", name, "--box-version", version, "--provider", provider])
+        if any("Successfully added box" in line for line in output.split("\n")):
+            # remove old version
+            _, _ = execute(["vagrant", "box", "remove", name, "--box-version", version, "--provider", provider])
 
 
 def execute(command, cwd=None, save_output=False, socket=None, output_file=None):
@@ -345,5 +353,11 @@ def execute(command, cwd=None, save_output=False, socket=None, output_file=None)
         return False, output
 
 
-def server_prints(message):
-    print "\033[94m$ Recompute: {message}\033[0m".format(message=message)
+def server_log_info(task, info=""):
+    time_string = time.strftime("%Y-%m-%d %H:%M:%S")
+    print "\033[94m$ Recompute {time} [{task}] \033[0m{info}".format(time=time_string, task=task, info=info)
+
+
+def server_log_error(task, error=""):
+    time_string = time.strftime("%Y-%m-%d %H:%M:%S")
+    print "\033[95m$ Recompute {time} [{task}] \033[0m{error}".format(time=time_string, task=task, error=error)

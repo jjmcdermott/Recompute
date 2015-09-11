@@ -4,7 +4,7 @@ $rootScript = <<SCRIPT
   apt-get update -y
   apt-get install -y software-properties-common python-software-properties git build-essential
   apt-get install -y gcc clang make autotools-dev autoconf cmake scons pkg-config
-  apt-get install -y <APT_GET_INSTALL>
+  apt-get install -y <APT_GET_INSTALLS>
 SCRIPT
 
 $userScript = <<SCRIPT
@@ -15,8 +15,8 @@ $userScript = <<SCRIPT
 
   git clone --depth=50 <GITHUB_URL> -b master
   cd <GITHUB_REPO_NAME>/
-  <INSTALL_SCRIPT>
-  <TEST_SCRIPT>
+  <INSTALL_SCRIPTS>
+  <TEST_SCRIPTS>
 SCRIPT
 
 Vagrant.configure("2") do |config|
