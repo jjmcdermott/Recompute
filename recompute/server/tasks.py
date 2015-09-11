@@ -12,15 +12,15 @@ import parser
 
 
 class AsyncRecomputator(object):
-    def __init__(self, name, cwd, output_socket, output_file):
+    def __init__(self, name, cwd, output_socket=None, output_file=None):
         self.name = name
         self.cwd = cwd
         self.output_socket = output_socket
         self.output_file = output_file
 
     @tornado.gen.coroutine
-    def run(self, command):
-        io.server_log_info(task="Recomputing {name} '{command}'".format(name=self.name, command=command))
+    def run(self, command, category=""):
+        io.server_log_info("{category} {name} '{command}'".format(category=category, name=self.name, command=command))
 
         STREAM = tornado.process.Subprocess.STREAM
 
@@ -34,7 +34,7 @@ class AsyncRecomputator(object):
                 stdout_stream.read_until(delimiter="\n", callback=on_stdout_readline)
 
         def stdout_readline_callback(line):
-            io.server_log_info(task="Recomputing {}".format(self.name), info=line.strip())
+            io.server_log_info(task="{category} {}".format(category=category, name=self.name), info=line.strip())
             if self.output_file is not None:
                 with open(self.output_file, "a") as f:
                     f.write(line)
@@ -51,7 +51,7 @@ class AsyncRecomputator(object):
                 stderr_stream.read_until(delimiter="\n", callback=on_stderr_readline)
 
         def stderr_readline_callback(line):
-            io.server_log_error(task="Recomputing {}".format(self.name), error=line.strip())
+            io.server_log_error(task="{category} {}".format(category=category, name=self.name), error=line.strip())
             if self.output_file is not None:
                 with open(self.output_file, "a") as f:
                     f.write(line)
@@ -82,10 +82,10 @@ def make_vm(recomputation_obj):
     recomputator = AsyncRecomputator(name=name, cwd=cwd, output_socket=output_socket, output_file=output_file)
 
     vagrant_up = "vagrant up --provision"
-    successful = yield recomputator.run(vagrant_up)
+    successful = yield recomputator.run(category="Recomputing", command=vagrant_up)
 
     vagrant_package = "vagrant package --output {}".format(vagrantbox)
-    yield recomputator.run(vagrant_package)
+    yield recomputator.run(category="Recomputing", command=vagrant_package)
 
     raise tornado.gen.Return(successful)
 
@@ -155,7 +155,6 @@ def make_recomputation_object(name, github_url, box):
 
     box_url = io.get_base_vm_url(box)
     box_version = io.get_base_vm_version(box)
-    print box_version
 
     github_obj = parser.GitHubParser.parse(github_url)
 

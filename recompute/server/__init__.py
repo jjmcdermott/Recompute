@@ -47,7 +47,7 @@ def update_base_vms_thread():
     io.server_log_info("Updating base vms")
     io.update_base_vagrantboxes()
 
-    io.server_log_info("Refreshing base boxes information")
+    io.server_log_info("Refreshing base vms information")
     config.base_vms_list = io.get_base_vms_list()
 
 

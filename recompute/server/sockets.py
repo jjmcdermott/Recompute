@@ -4,9 +4,11 @@ import ptyprocess
 import tornado.web
 import tornado.websocket
 import tornado.ioloop
+import tornado.gen
 
 import config
 import io
+import tasks
 
 
 class PlayWebSocket(tornado.websocket.WebSocketHandler):
@@ -46,13 +48,17 @@ class PlayTerminal(object):
         self.socket = socket
         self.pty = None
         self.ioloop = tornado.ioloop.IOLoop.instance()
+        self.recomputation = None
         self.recomputation_vm_dir = None
 
+    @tornado.gen.coroutine
     def handle_open(self, name, tag, version):
+        self.recomputation = name
         self.recomputation_vm_dir = io.get_recomputation_vm_dir(name, tag, version)
 
         self.socket.on_vagrant_up()
-        io.execute("vagrant up", self.recomputation_vm_dir)
+        async_recomputator = tasks.AsyncRecomputator(name=name, cwd=self.recomputation_vm_dir)
+        async_recomputator.run(category="Playing", command="vagrant up")
 
         self.socket.on_vagrant_ssh()
         argv = "vagrant ssh".split()
@@ -62,8 +68,10 @@ class PlayTerminal(object):
         self.pty = ptyprocess.PtyProcessUnicode.spawn(argv=argv, cwd=cwd, env=env, dimensions=(24, 80))
         self.ioloop.add_handler(self.pty.fd, self.pty_read, self.ioloop.READ)
 
+    @tornado.gen.coroutine
     def handle_close(self):
-        io.execute("vagrant halt", self.recomputation_vm_dir)
+        async_recomputator = tasks.AsyncRecomputator(name=self.recomputation, cwd=self.recomputation_vm_dir)
+        async_recomputator.run(category="Playing", command="vagrant halt")
 
         os.close(self.pty.fd)
         self.ioloop.remove_handler(self.pty.fd)

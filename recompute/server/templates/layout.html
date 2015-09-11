@@ -59,6 +59,8 @@ function apiStatus(data) {
 }
 
 
+
+
 </script>
 <script src="https://status.github.com/api/status.json?callback=apiStatus"></script>
 
@@ -90,24 +92,41 @@ function apiStatus(data) {
         $("span#running_status").css("visibility", "visible");
         $.post("{{ reverse_url('recompute') }}", { "recomputation": name, "github_url": github_url, "box": box }, function(data) {
             win.destroy();
+            alert("Server: " + data.responseText);
             window.location.reload();
         }).error(function(data) {
             $("span#running_status").css("visibility", "hidden");
             win.destroy();
-            alert(data.status + " Server: " + data.responseText);
+            alert("Server: " + data.responseText);
         });
     }
 
     function update_recomputation(name, github_url, box) {
-        make_recompute_window(name, github_url, box);
-        $.post("{{ reverse_url('update_recomputation') }}", { "name": name }, function() {
+        win = make_recompute_window(name, github_url, box);
+        $.post("{{ reverse_url('update_recomputation') }}", { "recomputation": name }, function(data) {
+            alert("Server: " + data.responseText);
             window.location.reload();
+        }).error(function(data) {
+            win.destroy();
+            alert("Server: " + data.responseText);
         });
     }
 
     function delete_recomputation(name) {
-        $.post("{{ reverse_url('delete_recomputation') }}", { "name": name }, function() {
+        $.post("{{ reverse_url('delete_recomputation') }}", { "recomputation": name }, function(data) {
+            alert("Server: " + data.responseText);
             window.location.reload();
+        }).error(function(data) {;
+            alert("Server: " + data.responseText);
+        });
+    }
+
+    function delete_vm(name, tag, version) {
+        $.post("{{ reverse_url('delete_vm') }}", { "recomputation": name,  "tag": tag, "version": version }, function(data) {
+            alert("Server: " + data.responseText);
+            window.location.reload();
+        }).error(function(data) {;
+            alert("Server: " + data.responseText);
         });
     }
 

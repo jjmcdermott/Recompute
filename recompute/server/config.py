@@ -23,7 +23,7 @@ uri_edit_recomputation = r"/recomputation/edit/(?P<name>[\w]+)"
 uri_update_recomputation = r"/recomputation/update"
 uri_delete_recomputation = r"/recomputation/delete"
 uri_download_vm = r"/vm/download/(?P<name>[\w]+)/(?P<tag>[\w]+)/(?P<version>[\d]+)"
-uri_delete_vm = r"/vm/delete/(?P<name>[\w]+)/(?P<tag>[\w]+)/(?P<version>[\d]+)"
+uri_delete_vm = r"/vm/delete"
 uri_download_log = r"/log/download/(?P<name>[\w]+)"
 
 uri_socket_play = r"/ws/play/(?P<name>[\w]+)/(?P<tag>[\w]+)/(?P<version>[\d]+)"

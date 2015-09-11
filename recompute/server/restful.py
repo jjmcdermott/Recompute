@@ -15,19 +15,17 @@ class Recompute(tornado.web.RequestHandler):
 
         form = forms.RecomputeForm(self.request.arguments)
         if not form.validate():
-            # flash
             self.set_status(400)
             self.finish("Invalid request")
-            raise tornado.gen.Return()
 
         if io.exists_recomputation(name):
-            # flash
-            self.reverse_url("index")
+            self.set_status(400)
+            self.finish("Name already exists")
 
         status_code, err = yield tasks.recompute(name, github_url, box)
 
         if status_code:
-            self.finish(self.reverse_url("download_vm", name, "Latest", 0))
+            self.finish("Recomputed {}".format(name))
         else:
             self.set_status(500)
             self.finish("Recomputation failed")
@@ -62,12 +60,10 @@ class DeleteRecomputation(tornado.web.RequestHandler):
         name = self.get_argument("recomputation")
         if io.exists_recomputation(name):
             io.destroy_recomputation(name)
-            # flask.flash(name + " is removed", "warning")
+            self.finish("{} is removed".format(name))
         else:
-            pass
-            # flask.flash(name + " not found", "error")
-
-        self.render("recomputation404.html", name=name)
+            self.set_status(400)
+            self.finish("{} not found".format(name))
 
 
 class DownloadVM(tornado.web.RequestHandler):
@@ -104,9 +100,17 @@ class DeleteVM(tornado.web.RequestHandler):
     Deletes the recomputation virtual machine with a particular tag and version
     """
 
-    def get(self, name, tag, version):
-        io.destroy_vm(name, tag, version)
-        self.redirect(self.reverse_url("recomputation", name))
+    def post(self, name, tag, version):
+        name = self.get_argument("recomputation")
+        tag = self.get_argument("tag")
+        version = self.get_argument("version")
+
+        if io.exists_vm(name, tag, version):
+            io.destroy_vm(name, tag, version)
+            self.finish("{name} {tag}_{version} is removed".format(name=name, tag=tag, version=version))
+        else:
+            self.set_status(400)
+            self.finish("{name} {tag}_{version} not found".format(name=name, tag=tag, version=version))
 
 
 class DownloadLog(tornado.web.RequestHandler):

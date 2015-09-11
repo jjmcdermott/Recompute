@@ -5,6 +5,7 @@ import json
 import re
 import time
 
+import config
 import boxes
 import defaults
 
@@ -73,7 +74,7 @@ def get_base_vm_url(box):
 
 
 def get_base_vm_version(box):
-    for base_box in get_base_vms_list():
+    for base_box in config.base_vms_list:
         if base_box["name"] == box:
             return base_box["version"]
 
@@ -202,7 +203,7 @@ def remove_failed_recomputations():
         recompute_dict = read_recomputefile(recomputation)
         if recompute_dict is None:
             shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
-            server_log_info("Removed {}.".format(recomputation))
+            server_log_info("Removed {}".format(recomputation))
 
 
 def remove_logs():
@@ -212,6 +213,10 @@ def remove_logs():
 
 def exists_recomputation(name):
     return os.path.exists(get_recomputation_dir(name))
+
+
+def exists_vm(name, tag, version):
+    return os.path.exists(get_recomputation_vm_dir(name, tag, version))
 
 
 def destroy_recomputation(name):
@@ -279,7 +284,7 @@ def update_base_vagrantboxes():
         provider = base_vm["provider"]
         version = base_vm["version"]
 
-        output = execute("vagrant box update --box {name} --provider {}".format(name=name, provider=provider))
+        output = execute("vagrant box update --box {name} --provider {provider}".format(name=name, provider=provider))
         # 'vagrant box update --box BOX' returns something like
         # ... Successfully added box 'ubuntu/trusty64' (v20150818.0.0) for 'virtualbox'!
         # or
@@ -296,14 +301,13 @@ def execute(command, cwd=None):
     output = ""
 
     p = subprocess.Popen(command.split(), cwd=cwd, stdout=subprocess.PIPE)
+
     while True:
         line = p.stdout.readline()
-
         if line == '' and p.poll() is not None:
             break
-
         if line != '':
-            output += output
+            output += line
 
     return output
 
