@@ -12,8 +12,8 @@ import parser
 
 
 class AsyncRecomputator(object):
-    def __init__(self, name, cwd, output_socket=None, output_file=None):
-        self.name = name
+    def __init__(self, recomputation, cwd, output_socket=None, output_file=None):
+        self.name = recomputation
         self.cwd = cwd
         self.output_socket = output_socket
         self.output_file = output_file
@@ -34,7 +34,7 @@ class AsyncRecomputator(object):
                 stdout_stream.read_until(delimiter="\n", callback=on_stdout_readline)
 
         def stdout_readline_callback(line):
-            io.server_log_info(task="{category} {}".format(category=category, name=self.name), info=line.strip())
+            io.server_log_info(task="{category} {name}".format(category=category, name=self.name), info=line.strip())
             if self.output_file is not None:
                 with open(self.output_file, "a") as f:
                     f.write(line)
@@ -51,7 +51,7 @@ class AsyncRecomputator(object):
                 stderr_stream.read_until(delimiter="\n", callback=on_stderr_readline)
 
         def stderr_readline_callback(line):
-            io.server_log_error(task="{category} {}".format(category=category, name=self.name), error=line.strip())
+            io.server_log_error(task="{category} {name}".format(category=category, name=self.name), error=line.strip())
             if self.output_file is not None:
                 with open(self.output_file, "a") as f:
                     f.write(line)
@@ -79,7 +79,7 @@ def make_vm(recomputation_obj):
     output_socket = sockets.RecomputeSocket.get_socket(name)
     output_file = io.get_log_file(name)
 
-    recomputator = AsyncRecomputator(name=name, cwd=cwd, output_socket=output_socket, output_file=output_file)
+    recomputator = AsyncRecomputator(recomputation=name, cwd=cwd, output_socket=output_socket, output_file=output_file)
 
     vagrant_up = "vagrant up --provision"
     successful = yield recomputator.run(category="Recomputing", command=vagrant_up)
@@ -91,12 +91,13 @@ def make_vm(recomputation_obj):
 
 
 def make_recomputefile(recomputation_obj):
-    old_recompute_dict = io.read_recomputefile(recomputation_obj.name)
-    recomputefile_path = io.get_recomputefile(recomputation_obj.name)
-
+    old_recompute_dict = io.load_recomputation(recomputation_obj.name)
     if old_recompute_dict is None:
         recomputation_obj.id = io.get_next_recomputation_id()
+    else:
+        recomputation_obj.id = old_recompute_dict["id"]
 
+    recomputefile_path = io.get_recomputefile(recomputation_obj.name)
     with open(recomputefile_path, "w") as f:
         f.write("{}".format(recomputation_obj.to_pretty_json(old_recompute_dict)))
 
@@ -169,7 +170,7 @@ def make_recomputation_object(name, github_url, box):
     cpus = defaults.recomputation_vm_cpus
 
     tag = "Latest"
-    version = io.get_next_build_version(name)
+    version = io.get_next_vm_version(name)
     date = time.strftime("%Y-%m-%d %H:%M:%S")
 
     return models.RecomputationObject(name, github_obj, box, box_url, box_version, memory, cpus, tag, version, date)

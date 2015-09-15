@@ -35,7 +35,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for recomputation in all_recomputations %}
+                {% for recomputation in recomputations %}
                     <tr>
                         <td><a href="{{ reverse_url('recomputation', recomputation['name']) }}">{{ recomputation["name"] }}</a></td>
                         <td>{{ recomputation["id"] }}</td>
@@ -50,4 +50,5 @@
             </table>
         </div>
     </div>
+
 {% end %}

@@ -22,20 +22,20 @@ class Recomputations(tornado.web.RequestHandler):
     """
     Returns the recomputations/search page.
     """
+    def initialize(self):
+        self.form = forms.FilterRecomputationsForm()
+        self.recomputations = io.get_all_recomputations_summary()
 
     def get(self):
-        form = forms.FilterRecomputationsForm()
-        all_recomputations = io.get_all_recomputations_summary()
+        self.render("recomputations.html", filter_recomputations_form=self.form, recomputations=self.recomputations)
 
-        if form.validate():
-            name = form.name.data
+    def post(self):
+        if self.form.validate():
+            name = self.form.name.data
             if name != "":
-                all_recomputations = [r for r in all_recomputations if r["name"] == name]
-            if len(all_recomputations) == 0:
-                pass
-                # flask.flash("Recomputation: " + name + " not found.", "danger")
+                self.recomputations = [r for r in self.recomputations if r["name"] == name]
 
-        self.render("recomputations.html", filter_recomputations_form=form, all_recomputations=all_recomputations)
+        self.render("recomputations.html", filter_recomputations_form=self.form, recomputations=self.recomputations)
 
 
 class Recomputation(tornado.web.RequestHandler):
@@ -47,4 +47,4 @@ class Recomputation(tornado.web.RequestHandler):
         if not io.exists_recomputation(name):
             self.render("recomputation404.html", name=name)
         else:
-            self.render("recomputation.html", recomputation=io.read_recomputefile(name))
+            self.render("recomputation.html", recomputation=io.get_recomputation(name))

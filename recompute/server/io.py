@@ -14,14 +14,130 @@ logs_dir = "recompute/server/logs"
 base_boxes_dir = "recompute/server/boxes"
 
 
+def execute(command, cwd=None, readline_callback=None):
+    p = subprocess.Popen(command.split(), cwd=cwd, stdout=subprocess.PIPE)
+    while True:
+        line = p.stdout.readline()
+        if line == '' and p.poll() is not None:
+            break
+        if line != '':
+            readline_callback(line)
+
+
+def server_log_info(task, info=""):
+    time_string = time.strftime("%Y-%m-%d %H:%M:%S")
+    print "\033[94m$ Recompute {time} [{task}] \033[0m{info}".format(time=time_string, task=task, info=info)
+
+
+def server_log_error(task, error=""):
+    time_string = time.strftime("%Y-%m-%d %H:%M:%S")
+    print "\033[95m$ Recompute {time} [{task}] \033[0m{error}".format(time=time_string, task=task, error=error)
+
+
 def create_recomputations_dir():
+    """
+    Initialization: Creates recomputations directory
+    """
+
+    server_log_info("Creating recomputations directory @ {}".format(recomputations_dir))
     if not os.path.exists(recomputations_dir):
         os.makedirs(recomputations_dir)
 
 
 def create_logs_dir():
+    """
+    Initialization: Creates logs directory
+    """
+
+    server_log_info("Creating logs directory @ {}".format(logs_dir))
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
+
+
+def update_base_vms():
+    """
+    Initialization: Return a dictionary of base vms where the key is the name and value is the version
+    """
+
+    base_vms_dict = dict()
+
+    vagrant_box_list = "vagrant box list"
+
+    def vagrant_box_list_readline_callback(line):
+        """
+        'vagrant box list' returns something like
+        # ubuntu/trusty64                                                 (virtualbox, 20150609.0.9)
+        # ubuntu/trusty64                                                 (virtualbox, 20150814.0.1)
+        # ubuntu/trusty64                                                 (virtualbox, 20150817.0.0)
+
+        Converts each line to a list of strings like
+        # [['ubuntu/trusty64', 'virtualbox', '20150609.0.9'],
+        #  ['ubuntu/trusty64', 'virtualbox', '20150814.0.1'],
+        #  ['ubuntu/trusty64', 'virtualbox', '20150817.0.0']]
+        """
+        server_log_info("Getting base vms", info=" ".join(line.rstrip().split()))
+        descriptions = re.sub("[(),]", "", line).split()
+        name = descriptions[0]
+        version = descriptions[2]
+
+        if name not in base_vms_dict or version > base_vms_dict[name]:
+            base_vms_dict[name] = version
+
+    server_log_info("Getting base vms '{}'".format(vagrant_box_list))
+    execute(vagrant_box_list, readline_callback=vagrant_box_list_readline_callback)
+
+    base_vms_updated = dict()
+
+    vagrant_box_update = "vagrant box update --box {box}"
+
+    def vagrant_box_update_readline_callback(line):
+        """
+        'vagrant box update --box BOX' returns something like
+        # ... Successfully added box 'ubuntu/trusty64' (v20150818.0.0) for 'virtualbox'!
+        # or
+        # ... Box 'ubuntu/trusty64' (v20150818.0.0) is running the latest version.
+        """
+        server_log_info("Updating base vms", info=line.rstrip())
+        if "Successfully added box" in line:
+            name = line[line.find("box '") + 5:line.find("' (")]
+            version = line[line.find("' (v") + 4:line.find(") for ")]
+            base_vms_updated[name] = version
+
+    publicly_available_vms = [box[0] for box in boxes.BASE_BOXES]
+    for vm in base_vms_dict.iterkeys():
+        if vm in publicly_available_vms and vm not in base_vms_updated:
+            command = vagrant_box_update.format(box=vm)
+            server_log_info("Updating base vms '{}'".format(command))
+            execute(command, readline_callback=vagrant_box_update_readline_callback)
+
+    for vm, version in base_vms_updated.iteritems():
+        base_vms_dict[vm] = version
+
+    return base_vms_dict
+
+
+def remove_failed_recomputations():
+    """
+    Initialization: Removes failed recomputations
+    """
+
+    server_log_info("Removing failed recomputations")
+    for recomputation in next(os.walk(recomputations_dir))[1]:
+        recompute_dict = load_recomputation(recomputation)
+        if recompute_dict is None:
+            server_log_info("Removed '{}'".format(recomputation))
+            shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
+
+
+def remove_old_logs():
+    """
+    Initialization: Removes old logs
+    """
+
+    server_log_info("Removing old logs")
+    for recomputation in next(os.walk(logs_dir))[1]:
+        server_log_info("Removed '{}'".format(recomputation))
+        shutil.rmtree("{dir}/{name}".format(dir=logs_dir, name=recomputation))
 
 
 def get_recomputation_dir(name):
@@ -74,9 +190,8 @@ def get_base_vm_url(box):
 
 
 def get_base_vm_version(box):
-    for base_box in config.base_vms_list:
-        if base_box["name"] == box:
-            return base_box["version"]
+    for base_box in config.base_vms_dict:
+        return config.base_vms_dict[base_box]
 
 
 def get_vagrantfile(name, tag, version):
@@ -94,8 +209,8 @@ def get_vagrantfile_template(language):
         return None
 
 
-def get_next_build_version(name):
-    recompute_dict = read_recomputefile(name)
+def get_next_vm_version(name):
+    recompute_dict = load_recomputation(name)
     if recompute_dict is None:
         return 0
     else:
@@ -138,14 +253,9 @@ def get_latest_log_file(name):
     return "{dir}/{name}/{log}".format(dir=logs_dir, name=name, log=log_file_list[0])
 
 
-def get_newest_vm(name):
-    recompute_dict = read_recomputefile(name)
-    return recompute_dict["vms"][0]
-
-
-def read_recomputefile(name):
+def load_recomputation(name):
     """
-    Returns a Dictionary representation of the recomputation
+    Returns a dictionary representation of the recomputation
     """
 
     recompute_file = get_file_if_exists(name, "{name}.recompute.json".format(name=name))
@@ -164,7 +274,7 @@ def get_all_recomputations_summary(count=0):
 
     recomputations_summary = list()
     for recomputation in next(os.walk(recomputations_dir))[1]:
-        recompute_dict = read_recomputefile(recomputation)
+        recompute_dict = load_recomputation(recomputation)
         if recompute_dict is not None:
             recomputations_summary.append(recompute_dict)
     recomputations_summary.sort(key=lambda r: r["id"])
@@ -189,26 +299,12 @@ def get_recomputations_count():
     if os.path.exists(recomputations_dir):
         count = 0
         for recomputation in next(os.walk(recomputations_dir))[1]:
-            recompute_dict = read_recomputefile(recomputation)
+            recompute_dict = load_recomputation(recomputation)
             if recompute_dict is not None:
                 count += 1
         return count
     else:
         return 0
-
-
-def remove_failed_recomputations():
-    # for each recomputation directory (name)
-    for recomputation in next(os.walk(recomputations_dir))[1]:
-        recompute_dict = read_recomputefile(recomputation)
-        if recompute_dict is None:
-            shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
-            server_log_info("Removed {}".format(recomputation))
-
-
-def remove_logs():
-    for recomputation in next(os.walk(logs_dir))[1]:
-        shutil.rmtree("{dir}/{name}".format(dir=logs_dir, name=recomputation))
 
 
 def exists_recomputation(name):
@@ -219,15 +315,28 @@ def exists_vm(name, tag, version):
     return os.path.exists(get_recomputation_vm_dir(name, tag, version))
 
 
+def change_recomputation_name(name, new_name):
+    recompute_dict = load_recomputation(name)
+
+    pass
+
+
+def change_recomputation_github_url(name, new_github_url):
+    pass
+
+
+def change_recomputation_description(name, new_description):
+    pass
+
+
 def destroy_recomputation(name):
     shutil.rmtree(get_recomputation_dir(name), ignore_errors=True)
 
 
 def destroy_vm(name, tag, version):
     # update recomputefile
-    recompute_dict = read_recomputefile(name)
-    recompute_dict["releases"] = [release for release in recompute_dict["releases"] if
-                                  release["tag"] != tag and release["version"] != version]
+    recompute_dict = load_recomputation(name)
+    recompute_dict["vms"] = [vm for vm in recompute_dict["vms"] if vm["tag"] != tag or vm["version"] != version]
 
     recomputefile_path = get_recomputefile(name)
     with open(recomputefile_path, "w") as recomputef:
@@ -235,88 +344,3 @@ def destroy_vm(name, tag, version):
 
     # remove build directory
     shutil.rmtree(get_recomputation_vm_dir(name, tag, version), ignore_errors=True)
-
-
-def get_all_boxes_summary():
-    # TODO get rid of hardcoded
-    return [{"language": "python", "version": "2.7"}, {"language": "c/c++"}, {"language": "node.js", "version": "0.10"},
-            {"language": "gap", "version": "4.7.8"}, {"language": "gecode", "version": "4.4.0"}]
-
-
-def get_base_vms_list():
-    """
-    Return a list of vagrantboxes installed, where each element in a dictionary containing the name, provider, and version
-    of the vagrantbox.
-    """
-
-    output = execute("vagrant box list")
-    # 'vagrant box list' returns something like
-    # ubuntu/trusty64                                                 (virtualbox, 20150609.0.9)
-    # ubuntu/trusty64                                                 (virtualbox, 20150814.0.1)
-    # ubuntu/trusty64                                                 (virtualbox, 20150817.0.0)
-
-    vagrantboxes = [re.sub("[(),]", "", line).split() for line in output.split("\n") if line]
-    # get rid of repeating white spaces and brackets, so we are left with something like
-    # [['ubuntu/trusty64', 'virtualbox', '20150609.0.9'],
-    #  ['ubuntu/trusty64', 'virtualbox', '20150814.0.1'],
-    #  ['ubuntu/trusty64', 'virtualbox', '20150817.0.0']]
-    # "if line" to get rid of the trailing empty line
-
-    vagrantboxes_list = list()
-
-    for vagrantbox in vagrantboxes:
-        box_vars = dict()
-        box_vars["name"] = vagrantbox[0]
-        box_vars["provider"] = vagrantbox[1]
-        box_vars["version"] = vagrantbox[2]
-        vagrantboxes_list.append(box_vars)
-
-    return vagrantboxes_list
-
-
-def update_base_vagrantboxes():
-    base_vms_list = get_base_vms_list()
-    base_boxes_list = [box[0] for box in boxes.BASE_BOXES]
-    current_base_vms = [vm for vm in base_vms_list if vm["name"] in base_boxes_list]
-
-    for base_vm in current_base_vms:
-        name = base_vm["name"]
-        provider = base_vm["provider"]
-        version = base_vm["version"]
-
-        output = execute("vagrant box update --box {name} --provider {provider}".format(name=name, provider=provider))
-        # 'vagrant box update --box BOX' returns something like
-        # ... Successfully added box 'ubuntu/trusty64' (v20150818.0.0) for 'virtualbox'!
-        # or
-        # ... Box 'ubuntu/trusty64' (v20150818.0.0) is running the latest version.
-        #
-        if any("Successfully added box" in line for line in output.split("\n")):
-            # remove old version
-            execute("vagrant box remove {name} --box-version {version} --provider {provider}".format(name=name,
-                                                                                                     version=version,
-                                                                                                     provider=provider))
-
-
-def execute(command, cwd=None):
-    output = ""
-
-    p = subprocess.Popen(command.split(), cwd=cwd, stdout=subprocess.PIPE)
-
-    while True:
-        line = p.stdout.readline()
-        if line == '' and p.poll() is not None:
-            break
-        if line != '':
-            output += line
-
-    return output
-
-
-def server_log_info(task, info=""):
-    time_string = time.strftime("%Y-%m-%d %H:%M:%S")
-    print "\033[94m$ Recompute {time} [{task}] \033[0m{info}".format(time=time_string, task=task, info=info)
-
-
-def server_log_error(task, error=""):
-    time_string = time.strftime("%Y-%m-%d %H:%M:%S")
-    print "\033[95m$ Recompute {time} [{task}] \033[0m{error}".format(time=time_string, task=task, error=error)

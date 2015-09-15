@@ -1,5 +1,6 @@
 import os
 import logging
+import threading
 import signal
 import tornado.httpserver
 import tornado.log
@@ -19,12 +20,12 @@ uri_recomputations = r"/recomputations"
 uri_recomputation = r"/recomputation/(?P<name>[\w]+)"
 
 uri_recompute = r"/recompute"
-uri_edit_recomputation = r"/recomputation/edit/(?P<name>[\w]+)"
-uri_update_recomputation = r"/recomputation/update"
-uri_delete_recomputation = r"/recomputation/delete"
-uri_download_vm = r"/vm/download/(?P<name>[\w]+)/(?P<tag>[\w]+)/(?P<version>[\d]+)"
-uri_delete_vm = r"/vm/delete"
-uri_download_log = r"/log/download/(?P<name>[\w]+)"
+uri_edit_recomputation = r"/edit/recomputation/(?P<name>[\w]+)"
+uri_update_recomputation = r"/update/recomputation"
+uri_delete_recomputation = r"/delete/recomputation"
+uri_download_vm = r"/download/vm/(?P<name>[\w]+)/(?P<tag>[\w]+)/(?P<version>[\d]+)"
+uri_delete_vm = r"/delete/vm"
+uri_download_log = r"/download/log/(?P<name>[\w]+)"
 
 uri_socket_play = r"/ws/play/(?P<name>[\w]+)/(?P<tag>[\w]+)/(?P<version>[\d]+)"
 uri_socket_recompute = r"/ws/recompute/(?P<name>[\w]+)"
@@ -32,9 +33,8 @@ uri_socket_recompute = r"/ws/recompute/(?P<name>[\w]+)"
 # setting default values
 latest_recomputations_count = 5
 twenty_four_hours = 60 * 60 * 24
-time_update_base_vms = twenty_four_hours
-time_clean_up = twenty_four_hours
-base_vms_list = list()
+time_update = twenty_four_hours
+base_vms_dict = list()
 recomputation_sockets_dict = dict()
 
 
@@ -73,6 +73,9 @@ class RecomputeApp(tornado.web.Application):
         self.http_server = tornado.httpserver.HTTPServer(self)
 
     def start(self, host, port):
+        io.server_log_info("Initializing")
+        self.initialize()
+
         io.server_log_info("Starting server")
         self.http_server.bind(address=host, port=port)
         self.http_server.start()
@@ -88,6 +91,23 @@ class RecomputeApp(tornado.web.Application):
         if self.is_closing:
             tornado.ioloop.IOLoop.instance().stop()
             logging.info('Exit success')
+
+    def initialize(self):
+        io.create_recomputations_dir()
+        io.create_logs_dir()
+        self.update()
+
+    def update(self):
+        global time_update
+        global base_vms_dict
+
+        t = threading.Timer(time_update, self.update)
+        t.daemon = True
+        t.start()
+
+        base_vms_dict = io.update_base_vms()
+        io.remove_failed_recomputations()
+        io.remove_old_logs()
 
 
 tornado.log.enable_pretty_logging()

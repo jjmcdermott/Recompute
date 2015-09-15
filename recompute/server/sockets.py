@@ -18,6 +18,7 @@ class PlayWebSocket(tornado.websocket.WebSocketHandler):
         self.terminal = PlayTerminal(self)
         self.log = logging.getLogger(__name__)
 
+    @tornado.gen.coroutine
     def open(self, name, tag, version):
         self.name = name
         self.terminal.handle_open(self.name, tag, version)
@@ -26,6 +27,7 @@ class PlayWebSocket(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         self.terminal.handle_message(message)
 
+    @tornado.gen.coroutine
     def on_close(self):
         self.terminal.handle_close()
         self.log.info("Recomputation: {name} closed @ {ip} ".format(name=self.name, ip=self.request.remote_ip))
@@ -57,8 +59,9 @@ class PlayTerminal(object):
         self.recomputation_vm_dir = io.get_recomputation_vm_dir(name, tag, version)
 
         self.socket.on_vagrant_up()
-        async_recomputator = tasks.AsyncRecomputator(name=name, cwd=self.recomputation_vm_dir)
-        async_recomputator.run(category="Playing", command="vagrant up")
+        vagrant_up = "vagrant up"
+        async_recomputator = tasks.AsyncRecomputator(recomputation=name, cwd=self.recomputation_vm_dir)
+        yield async_recomputator.run(category="Playing", command=vagrant_up)
 
         self.socket.on_vagrant_ssh()
         argv = "vagrant ssh".split()
@@ -70,8 +73,9 @@ class PlayTerminal(object):
 
     @tornado.gen.coroutine
     def handle_close(self):
-        async_recomputator = tasks.AsyncRecomputator(name=self.recomputation, cwd=self.recomputation_vm_dir)
-        async_recomputator.run(category="Playing", command="vagrant halt")
+        vagrant_halt = "vagrant halt"
+        async_recomputator = tasks.AsyncRecomputator(recomputation=self.recomputation, cwd=self.recomputation_vm_dir)
+        yield async_recomputator.run(category="Playing", command=vagrant_halt)
 
         os.close(self.pty.fd)
         self.ioloop.remove_handler(self.pty.fd)

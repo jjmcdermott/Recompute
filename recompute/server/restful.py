@@ -9,14 +9,14 @@ import forms
 class Recompute(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def post(self):
-        name = self.get_argument("recomputation")
-        github_url = self.get_argument("github_url")
-        box = self.get_argument("box")
-
         form = forms.RecomputeForm(self.request.arguments)
         if not form.validate():
             self.set_status(400)
             self.finish("Invalid request")
+
+        name = form.recomputation.data
+        github_url = form.github_url.data
+        box = form.box.data
 
         if io.exists_recomputation(name):
             self.set_status(400)
@@ -32,20 +32,44 @@ class Recompute(tornado.web.RequestHandler):
 
 
 class EditRecomputation(tornado.web.RequestHandler):
+    def initialize(self):
+        self.form = forms.EditRecomputationForm(self.request.arguments)
+
     def get(self, name):
-        self.redirect(self.reverse_url("recomputation", name))
+        recomputation = io.load_recomputation(name)
+        self.render("edit_recomputation.html", edit_recomputation_form=self.form, recomputation=recomputation)
+
+    def post(self, name):
+        if self.form.validate():
+            new_name = self.form.recomputation.data
+            new_github_url = self.form.github_url.data
+            new_description = self.form.description.data
+            io.change_recomputation_name(name, new_name)
+            io.change_recomputation_github_url(name, new_github_url)
+            io.change_recomputation_description(name, new_description)
+            self.finish("Edited {}".format(name))
+        else:
+            self.set_status(400)
+            self.finish("Invalid request")
 
 
 class UpdateRecomputation(tornado.web.RequestHandler):
+    @tornado.gen.coroutine
     def post(self):
-        name = self.get_argument("recomputation")
-        newest_vm = io.get_newest_vm(name)
+        name = self.get_argument("name")
 
-        status_code, err = yield tasks.recompute(name, newest_vm["github_url"], newest_vm["box"])
+        if not io.exists_recomputation(name):
+            self.set_status(400)
+            self.finish("{} not found".format(name))
+
+        recompute_dict = io.load_recomputation(name)
+        current_github_url = recompute_dict["github_url"]
+        latest_box = recompute_dict["vms"][0]["box"]
+
+        status_code, err = yield tasks.recompute(name, current_github_url, latest_box)
 
         if status_code:
-            newest_vm = io.get_newest_vm(name)
-            self.finish(self.reverse_url("download_vm", name, newest_vm["tag"], newest_vm["version"]))
+            self.finish("Recomputation updated")
         else:
             self.set_status(500)
             self.finish("Recomputation failed")
@@ -57,7 +81,8 @@ class DeleteRecomputation(tornado.web.RequestHandler):
     """
 
     def post(self):
-        name = self.get_argument("recomputation")
+        name = self.get_argument("name")
+
         if io.exists_recomputation(name):
             io.destroy_recomputation(name)
             self.finish("{} is removed".format(name))
@@ -100,8 +125,8 @@ class DeleteVM(tornado.web.RequestHandler):
     Deletes the recomputation virtual machine with a particular tag and version
     """
 
-    def post(self, name, tag, version):
-        name = self.get_argument("recomputation")
+    def post(self, ):
+        name = self.get_argument("name")
         tag = self.get_argument("tag")
         version = self.get_argument("version")
 

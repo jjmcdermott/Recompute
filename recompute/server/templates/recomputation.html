@@ -10,8 +10,8 @@
     <h4>Description</h4>
     <h4>
         <a href="{{ reverse_url('edit_recomputation', recomputation['name']) }}"><i class="fa fa-pencil"></i> Edit</a>&nbsp;&nbsp;
-        <a href="" onclick="update_recomputation({{ recomputation['name'], latest_github_url, latest_box }})"><i class="fa fa-refresh"></i> Update</a>&nbsp;&nbsp;
-        <a href="" onclick="delete_recomputation({{ recomputation['name'] }})" class="delete"><i class="fa fa-trash-o"></i> Delete</a>
+        <a onclick="update_recomputation('{{ recomputation['name'] }}', '{{ latest_github_url }}', '{{ latest_box }}');"><i class="fa fa-refresh"></i> Update</a>&nbsp;&nbsp;
+        <a onclick="delete_recomputation('{{ recomputation['name'] }}');" class="delete"><i class="fa fa-trash-o"></i> Delete</a>
     </h4>
 </div>
 
@@ -60,7 +60,7 @@
                     <td>{{ vm["date"] }}</td>
                     <td><a onclick="play('{{ recomputation['name'] }}', '{{ vm['tag'] }}', '{{ vm['version'] }}');"><i class="fa fa-play-circle"></i> Play</a></td>
                     <td><a href="{{ reverse_url('download_vm', recomputation['name'], vm['tag'], vm['version']) }}"><i class="fa fa-download"></i> VM</a></td>
-                    <td><a href="" onclick="delete_vm({{ recomputation['name'], vm['tag'], vm['version'] }})" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
+                    <td><a href="" onclick="delete_vm('{{ recomputation['name'] }}', '{{ vm['tag'] }}', '{{ vm['version'] }}');" class="delete"><i class="fa fa-trash-o"></i> Delete</a></td>
                 </tr>
                 {% end %}
                 </tbody>
