@@ -7,7 +7,7 @@
 
 <div class="page-header">
     <h1>Recomputation: {{ recomputation["name"] }}</h1>
-    <h4>Description</h4>
+    <h5>{{ recomputation["description"] }}</h5>
     <h4>
         <a href="{{ reverse_url('edit_recomputation', recomputation['name']) }}"><i class="fa fa-pencil"></i> Edit</a>&nbsp;&nbsp;
         <a onclick="update_recomputation('{{ recomputation['name'] }}', '{{ latest_github_url }}', '{{ latest_box }}');"><i class="fa fa-refresh"></i> Update</a>&nbsp;&nbsp;
@@ -21,7 +21,7 @@
         <ul class="list-group">
             <li class="list-group-item"><span>Name: {{ recomputation["name"] }}</span></li>
             <li class="list-group-item"><span>ID: {{ recomputation["id"] }}</span></li>
-            <li class="list-group-item"><span>GitHub: <a href="{{ latest_github_url }}">{{ latest_github_url }}</a></span></li>
+            <li class="list-group-item"><span>GitHub: <a href="{{ latest_github_url }}">{{ recomputation["github_url"] }}</a></span></li>
             <li class="list-group-item"><span>Last Updated: {{ recomputation["vms"][0]["date"] }}</span></li>
         </ul>
     </div>

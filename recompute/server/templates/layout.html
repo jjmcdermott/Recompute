@@ -102,8 +102,15 @@ function apiStatus(data) {
     }
 
     function fire_edit_recomputation(redirect_url) {
-        $("form#edit_recomputation").submit();
-        <!--window.location.href = redirect_url;-->
+        $form = $("form#edit_recomputation");
+        $form.submit(function(data) {
+            $.post($(this).attr('action'), $(this).serialize(), function(data) {
+              alert(data);
+              window.location.href = redirect_url;
+            });
+            return false;
+        });
+        $form.submit();
     }
 
     function update_recomputation(name, github_url, box) {
