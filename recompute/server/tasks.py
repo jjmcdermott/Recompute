@@ -9,6 +9,8 @@ import io
 import defaults
 import models
 import parser
+import boxes
+import config
 
 
 class AsyncRecomputator(object):
@@ -96,10 +98,7 @@ def make_recomputefile(recomputation_obj):
         recomputation_obj.id = io.get_next_recomputation_id()
     else:
         recomputation_obj.id = old_recompute_dict["id"]
-
-    recomputefile_path = io.get_recomputefile(recomputation_obj.name)
-    with open(recomputefile_path, "w") as f:
-        f.write("{}".format(recomputation_obj.to_pretty_json(old_recompute_dict)))
+    io.override_recomputefile(recomputation_obj.name, recomputation_obj.to_dict(old_recompute_dict))
 
 
 def make_vagrantfile(recomputation_obj):
@@ -154,8 +153,8 @@ def make_recomputation_object(name, github_url, box):
     """
     """
 
-    box_url = io.get_base_vm_url(box)
-    box_version = io.get_base_vm_version(box)
+    box_url = boxes.BASE_BOXES_URL[box]
+    box_version = config.base_vms_dict[box]
 
     github_obj = parser.GitHubParser.parse(github_url)
 

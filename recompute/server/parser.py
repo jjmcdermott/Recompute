@@ -14,6 +14,7 @@ class TravisObject(object):
 class GitHubObject(object):
     def __init__(self, github_url):
         self.github_url = github_url
+        self.description = None
         self.user = github_url.split("/")[-2]
         self.repo_name = github_url.split("/")[-1]
         self.programming_language = None
@@ -29,6 +30,9 @@ class GitHubParser(object):
         github_page = GitHubParser.get_github_page_contents(github_url)
 
         github_obj = GitHubObject(github_url)
+
+        description = GitHubParser.__get_github_description(github_page)
+        github_obj.description = description
 
         lang, ver = GitHubParser.__get_programming_language(travis_script, github_page)
         github_obj.programming_language = lang
@@ -61,6 +65,15 @@ class GitHubParser(object):
     def get_github_page_contents(cls, github_url):
         response = requests.get(github_url)
         return response.text
+
+    @classmethod
+    def __get_github_description(cls, github_page):
+        soup = bs4.BeautifulSoup(github_page)
+        description = soup.find("div", {"class": "repository-description"})
+        if description is not None:
+            return description.text
+        else:
+            return ""
 
     @classmethod
     def __get_programming_language(cls, travis_script, github_page):

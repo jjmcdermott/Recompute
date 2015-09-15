@@ -142,9 +142,7 @@ def remove_old_logs():
 
 def get_recomputation_dir(name):
     """
-    Return the path of the recomputation directory
-
-    :param name: Recomputation
+    Returns the recomputation directory path
     """
 
     return "{dir}/{name}".format(dir=recomputations_dir, name=name)
@@ -152,17 +150,25 @@ def get_recomputation_dir(name):
 
 def get_log_dir(name):
     """
-    Return the path of the recomputation log directory
+    Returns the recomputation log directory path
     """
 
     return "{dir}/{name}".format(dir=logs_dir, name=name)
 
 
 def get_recomputation_vm_dir(name, tag, version):
+    """
+    Returns the recomputation vm directory path
+    """
+
     return "{dir}/vms/{tag}_{version}".format(dir=get_recomputation_dir(name), tag=tag, version=version)
 
 
 def create_recomputation_dir(name):
+    """
+    Creates the recomputation & log directories
+    """
+
     recomputation_dir = get_recomputation_dir(name)
     if not os.path.exists(recomputation_dir):
         os.makedirs(recomputation_dir)
@@ -173,6 +179,10 @@ def create_recomputation_dir(name):
 
 
 def create_recomputation_vm_dir(name, tag, version):
+    """
+    Creates the recomputation vm directory
+    """
+
     recomputation_build_dir = get_recomputation_vm_dir(name, tag, version)
     if not os.path.exists(recomputation_build_dir):
         os.makedirs(recomputation_build_dir)
@@ -180,25 +190,22 @@ def create_recomputation_vm_dir(name, tag, version):
 
 def get_log_file(name):
     """
-    Return a new log file name for the recomputation
+    Returns a new recomputation log file name, with a timestamp
     """
     return "{dir}/{name}/{time}.txt".format(dir=logs_dir, name=name, time=time.strftime("%Y%m%d-%H%M%S"))
 
 
-def get_base_vm_url(box):
-    return boxes.BASE_BOXES_URL[box]
-
-
-def get_base_vm_version(box):
-    for base_box in config.base_vms_dict:
-        return config.base_vms_dict[base_box]
-
-
 def get_vagrantfile(name, tag, version):
+    """
+    Returns the recomputation vm Vagrantfile path
+    """
     return "{dir}/Vagrantfile".format(dir=get_recomputation_vm_dir(name, tag, version))
 
 
 def get_recomputefile(name):
+    """
+    Returns the recomputation recomputefile path
+    """
     return "{dir}/{name}.recompute.json".format(dir=get_recomputation_dir(name), name=name)
 
 
@@ -267,7 +274,16 @@ def load_recomputation(name):
             return json.load(recomputation_file)
 
 
-def get_all_recomputations_summary(count=0):
+def load_recomputation_by_id(id):
+    for recomputation in next(os.walk(recomputations_dir))[1]:
+        recompute_dict = load_recomputation(recomputation)
+        if recompute_dict is not None:
+            if recompute_dict["id"] == id:
+                return recompute_dict
+    return None
+
+
+def load_all_recomputations(count=0):
     """
     Returns a list of dictionaries, each representing a recomputation, ordered by decreasing ids
     """
@@ -288,7 +304,7 @@ def get_all_recomputations_summary(count=0):
 
 
 def get_next_recomputation_id():
-    recomputation_summary = get_all_recomputations_summary()
+    recomputation_summary = load_all_recomputations()
     if len(recomputation_summary) == 0:
         return 0
     else:
@@ -317,20 +333,58 @@ def exists_vm(name, tag, version):
 
 def change_recomputation_name(name, new_name):
     recompute_dict = load_recomputation(name)
+    recompute_dict["name"] = new_name
+    override_recomputefile(name, recompute_dict)
 
-    pass
+    new_recomputation_dir = get_recomputation_dir(new_name)
+    shutil.move(get_recomputation_dir(name), new_recomputation_dir)
+
+    old_recomputefile = "{}.recompute.json".format(name)
+    new_recomputefile = "{}.recompute.json".format(new_name)
+    shutil.move(os.path.join(new_recomputation_dir, old_recomputefile),
+                os.path.join(new_recomputation_dir, new_recomputefile))
+
+    for vm in next(os.walk(os.path.join(new_recomputation_dir, "vms")))[1]:
+        old_box_path = "{dir}/{name}.box".format(dir=os.path.join(new_recomputation_dir, "vms", vm), name=name)
+        new_box_path = "{dir}/{name}.box".format(dir=os.path.join(new_recomputation_dir, "vms", vm), name=new_name)
+        shutil.move(old_box_path, new_box_path)
 
 
 def change_recomputation_github_url(name, new_github_url):
-    pass
+    recompute_dict = load_recomputation(name)
+    recompute_dict["github_url"] = new_github_url
+    override_recomputefile(name, recompute_dict)
 
 
 def change_recomputation_description(name, new_description):
-    pass
+    recompute_dict = load_recomputation(name)
+    recompute_dict["description"] = new_description
+    override_recomputefile(name, recompute_dict)
 
 
 def destroy_recomputation(name):
-    shutil.rmtree(get_recomputation_dir(name), ignore_errors=True)
+    recomputation_dir = get_recomputation_dir(name)
+
+    command = "vagrant destroy --force"
+
+    task = None
+
+    def vagrant_destroy_readline_callback(line):
+        server_log_info(task=task, info=line.strip())
+
+    for vm in next(os.walk(os.path.join(recomputation_dir, "vms")))[1]:
+        cwd = os.path.join(recomputation_dir, "vms", vm)
+        task = "Destroying recomputation {name} {vm}".format(name=name, vm=vm)
+        server_log_info("{task} '{command}'".format(task=task, command=command))
+        execute(command, cwd=cwd, readline_callback=vagrant_destroy_readline_callback)
+
+    shutil.rmtree(recomputation_dir, ignore_errors=True)
+
+
+def override_recomputefile(name, recompute_dict):
+    recomputefile_path = get_recomputefile(name)
+    with open(recomputefile_path, "w") as recomputef:
+        recomputef.write(json.dumps(recompute_dict, indent=4, sort_keys=True))
 
 
 def destroy_vm(name, tag, version):
@@ -338,9 +392,5 @@ def destroy_vm(name, tag, version):
     recompute_dict = load_recomputation(name)
     recompute_dict["vms"] = [vm for vm in recompute_dict["vms"] if vm["tag"] != tag or vm["version"] != version]
 
-    recomputefile_path = get_recomputefile(name)
-    with open(recomputefile_path, "w") as recomputef:
-        recomputef.write(json.dumps(recompute_dict, indent=4, sort_keys=True))
-
-    # remove build directory
+    override_recomputefile(name, recompute_dict)
     shutil.rmtree(get_recomputation_vm_dir(name, tag, version), ignore_errors=True)

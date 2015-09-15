@@ -101,6 +101,11 @@ function apiStatus(data) {
         });
     }
 
+    function fire_edit_recomputation(redirect_url) {
+        $("form#edit_recomputation").submit();
+        <!--window.location.href = redirect_url;-->
+    }
+
     function update_recomputation(name, github_url, box) {
         win = make_recompute_window(name, github_url, box);
         $.post("{{ reverse_url('update_recomputation') }}", {"name": name}, function(data) {

@@ -17,7 +17,8 @@ uri_static = r"/static/(.*)"
 
 uri_index = r"/"
 uri_recomputations = r"/recomputations"
-uri_recomputation = r"/recomputation/(?P<name>[\w]+)"
+uri_recomputation = r"/recomputation/name/(?P<name>[A-Za-z]+)"
+uri_recomputation_by_id = r"/recomputation/id/(?P<name>[0-9]+)"
 
 uri_recompute = r"/recompute"
 uri_edit_recomputation = r"/edit/recomputation/(?P<name>[\w]+)"
@@ -46,6 +47,7 @@ class RecomputeApp(tornado.web.Application):
             tornado.web.url(uri_index, pageserver.Index, name="index"),
             tornado.web.url(uri_recomputations, pageserver.Recomputations, name="recomputations"),
             tornado.web.url(uri_recomputation, pageserver.Recomputation, name="recomputation"),
+            tornado.web.url(uri_recomputation_by_id, pageserver.Recomputation, name="recomputation_by_id"),
 
             tornado.web.url(uri_recompute, restful.Recompute, name="recompute"),
             tornado.web.url(uri_edit_recomputation, restful.EditRecomputation, name="edit_recomputation"),

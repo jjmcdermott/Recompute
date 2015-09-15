@@ -44,9 +44,9 @@ class EditRecomputation(tornado.web.RequestHandler):
             new_name = self.form.recomputation.data
             new_github_url = self.form.github_url.data
             new_description = self.form.description.data
-            io.change_recomputation_name(name, new_name)
             io.change_recomputation_github_url(name, new_github_url)
             io.change_recomputation_description(name, new_description)
+            io.change_recomputation_name(name, new_name)
             self.finish("Edited {}".format(name))
         else:
             self.set_status(400)

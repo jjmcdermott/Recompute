@@ -15,11 +15,13 @@ class RecomputationObject(object):
         self.version = version
         self.date = date
 
-    def to_pretty_json(self, old_recompute_dict=None):
+    def to_dict(self, old_recompute_dict=None):
         recomputation_vars = dict()
         recomputation_vars["id"] = self.id
         recomputation_vars["name"] = self.name
         recomputation_vars["vms"] = list()
+        recomputation_vars["github_url"] = self.github_obj.github_url
+        recomputation_vars["description"] = self.github_obj.description
         vm = dict()
         vm["box"] = self.box
         vm["box_url"] = self.box_url
@@ -32,4 +34,4 @@ class RecomputationObject(object):
         recomputation_vars["vms"].append(vm)
         if old_recompute_dict is not None:
             recomputation_vars["vms"] = recomputation_vars["vms"] + old_recompute_dict["vms"]
-        return json.dumps(recomputation_vars, indent=4, sort_keys=True)
+        return recomputation_vars
