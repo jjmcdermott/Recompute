@@ -29,7 +29,7 @@ class Recompute(tornado.web.RequestHandler):
         else:
             self.set_status(500)
             log_link = "<a href={link}>Download log.</a>".format(link=self.reverse_url("download_log", name))
-            vm_link = "<a href={link}>Download vm.</a>".format(link=self.reverse_url("delete_vm", name, "Latest", 0))
+            vm_link = "<a href={link}>Download vm.</a>".format(link=self.reverse_url("download_vm", name, "Latest", 0))
             self.finish("Failed to recompute '{name}'. {log}. {vm}.".format(name=name, log=log_link, vm=vm_link))
 
 
