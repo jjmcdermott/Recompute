@@ -91,4 +91,4 @@ To start the virtual machine:
 [5]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 [6]: https://www.virtualbox.org/
 [7]: https://www.vagrantup.com/
-[8]: https://raw.github.com/cjw-charleswu/Recompute/master/screenshots/recompute.png
+[8]: https://raw.github.com/cjw-charleswu/Recompute/master/screenshots/index.png

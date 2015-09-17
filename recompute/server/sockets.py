@@ -81,13 +81,13 @@ class PlayTerminal(object):
 
     @tornado.gen.coroutine
     def handle_close(self):
-        vagrant_halt = "vagrant halt"
-        async_recomputator = tasks.AsyncRecomputator(recomputation=self.recomputation, cwd=self.recomputation_vm_dir)
-        yield async_recomputator.run(category="Playing", command=vagrant_halt)
-
         os.close(self.pty.fd)
         self.ioloop.remove_handler(self.pty.fd)
         self.pty.isalive()
+
+        vagrant_halt = "vagrant halt"
+        async_recomputator = tasks.AsyncRecomputator(recomputation=self.recomputation, cwd=self.recomputation_vm_dir)
+        yield async_recomputator.run(category="Playing", command=vagrant_halt)
 
     def handle_message(self, message):
         self.pty.write(message)

@@ -25,11 +25,12 @@ class Recompute(tornado.web.RequestHandler):
         status_code, err = yield tasks.recompute(name, github_url, box)
 
         if status_code:
-            self.finish("Recomputed '{}'".format(name))
+            landing_page = "<a href={link}>More information</a>".format(link=self.reverse_url("recomputation", name))
+            self.finish("Recomputed '{name}'. {link}.".format(name=name, link=landing_page))
         else:
             self.set_status(500)
-            log_link = "<a href={link}>Download log.</a>".format(link=self.reverse_url("download_log", name))
-            vm_link = "<a href={link}>Download vm.</a>".format(link=self.reverse_url("download_vm", name, "Latest", 0))
+            log_link = "<a href={link}>Download log</a>".format(link=self.reverse_url("download_log", name))
+            vm_link = "<a href={link}>Download vm</a>".format(link=self.reverse_url("download_vm", name, "Latest", 0))
             self.finish("Failed to recompute '{name}'. {log}. {vm}.".format(name=name, log=log_link, vm=vm_link))
 
 
