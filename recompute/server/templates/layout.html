@@ -9,8 +9,9 @@
 
     <link rel="shortcut icon" href="{{ static_url('favicon.ico') }}">
 
-    <link rel="stylesheet" href="{{ static_url('jquery-ui.min.css') }}">
     <link rel="stylesheet" href="{{ static_url('bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ static_url('jquery-ui.min.css') }}">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
     <link rel="stylesheet" href="{{ static_url('style.css') }}">
@@ -58,23 +59,44 @@ function apiStatus(data) {
   console.log(data.status);
 }
 
-
-
-
-
 </script>
 <script src="https://status.github.com/api/status.json?callback=apiStatus"></script>
 
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-<script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
 <script src="{{ static_url('term.js') }}"></script>
 <script src="{{ static_url('play.js') }}"></script>
 <script src="{{ static_url('recompute.js') }}"></script>
 
 <script>
+
+    function make_dialog(title, innerHTML, redirect_url) {
+        var resp = document.createElement("div");
+        resp.id = "dialog-message"
+        resp.title = title
+
+        var innerText = document.createElement("p");
+        innerText.innerHTML = innerHTML;
+
+        resp.appendChild(innerText);
+
+        document.body.appendChild(resp);
+
+        $("#dialog-message").dialog({
+          modal: true,
+          draggable: true,
+          buttons: {
+            Ok: function() {
+              $(this).dialog("close");
+              window.location.href = redirect_url
+            }
+          }
+        });
+    }
+
     function play(vm, tag, version) {
         var terminal_args = {
             cols: 80,
@@ -92,12 +114,11 @@ function apiStatus(data) {
         $("span#running_status").css("visibility", "visible");
         $.post("{{ reverse_url('recompute') }}", { "recomputation": name, "github_url": github_url, "box": box }, function(data) {
             win.destroy();
-            alert("Server: " + data);
-            window.location.reload();
+            make_dialog("Recompute completed", data, window.location.href);
         }).error(function(data) {
             $("span#running_status").css("visibility", "hidden");
             win.destroy();
-            alert("Server: " + data.responseText);
+            make_dialog("Recompute failed", data.responseText, window.location.href);
         });
     }
 
@@ -105,8 +126,7 @@ function apiStatus(data) {
         $form = $("form#edit_recomputation");
         $form.submit(function(data) {
             $.post($(this).attr('action'), $(this).serialize(), function(data) {
-              alert(data);
-              window.location.href = redirect_url;
+            make_dialog("Recomputation edited", data, redirect_url);
             });
             return false;
         });
@@ -117,29 +137,26 @@ function apiStatus(data) {
         win = make_recompute_window(name, github_url, box);
         $.post("{{ reverse_url('update_recomputation') }}", {"name": name}, function(data) {
             win.destroy();
-            alert("Server: " + data);
-            window.location.reload();
+            make_dialog("Recomputation updated", data, window.location.href);
         }).error(function(data) {
             win.destroy();
-            alert("Server: " + data.responseText);
+            make_dialog("Recomputation update failed", data.responseText, window.location.href);
         });
     }
 
     function delete_recomputation(name) {
         $.post("{{ reverse_url('delete_recomputation') }}", {"name": name}, function(data) {
-            alert("Server: " + data);
-            window.location.reload();
+            make_dialog("Recomputation deleted", data, window.location.href);
         }).error(function(data) {;
-            alert("Server: " + data.responseText);
+            make_dialog("Recomputation not deleted", data.responseText, window.location.href);
         });
     }
 
     function delete_vm(name, tag, version) {
         $.post("{{ reverse_url('delete_vm') }}", { "name": name,  "tag": tag, "version": version }, function(data) {
-            alert("Server: " + data);
-            window.location.reload();
+            make_dialog("Virtual machine deleted", data, window.location.href);
         }).error(function(data) {;
-            alert("Server: " + data.responseText);
+            make_dialog("Virtual machine not deleted", data.responseText, window.location.href);
         });
     }
 

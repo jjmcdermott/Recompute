@@ -17,7 +17,7 @@ uri_static = r"/static/(.*)"
 
 uri_index = r"/"
 uri_recomputations = r"/recomputations"
-uri_recomputation = r"/recomputation/name/(?P<name>[A-Za-z]+)"
+uri_recomputation = r"/recomputation/name/(?P<name>[\w]+)"
 uri_recomputation_by_id = r"/recomputation/id/(?P<name>[0-9]+)"
 
 uri_recompute = r"/recompute"

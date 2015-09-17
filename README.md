@@ -49,7 +49,7 @@ Exit the virtual environment:
 
 
 ## Run
-The server is a Python Tornado + Flask application.
+The server is a Python Tornado application.
 
 #### Server
 The IP address and port number are optional. By default, the server will run at localhost:5000.
@@ -87,7 +87,7 @@ To start the virtual machine:
 [1]: https://travis-ci.org/cjw-charleswu/Recompute.svg?branch=master
 [2]: https://travis-ci.org/cjw-charleswu/Recompute
 [3]: http://www.recomputation.org/
-[4]: https://github.com/cjw-charleswu/Recompute/blob/master/report/report.pdf
+[4]: https://www.sharelatex.com/project/55dc8e93a56a48502de3f166
 [5]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 [6]: https://www.virtualbox.org/
 [7]: https://www.vagrantup.com/

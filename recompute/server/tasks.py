@@ -197,7 +197,7 @@ def recompute(name, github_url, box):
 
     io.create_recomputation_vm_dir(name, recomputation_obj.tag, recomputation_obj.version)
 
-    make_vagrantfile(recomputation_obj)
+    # make_vagrantfile(recomputation_obj)
 
     successful = yield make_vm(recomputation_obj)
 
