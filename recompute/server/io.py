@@ -75,7 +75,7 @@ def update_base_vms():
         #  ['ubuntu/trusty64', 'virtualbox', '20150814.0.1'],
         #  ['ubuntu/trusty64', 'virtualbox', '20150817.0.0']]
         """
-        server_log_info("Getting base vms", info=" ".join(line.rstrip().split()))
+        server_log_info("Listing vm", info=" ".join(line.rstrip().split()))
         descriptions = re.sub("[(),]", "", line).split()
         name = descriptions[0]
         version = descriptions[2]
@@ -83,8 +83,20 @@ def update_base_vms():
         if name not in base_vms_dict or version > base_vms_dict[name]:
             base_vms_dict[name] = version
 
-    server_log_info("Getting base vms '{}'".format(vagrant_box_list))
+    server_log_info("Listing vms '{}'".format(vagrant_box_list))
     execute(vagrant_box_list, readline_callback=vagrant_box_list_readline_callback)
+
+    vagrant_box_add = "vagrant box add {box}"
+
+    def vagrant_box_add_readline_callback(line):
+        server_log_info("Adding base vm", info=" ".join(line.rstrip().split()))
+
+    for box in boxes.BASE_BOXES:
+        name = box[0]
+        if name not in base_vms_dict:
+            command = vagrant_box_add.format(box=name)
+            server_log_info("Adding base vm '{}'".format(command))
+            execute(command, readline_callback=vagrant_box_add_readline_callback)
 
     base_vms_updated = dict()
 
@@ -97,7 +109,7 @@ def update_base_vms():
         # or
         # ... Box 'ubuntu/trusty64' (v20150818.0.0) is running the latest version.
         """
-        server_log_info("Updating base vms", info=line.rstrip())
+        server_log_info("Updating base vm", info=line.rstrip())
         if "Successfully added box" in line:
             name = line[line.find("box '") + 5:line.find("' (")]
             version = line[line.find("' (v") + 4:line.find(") for ")]
@@ -107,7 +119,7 @@ def update_base_vms():
     for vm in base_vms_dict.iterkeys():
         if vm in publicly_available_vms and vm not in base_vms_updated:
             command = vagrant_box_update.format(box=vm)
-            server_log_info("Updating base vms '{}'".format(command))
+            server_log_info("Updating base vm '{}'".format(command))
             execute(command, readline_callback=vagrant_box_update_readline_callback)
 
     for vm, version in base_vms_updated.iteritems():
@@ -324,7 +336,7 @@ def get_recomputations_count():
 
 
 def exists_recomputation(name):
-    return os.path.exists(get_recomputation_dir(name))
+    return os.path.exists(get_recomputation_dir(name)) and os.path.exists(get_recomputefile(name))
 
 
 def exists_vm(name, tag, version):
