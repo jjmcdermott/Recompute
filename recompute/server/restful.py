@@ -28,8 +28,9 @@ class Recompute(tornado.web.RequestHandler):
             self.finish("Recomputed '{}'".format(name))
         else:
             self.set_status(500)
-            self.finish("Failed to recompute '{name}'. <a href={link}>Download log.</a>".format(
-                name=name, link=self.reverse_url("download_log", name)))
+            log_link = "<a href={link}>Download log.</a>".format(link=self.reverse_url("download_log", name))
+            vm_link = "<a href={link}>Download vm.</a>".format(link=self.reverse_url("delete_vm", name, "Latest", 0))
+            self.finish("Failed to recompute '{name}'. {log}. {vm}.".format(name=name, log=log_link, vm=vm_link))
 
 
 class EditRecomputation(tornado.web.RequestHandler):

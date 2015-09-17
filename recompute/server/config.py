@@ -78,7 +78,7 @@ class RecomputeApp(tornado.web.Application):
         io.server_log_info("Initializing")
         self.initialize()
 
-        io.server_log_info("Starting server")
+        io.server_log_info("Server started @ {host}:{port}".format(host=host, port=port))
         self.http_server.bind(address=host, port=port)
         self.http_server.start()
         signal.signal(signal.SIGINT, self.signal_handler)
