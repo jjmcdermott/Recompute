@@ -89,6 +89,9 @@ def make_vm(recomputation_obj):
     vagrant_package = "vagrant package --output {}".format(vagrantbox)
     yield recomputator.run(category="Recomputing", command=vagrant_package)
 
+    if successful:
+        io.archive_vagrantfile(name, tag, version)
+
     raise tornado.gen.Return(successful)
 
 

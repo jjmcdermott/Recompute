@@ -41,7 +41,7 @@ def create_recomputations_dir():
 
     server_log_info("Creating recomputations directory @ {}".format(recomputations_dir))
     if not os.path.exists(recomputations_dir):
-        os.makedirs(recomputations_dir)
+        os.makedirs(recomputations_dir, 0755)
 
 
 def create_logs_dir():
@@ -51,7 +51,7 @@ def create_logs_dir():
 
     server_log_info("Creating logs directory @ {}".format(logs_dir))
     if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
+        os.makedirs(logs_dir, 0755)
 
 
 def update_base_vms():
@@ -142,7 +142,7 @@ def remove_failed_recomputations():
     for recomputation in next(os.walk(recomputations_dir))[1]:
         recompute_dict = load_recomputation(recomputation)
         if recompute_dict is None:
-            server_log_info("Removed '{}'".format(recomputation))
+            server_log_info("Removed recomputation '{}'".format(recomputation))
             shutil.rmtree("{dir}/{name}".format(dir=recomputations_dir, name=recomputation))
 
 
@@ -153,7 +153,7 @@ def remove_old_logs():
 
     server_log_info("Removing old logs")
     for recomputation in next(os.walk(logs_dir))[1]:
-        server_log_info("Removed '{}'".format(recomputation))
+        server_log_info("Removed log '{}'".format(recomputation))
         shutil.rmtree("{dir}/{name}".format(dir=logs_dir, name=recomputation))
 
 
@@ -188,11 +188,11 @@ def create_recomputation_dir(name):
 
     recomputation_dir = get_recomputation_dir(name)
     if not os.path.exists(recomputation_dir):
-        os.makedirs(recomputation_dir)
+        os.makedirs(recomputation_dir, 0755)
 
     log_dir = get_log_dir(name)
     if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+        os.makedirs(log_dir, 0755)
 
 
 def create_recomputation_vm_dir(name, tag, version):
@@ -202,7 +202,7 @@ def create_recomputation_vm_dir(name, tag, version):
 
     recomputation_build_dir = get_recomputation_vm_dir(name, tag, version)
     if not os.path.exists(recomputation_build_dir):
-        os.makedirs(recomputation_build_dir)
+        os.makedirs(recomputation_build_dir, 0755)
 
 
 def get_log_file(name):
@@ -346,6 +346,12 @@ def exists_recomputation(name):
 
 def exists_vm(name, tag, version):
     return os.path.exists(get_recomputation_vm_dir(name, tag, version))
+
+
+def archive_vagrantfile(name, tag, version):
+    vagrantfile = get_vagrantfile(name, tag, version)
+    archived_vagrantfile = os.path.join(get_recomputation_vm_dir(name, tag, version), "boxVagrantfile")
+    shutil.move(vagrantfile, archived_vagrantfile)
 
 
 def change_recomputation_name(name, new_name):
