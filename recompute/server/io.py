@@ -86,18 +86,6 @@ def update_base_vms():
     server_log_info("Listing vms '{}'".format(vagrant_box_list))
     execute(vagrant_box_list, readline_callback=vagrant_box_list_readline_callback)
 
-    vagrant_box_add = "vagrant box add {box}"
-
-    def vagrant_box_add_readline_callback(line):
-        server_log_info("Adding base vm", info=" ".join(line.rstrip().split()))
-
-    for box in boxes.BASE_BOXES:
-        name = box[0]
-        if name not in base_vms_dict:
-            command = vagrant_box_add.format(box=name)
-            server_log_info("Adding base vm '{}'".format(command))
-            execute(command, readline_callback=vagrant_box_add_readline_callback)
-
     base_vms_updated = dict()
 
     vagrant_box_update = "vagrant box update --box {box}"
@@ -124,6 +112,22 @@ def update_base_vms():
 
     for vm, version in base_vms_updated.iteritems():
         base_vms_dict[vm] = version
+
+    vagrant_box_add = "vagrant box add {box}"
+
+    def vagrant_box_add_readline_callback(line):
+        server_log_info("Adding base vm", info=" ".join(line.rstrip().split()))
+        if "Adding box" in line:
+            name = line[line.find("Adding box '") + 12:line.find("' (")]
+            version = line[line.find("' (v") + 4:line.find(") for ")]
+            base_vms_dict[name] = version
+
+    for box in boxes.BASE_BOXES:
+        name = box[0]
+        if name not in base_vms_dict:
+            command = vagrant_box_add.format(box=name)
+            server_log_info("Adding base vm '{}'".format(command))
+            execute(command, readline_callback=vagrant_box_add_readline_callback)
 
     return base_vms_dict
 
