@@ -1,0 +1,49 @@
+.outer_container {
+  width: 100%;
+}
+
+.landing_container {
+  display: table;
+  margin: 0 auto;
+  margin-top: 20px;
+  width: 80%;
+  background-color: #F2EFFB;
+  border-radius: 25px;
+  padding: 20px;
+}
+
+.metadata {
+  background-color: #FAFAFA;
+  border-radius: 15px;
+  float: left;
+  width: 45%;
+  padding: 10px;
+}
+
+.sourceandplay {
+  float:right;
+}
+
+.sourceandplaybuttons {
+  margin-top: 10px;
+  border-radius: 15px;
+  background-color: #FAFAFA;
+  padding: 5px;
+  text-align: center;
+}
+
+/*.sourcecode {
+  padding: 5px;
+  border-radius: 7px;
+  background-color: #EFFBEF;
+}
+
+.play {
+  border-radius: 7px;
+  background-color: #EFFBEF;
+}
+
+.orcid {
+  border-radius: 7px;
+  background-color: #EFFBEF;
+}*/

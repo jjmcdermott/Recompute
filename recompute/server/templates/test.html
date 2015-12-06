@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+
+<div class="page-header">
+    <h1>John's test</h1>
+</div>
+
+<form class="form-inline" action="{{ reverse_url('recomputations') }}" method="POST">
+    <div class="form-group">
+        <label for="name" >Name</label>
+        {{ filter_recomputations_form.name(class_="form-control", placeholder="Name") }}
+    </div>
+
+    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Search</button>
+</form>
+
+{% for recomputation in recomputations %}
+    <a href="{{ reverse_url('test_machine', recomputation['name']) }}">{{ recomputation["name"] }}</a>
+{% end %}
+
+{% end %}

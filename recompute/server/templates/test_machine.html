@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% set latest_github_url = recomputation["vms"][0]["github_url"] %}
+{% set latest_box = recomputation["vms"][0]["box"] %}
+{% set vm = recomputation["vms"][0] %}
+
+
+<div class="landing_container">
+
+  <div class="page-header">
+      <h1>Landing page: {{ recomputation["name"] }}/abc/001</h1>
+  </div>
+
+  <div class="metadata">
+    <!--  recomputation["metadata"]  -->
+    METADATA<br>
+    Jones, Catherine; Gent, Ian; Matthews, Brian (2015): Recomp 1.0:
+    Software Toolkit for Software Recomputations; RRR Project.
+    http://dx.doi.org/abc/001
+  </div>
+
+  <div class="sourceandplay">
+
+    <div class="sourceandplaybuttons">
+      <!--  recomputation["sourcecode"]  -->
+      <a href="{{ latest_github_url }}">Github</a>
+    </div>
+
+    <div class="sourceandplaybuttons">
+      <a onclick="play('{{ recomputation['name'] }}', '{{ vm['tag'] }}', '{{ vm['version'] }}');"><i class="fa fa-play-circle"></i> Play</a>
+    </div>
+
+    <div class="sourceandplaybuttons">
+      Orcid / Research object
+    </div>
+
+  </div>
+<!-- end of sourceandplay -->
+
+</div>
+<!-- end of landing_container -->
+
+{% end %}

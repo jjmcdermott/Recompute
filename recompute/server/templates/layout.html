@@ -16,6 +16,7 @@
 
     <link rel="stylesheet" href="{{ static_url('style.css') }}">
     <link rel="stylesheet" href="{{ static_url('play.css') }}">
+    <link rel="stylesheet" href="{{ static_url('landing.css') }}">
 </head>
 
 <body>
@@ -38,6 +39,8 @@
                 'index') %} class="active" {% end %}><a href="{{ reverse_url('index') }}">Home</a></li>
                 <li {% if request.path== reverse_url(
                 'recomputations') %} class="active" {% end %}><a href="{{ reverse_url('recomputations') }}">Recomputations</a></li>
+                <li {% if request.path== reverse_url(
+                'Jtest') %} class="active" {% end %}><a href="{{ reverse_url('Jtest') }}">John test</a></li>
             </ul>
         </div>
         <!--/.nav-collapse -->
