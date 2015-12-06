@@ -15,6 +15,7 @@
 .metadata {
   background-color: #FAFAFA;
   border-radius: 15px;
+  border: 2px solid #73AD21;
   float: left;
   width: 45%;
   padding: 10px;
@@ -27,6 +28,7 @@
 .sourceandplaybuttons {
   margin-top: 10px;
   border-radius: 15px;
+  border: 2px solid #73AD21;
   background-color: #FAFAFA;
   padding: 5px;
   text-align: center;
