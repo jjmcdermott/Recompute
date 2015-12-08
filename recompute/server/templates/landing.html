@@ -21,8 +21,8 @@
       METADATA<br>
       {{ recomputation["title"] }}; {{ recomputation["creator"] }}:<br>
       {{ recomputation["publisher"] }} ({{ recomputation["publicationyear"] }});<br>
-      {{ recomputation["metadata"] }};<br>
-      Persistent identifier: {{ recomputation["doi"] }}
+      <small>{{ recomputation["metadata"] }};</small><br>
+      Persistent identifier: <b>{{ recomputation["doi"] }}</b>
     </div>
 
     <div class="sidebuttons">
@@ -33,11 +33,11 @@
       </div>
 
       <div class="sidebutton">
-        Download
+        <a href="{{ reverse_url('download_vm', recomputation['name'], recomputation['vms'][0]['tag'], recomputation['vms'][0]['version']) }}"><i class="fa fa-download"></i>Download VM</a>
       </div>
 
-      <div class="sidebutton">
-        Cite
+      <div class="sidebutton" onclick="alert('Copy the citation: {{ recomputation["name"] }}:{{ recomputation["doi"] }}')" style="color:#008cba">
+        Click to cite
       </div>
 
     </div>
@@ -50,16 +50,16 @@
 
     <div class="playbuttons">
 
-      <div class="playbutton">
+      <div class="controls" id="rewind">
         Rew
       </div>
 
-      <div class="playbutton">
+      <div class="controls" id="playbutton">
         <a onclick="play('{{ recomputation['name'] }}', '{{ vm['tag'] }}', '{{ vm['version'] }}');"><i class="fa fa-play-circle">
         </i>Play</a>
       </div>
 
-      <div class="playbutton">
+      <div class="controls" id="fastforward">
         FF
       </div>
 
