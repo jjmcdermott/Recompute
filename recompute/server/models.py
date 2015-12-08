@@ -14,6 +14,12 @@ class RecomputationObject(object):
         self.tag = tag
         self.version = version
         self.date = date
+        self.doi = None
+        self.title = None
+        self.creator = None
+        self.publisher = None
+        self.publicationyear = None
+        self.metadata = None
 
     def to_dict(self, old_recompute_dict=None):
         recomputation_vars = dict()
@@ -22,6 +28,12 @@ class RecomputationObject(object):
         recomputation_vars["vms"] = list()
         recomputation_vars["github_url"] = self.github_obj.github_url
         recomputation_vars["description"] = self.github_obj.description
+        recomputation_vars["doi"] = self.doi
+        recomputation_vars["title"] = self.title
+        recomputation_vars["creator"] = self.creator
+        recomputation_vars["publisher"] = self.publisher
+        recomputation_vars["publicationyear"] = self.publicationyear
+        recomputation_vars["metadata"] = self.metadata
         vm = dict()
         vm["box"] = self.box
         vm["box_url"] = self.box_url

@@ -21,17 +21,44 @@
   padding: 10px;
 }
 
-.sourceandplay {
+.sidebuttons {
   float:right;
 }
 
-.sourceandplaybuttons {
+.sidebutton {
   margin-top: 10px;
   border-radius: 15px;
   border: 2px solid #73AD21;
   background-color: #FAFAFA;
   padding: 5px;
   text-align: center;
+}
+
+
+.playbuttons {
+  margin: 0 auto;
+}
+
+.playbutton {
+  float:left;
+  margin: auto;
+  border-radius: 15px;
+  border: 2px solid #73AD21;
+  background-color: #FAFAFA;
+  padding: 5px;
+  text-align: center;
+}
+
+.upperpart {
+  margin: 0 auto;
+}
+
+.lowerpart {
+  margin: 0 auto;
+}
+
+.wrapper {
+  overflow: hidden;
 }
 
 /*.sourcecode {

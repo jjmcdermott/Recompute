@@ -384,6 +384,15 @@ def change_recomputation_description(name, new_description):
     recompute_dict["description"] = new_description
     override_recomputefile(name, recompute_dict)
 
+def change_recomputation_doi(name, new_doi, new_title, new_creator, new_publisher, new_publicationyear, new_metadata):
+    recompute_dict = load_recomputation(name)
+    recompute_dict["doi"] = new_doi
+    recompute_dict["title"] = new_title
+    recompute_dict["creator"] = new_creator
+    recompute_dict["publisher"] = new_publisher
+    recompute_dict["publicationyear"] = new_publicationyear
+    recompute_dict["metadata"] = new_metadata
+    override_recomputefile(name, recompute_dict)
 
 def destroy_recomputation(name):
     recomputation_dir = get_recomputation_dir(name)

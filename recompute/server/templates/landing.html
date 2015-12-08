@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% set latest_github_url = recomputation["vms"][0]["github_url"] %}
+{% set latest_box = recomputation["vms"][0]["box"] %}
+{% set vm = recomputation["vms"][0] %}
+
+
+<div class="landing_container">
+
+  <div class="page-header">
+      <h1>Landing page: {{ recomputation["name"] }}/{{ recomputation["doi"] }}</h1>
+  </div>
+
+<div class="wrapper">
+  <div class="upperpart">
+
+    <div class="metadata">
+      <!--  recomputation["metadata"]  -->
+      METADATA<br>
+      {{ recomputation["title"] }}; {{ recomputation["creator"] }}:<br>
+      {{ recomputation["publisher"] }} ({{ recomputation["publicationyear"] }});<br>
+      {{ recomputation["metadata"] }};<br>
+      Persistent identifier: {{ recomputation["doi"] }}
+    </div>
+
+    <div class="sidebuttons">
+
+      <div class="sidebutton">
+        <!--  recomputation["sourcecode"]  -->
+        <a href="{{ latest_github_url }}">Github</a>
+      </div>
+
+      <div class="sidebutton">
+        Download
+      </div>
+
+      <div class="sidebutton">
+        Cite
+      </div>
+
+    </div>
+    <!-- end of sidebuttons -->
+
+  </div>
+  <!-- end of upperpart -->
+
+  <div class="lowerpart">
+
+    <div class="playbuttons">
+
+      <div class="playbutton">
+        Rew
+      </div>
+
+      <div class="playbutton">
+        <a onclick="play('{{ recomputation['name'] }}', '{{ vm['tag'] }}', '{{ vm['version'] }}');"><i class="fa fa-play-circle">
+        </i>Play</a>
+      </div>
+
+      <div class="playbutton">
+        FF
+      </div>
+
+    </div>
+    <!-- end of playbuttons -->
+
+  </div>
+  <!-- end of lowerpart -->
+</div>
+
+</div>
+<!-- end of landing_container -->
+
+{% end %}

@@ -34,6 +34,38 @@ class Recompute(tornado.web.RequestHandler):
             self.finish("Failed to recompute '{name}'. {log}. {vm}.".format(name=name, log=log_link, vm=vm_link))
 
 
+class Request(tornado.web.RequestHandler):
+    """
+    Returns a form for an individual test recomputation page from which
+    a DOI request can be made
+    """
+    def initialize(self):
+        self.form = forms.RequestDOIForm(self.request.arguments)
+
+    def get(self, name):
+        if name.isdigit():
+            recomputation = io.load_recomputation_by_id(int(name))
+        else:
+            recomputation = io.load_recomputation(name)
+
+        if recomputation is not None:
+            self.render("requestdoi.html", requestdoi_form=self.form, recomputation=recomputation)
+
+    def post(self, name):
+        if self.form.validate():
+            doi = self.form.doi.data
+            title = self.form.title.data
+            creator = self.form.creator.data
+            publisher = self.form.publisher.data
+            publicationyear = self.form.publicationyear.data
+            metadata = self.form.metadata.data
+            io.change_recomputation_doi(name, doi, title, creator, publisher, publicationyear, metadata)
+            self.finish("Identifier request for '{}' submitted".format(name))
+        else:
+            self.set_status(400)
+            self.finish("Invalid request")
+
+
 class EditRecomputation(tornado.web.RequestHandler):
     def initialize(self):
         self.form = forms.EditRecomputationForm(self.request.arguments)

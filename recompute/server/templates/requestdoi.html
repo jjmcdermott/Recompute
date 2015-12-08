@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% set latest_github_url = recomputation["vms"][0]["github_url"] %}
+{% set latest_box = recomputation["vms"][0]["box"] %}
+{% set vm = recomputation["vms"][0] %}
+
+
+  <div class="page-header">
+      <h1>Request doi for: {{ recomputation["name"] }}</h1>
+  </div>
+
+
+  <div class="col-lg-6 col-lg-offset-3 well">
+
+      <form class="form-horizontal" action="{{ reverse_url('requestdoi', recomputation['name']) }}" method="post"
+            id="requestdoi">
+          <fieldset>
+              <legend>Request DOI for recomputation: {{ recomputation["name"] }}</legend>
+              <div class="form-group">
+                  <label for="select" class="col-lg-2 control-label">DOI</label>
+
+                  <div class="col-lg-10">
+                      {{ requestdoi_form.doi(class_="form-control") }}
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="select" class="col-lg-2 control-label">Title</label>
+
+                  <div class="col-lg-10">
+                      {{ requestdoi_form.title(class_="form-control") }}
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="select" class="col-lg-2 control-label">Creator</label>
+
+                  <div class="col-lg-10">
+                      {{ requestdoi_form.creator(class_="form-control") }}
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="select" class="col-lg-2 control-label">Publisher</label>
+
+                  <div class="col-lg-10">
+                      {{ requestdoi_form.publisher(class_="form-control") }}
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="select" class="col-lg-2 control-label">Publication Year</label>
+
+                  <div class="col-lg-10">
+                      {{ requestdoi_form.publicationyear(class_="form-control") }}
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label for="select" class="col-lg-2 control-label">Further metadata</label>
+
+                  <div class="col-lg-10">
+                      {{ requestdoi_form.metadata(class_="form-control") }}
+                  </div>
+              </div>
+
+              <div class="form-group">
+                  <div class="col-lg-10 col-lg-offset-2">
+                      <a href="{{ reverse_url('recomputation', recomputation['name']) }}"
+                         class="btn btn-default">Cancel</a>
+                      <button type="button"
+                              onclick="fire_requestdoi('{{ reverse_url('landing', recomputation['name']) }}');"
+                              class="btn btn-success">Save
+                      </button>
+                  </div>
+              </div>
+          </fieldset>
+      </form>
+
+  </div>
+
+
+{% end %}

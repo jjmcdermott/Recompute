@@ -39,8 +39,8 @@
                 'index') %} class="active" {% end %}><a href="{{ reverse_url('index') }}">Home</a></li>
                 <li {% if request.path== reverse_url(
                 'recomputations') %} class="active" {% end %}><a href="{{ reverse_url('recomputations') }}">Recomputations</a></li>
-                <li {% if request.path== reverse_url(
-                'Jtest') %} class="active" {% end %}><a href="{{ reverse_url('Jtest') }}">John test</a></li>
+                <!-- <li {% if request.path== reverse_url(
+                'software') %} class="active" {% end %}><a href="{{ reverse_url('software') }}">Software</a></li> -->
             </ul>
         </div>
         <!--/.nav-collapse -->
@@ -100,6 +100,30 @@ function apiStatus(data) {
         });
     }
 
+    function make_dialog_delay(title, innerHTML, redirect_url, delay) {
+        var resp = document.createElement("div");
+        resp.id = "dialog-message"
+        resp.title = title
+
+        var innerText = document.createElement("p");
+        innerText.innerHTML = innerHTML;
+
+        resp.appendChild(innerText);
+
+        document.body.appendChild(resp);
+
+        $("#dialog-message").dialog({
+          modal: true,
+          draggable: true,
+          buttons: {
+            Ok: function() {
+              $(this).dialog("close");
+              window.location.href = redirect_url
+            }
+          }
+        });
+    }
+
     function play(vm, tag, version) {
         var terminal_args = {
             cols: 80,
@@ -130,6 +154,17 @@ function apiStatus(data) {
         $form.submit(function(data) {
             $.post($(this).attr('action'), $(this).serialize(), function(data) {
             make_dialog("Recomputation edited", data, redirect_url);
+            });
+            return false;
+        });
+        $form.submit();
+    }
+
+    function fire_requestdoi(redirect_url) {
+        $form = $("form#requestdoi");
+        $form.submit(function(data) {
+            $.post($(this).attr('action'), $(this).serialize(), function(data) {
+            make_dialog_delay("Confirm request", data, redirect_url, 20);
             });
             return false;
         });

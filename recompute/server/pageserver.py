@@ -40,6 +40,27 @@ class Recomputations(tornado.web.RequestHandler):
 
         self.render("recomputations.html", filter_recomputations_form=self.form, recomputations=self.recomputations)
 
+class Software(tornado.web.RequestHandler):
+    """
+    Returns the list of software/projects.
+    """
+
+    def initialize(self):
+        self.form = forms.FilterRecomputationsForm(self.request.arguments)
+        self.recomputations = io.load_all_recomputations()
+
+    def get(self):
+        self.render("software.html", filter_recomputations_form=self.form, recomputations=self.recomputations)
+
+    def post(self):
+        if self.form.validate():
+            print "here"
+            name = self.form.name.data
+            if name != "":
+                print name
+                self.recomputations = [r for r in self.recomputations if r["name"] == name]
+
+        self.render("software.html", filter_recomputations_form=self.form, recomputations=self.recomputations)
 
 class Recomputation(tornado.web.RequestHandler):
     """
@@ -57,7 +78,7 @@ class Recomputation(tornado.web.RequestHandler):
         else:
             self.render("recomputation404.html", name=name)
 
-class testMachine(tornado.web.RequestHandler):
+class Landing(tornado.web.RequestHandler):
     """
     Returns an individual test recomputation page.
     """
@@ -69,28 +90,6 @@ class testMachine(tornado.web.RequestHandler):
             recomputation = io.load_recomputation(name)
 
         if recomputation is not None:
-            self.render("test_machine.html", recomputation=recomputation)
+            self.render("landing.html", recomputation=recomputation)
         else:
             self.render("recomputation404.html", name=name)
-
-class Jtest(tornado.web.RequestHandler):
-    """
-    Returns the John test page.
-    """
-
-    def initialize(self):
-        self.form = forms.FilterRecomputationsForm(self.request.arguments)
-        self.recomputations = io.load_all_recomputations()
-
-    def get(self):
-        self.render("test.html", filter_recomputations_form=self.form, recomputations=self.recomputations)
-
-    def post(self):
-        if self.form.validate():
-            print "here"
-            name = self.form.name.data
-            if name != "":
-                print name
-                self.recomputations = [r for r in self.recomputations if r["name"] == name]
-
-        self.render("test.html", filter_recomputations_form=self.form, recomputations=self.recomputations)

@@ -26,12 +26,13 @@
                 <thead>
                     <tr>
                         <th>NAME</th>
-                        <th>ID</th>
+                        <th>VM ID</th>
                         <th>TAG</th>
                         <th>VERSION</th>
                         <th>LAST UPDATED</th>
                         <th>PLAY</th>
                         <th>DOWNLOAD</th>
+                        <th>PERSISTENT ID</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,7 +45,13 @@
                         <td>{{ recomputation["vms"][0]["date"] }}</td>
                         <td><a onclick="play('{{ recomputation['name'] }}', '{{ recomputation['vms'][0]['tag'] }}', '{{ recomputation['vms'][0]['version'] }}');"><i class="fa fa-play-circle"></i> Play</a></td>
                         <td><a href="{{ reverse_url('download_vm', recomputation['name'], recomputation['vms'][0]['tag'], recomputation['vms'][0]['version']) }}"><i class="fa fa-download"></i> VM</a></td>
-                    </tr>
+                        <td><a href="
+                          {% if recomputation['doi'] is None %}
+                          {{ reverse_url('requestdoi', recomputation['name']) }}"><i class="fa"></i>Request</a></td>
+                          {% else %}
+                          {{ reverse_url('landing', recomputation['name']) }}"><i class="fa"></i>{{ recomputation['doi'] }}</a></td>
+                          {% end %}
+                        </tr>
                 {% end %}
                 </tbody>
             </table>
