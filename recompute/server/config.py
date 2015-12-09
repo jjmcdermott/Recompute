@@ -17,22 +17,22 @@ uri_static = r"/static/(.*)"
 
 uri_index = r"/"
 uri_recomputations = r"/recomputations"
-uri_recomputation = r"/recomputation/name/(?P<name>[\w]+)"
+uri_recomputation = r"/recomputation/name/(?P<name>[\w\.\-]+)"
 uri_recomputation_by_id = r"/recomputation/id/(?P<name>[0-9]+)"
 uri_software = r"/software"
-uri_landing = r"/landing/(?P<name>[\w]+)"
-uri_requestdoi = r"/requestdoi/(?P<name>[\w]+)"
+uri_landing = r"/landing/(?P<name>[\w\.\-]+)"
+uri_requestdoi = r"/requestdoi/(?P<name>[\w\.\-]+)"
 
 uri_recompute = r"/recompute"
-uri_edit_recomputation = r"/edit/recomputation/(?P<name>[\w]+)"
+uri_edit_recomputation = r"/edit/recomputation/(?P<name>[\w\.\-]+)"
 uri_update_recomputation = r"/update/recomputation"
 uri_delete_recomputation = r"/delete/recomputation"
-uri_download_vm = r"/download/vm/(?P<name>[\w]+)/(?P<tag>[\w]+)/(?P<version>[\d]+)"
+uri_download_vm = r"/download/vm/(?P<name>[\w\.\-]+)/(?P<tag>[\w\.\-]+)/(?P<version>[\d]+)"
 uri_delete_vm = r"/delete/vm"
-uri_download_log = r"/download/log/(?P<name>[\w]+)"
+uri_download_log = r"/download/log/(?P<name>[\w\.\-]+)"
 
-uri_socket_play = r"/ws/play/(?P<name>[\w]+)/(?P<tag>[\w]+)/(?P<version>[\d]+)"
-uri_socket_recompute = r"/ws/recompute/(?P<name>[\w]+)"
+uri_socket_play = r"/ws/play/(?P<name>[\w\.\-]+)/(?P<tag>[\w\.\-]+)/(?P<version>[\d]+)"
+uri_socket_recompute = r"/ws/recompute/(?P<name>[\w\.\-]+)"
 
 # setting default values
 latest_recomputations_count = 5
