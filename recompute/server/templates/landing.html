@@ -1,5 +1,20 @@
 {% extends "layout.html" %}
 
+
+{% block jumbo %}
+
+  <div class="jumbotron" style="border: 2px solid #73AD21;">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-5">
+              <h2>Landing Page</h2>
+            </div>
+        </div>
+    </div>
+  </div>
+
+{% end %}
+
 {% block content %}
 
 {% set latest_github_url = recomputation["vms"][0]["github_url"] %}
@@ -10,7 +25,7 @@
 <div class="landing_container">
 
   <div class="page-header">
-      <h1>Landing page: {{ recomputation["name"] }}/{{ recomputation["doi"] }}</h1>
+      <h1>{{ recomputation["name"] }}/{{ recomputation["doi"] }}</h1>
   </div>
 
 <div class="wrapper">
@@ -51,7 +66,7 @@
     <div class="playbuttons">
 
       <div class="controls" id="rewind">
-        Rew
+        Previous version
       </div>
 
       <div class="controls" id="playbutton">
@@ -60,7 +75,7 @@
       </div>
 
       <div class="controls" id="fastforward">
-        FF
+        Next version
       </div>
 
     </div>
